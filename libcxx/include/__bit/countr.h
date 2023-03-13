@@ -12,6 +12,7 @@
 #include <__bit/rotate.h>
 #include <__concepts/arithmetic.h>
 #include <__config>
+#include <__type_traits/is_unsigned_integer.h>
 #include <limits>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
@@ -35,10 +36,11 @@ _LIBCPP_NODISCARD inline _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR int __libcpp_ct
   return __builtin_ctzll(__x);
 }
 
-#if _LIBCPP_STD_VER >= 20
+#if _LIBCPP_STD_VER >= 17
 
-template <__libcpp_unsigned_integer _Tp>
-_LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI constexpr int countr_zero(_Tp __t) noexcept {
+template <typename _Tp>
+_LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR int __countr_zero(_Tp __t) _NOEXCEPT {
+  static_assert(__libcpp_is_unsigned_integer<_Tp>::value, "__countr_zero requires an unsigned integer type");
   if (__t == 0)
     return numeric_limits<_Tp>::digits;
 
@@ -57,6 +59,15 @@ _LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI constexpr int countr_zero(_Tp __t) n
     }
     return __ret + std::__libcpp_ctz(static_cast<unsigned long long>(__t));
   }
+}
+
+#endif
+
+#if _LIBCPP_STD_VER >= 20
+
+template <__libcpp_unsigned_integer _Tp>
+_LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI constexpr int countr_zero(_Tp __t) noexcept {
+  return std::__countr_zero(__t);
 }
 
 template <__libcpp_unsigned_integer _Tp>
