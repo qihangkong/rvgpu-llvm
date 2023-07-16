@@ -164,7 +164,7 @@ int main(int argc, const char **argv) {
     return 0;
   }
 
-  clang::IncrementalCompilerBuilder CB;
+  clang::caas::IncrementalCompilerBuilder CB;
   CB.SetCompilerArgs(ClangArgv);
 
   std::unique_ptr<clang::CompilerInstance> DeviceCI;
@@ -199,11 +199,10 @@ int main(int argc, const char **argv) {
   if (CudaEnabled)
     DeviceCI->LoadRequestedPlugins();
 
-  std::unique_ptr<clang::Interpreter> Interp;
-
+  std::unique_ptr<clang::caas::Interpreter> Interp;
   if (CudaEnabled) {
-    Interp = ExitOnErr(
-        clang::Interpreter::createWithCUDA(std::move(CI), std::move(DeviceCI)));
+    Interp = ExitOnErr(clang::caas::Interpreter::createWithCUDA(
+        std::move(CI), std::move(DeviceCI)));
 
     if (CudaPath.empty()) {
       ExitOnErr(Interp->LoadDynamicLibrary("libcudart.so"));
@@ -212,7 +211,7 @@ int main(int argc, const char **argv) {
       ExitOnErr(Interp->LoadDynamicLibrary(CudaRuntimeLibPath.c_str()));
     }
   } else
-    Interp = ExitOnErr(clang::Interpreter::create(std::move(CI)));
+    Interp = ExitOnErr(clang::caas::Interpreter::create(std::move(CI)));
 
   for (const std::string &input : OptInputs) {
     if (auto Err = Interp->ParseAndExecute(input))

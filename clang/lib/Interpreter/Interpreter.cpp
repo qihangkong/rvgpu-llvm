@@ -43,7 +43,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/TargetParser/Host.h"
 using namespace clang;
-
+using namespace clang::caas;
 // FIXME: Figure out how to unify with namespace init_convenience from
 //        tools/clang-import-test/clang-import-test.cpp
 namespace {
@@ -268,6 +268,7 @@ const char *const Runtimes = R"(
       __clang_Interpreter_SetValueCopyArr(Src[0], Placement, Size);
     }
 #endif // __cplusplus
+    #define __CLANG_REPL__ 1
 )";
 
 llvm::Expected<std::unique_ptr<Interpreter>>
@@ -375,6 +376,22 @@ llvm::Error Interpreter::CreateExecutor() {
     IncrExecutor = std::move(Executor);
 
   return Err;
+}
+
+llvm::Error Interpreter::ExecuteModule(std::unique_ptr<llvm::Module> &M) {
+  if (!IncrExecutor) {
+    auto Err = CreateExecutor();
+    if (Err)
+      return Err;
+  }
+  // FIXME: Add a callback to retain the llvm::Module once the JIT is done.
+  if (auto Err = IncrExecutor->addModule(M))
+    return Err;
+
+  if (auto Err = IncrExecutor->runCtors())
+    return Err;
+
+  return llvm::Error::success();
 }
 
 llvm::Error Interpreter::Execute(PartialTranslationUnit &T) {
@@ -500,6 +517,10 @@ Interpreter::CompileDtorCall(CXXRecordDecl *CXXRD) {
   return AddrOrErr;
 }
 
+std::unique_ptr<llvm::Module> Interpreter::GenModule() {
+  return IncrParser->GenModule();
+}
+
 static constexpr llvm::StringRef MagicRuntimeInterface[] = {
     "__clang_Interpreter_SetValueNoAlloc",
     "__clang_Interpreter_SetValueWithAlloc",
@@ -543,15 +564,15 @@ namespace {
 
 class RuntimeInterfaceBuilder
     : public TypeVisitor<RuntimeInterfaceBuilder, Interpreter::InterfaceKind> {
-  clang::Interpreter &Interp;
+  clang::caas::Interpreter &Interp;
   ASTContext &Ctx;
   Sema &S;
   Expr *E;
   llvm::SmallVector<Expr *, 3> Args;
 
 public:
-  RuntimeInterfaceBuilder(clang::Interpreter &In, ASTContext &C, Sema &SemaRef,
-                          Expr *VE, ArrayRef<Expr *> FixedArgs)
+  RuntimeInterfaceBuilder(clang::caas::Interpreter &In, ASTContext &C,
+                          Sema &SemaRef, Expr *VE, ArrayRef<Expr *> FixedArgs)
       : Interp(In), Ctx(C), S(SemaRef), E(VE) {
     // The Interpreter* parameter and the out parameter `OutVal`.
     for (Expr *E : FixedArgs)

@@ -34,7 +34,7 @@ LLVM_ATTRIBUTE_USED void linkComponents() {
                << (void *)&llvm_orc_registerJITLoaderGDBAllocAction;
 }
 
-namespace clang {
+namespace clang::caas {
 
 IncrementalExecutor::IncrementalExecutor(llvm::orc::ThreadSafeContext &TSC,
                                          llvm::Error &Err,
@@ -64,6 +64,10 @@ IncrementalExecutor::IncrementalExecutor(llvm::orc::ThreadSafeContext &TSC,
 }
 
 IncrementalExecutor::~IncrementalExecutor() {}
+
+llvm::Error IncrementalExecutor::addModule(std::unique_ptr<llvm::Module> &M) {
+  return Jit->addIRModule({std::move(M), TSCtx});
+}
 
 llvm::Error IncrementalExecutor::addModule(PartialTranslationUnit &PTU) {
   llvm::orc::ResourceTrackerSP RT =
@@ -113,4 +117,4 @@ IncrementalExecutor::getSymbolAddress(llvm::StringRef Name,
   return SymOrErr->getAddress();
 }
 
-} // end namespace clang
+} // namespace clang::caas
