@@ -82,10 +82,10 @@ static int checkDiagErrors(const clang::CompilerInstance *CI, bool HasError) {
 }
 
 struct ReplListCompleter {
-  clang::IncrementalCompilerBuilder &CB;
-  clang::Interpreter &MainInterp;
-  ReplListCompleter(clang::IncrementalCompilerBuilder &CB,
-                    clang::Interpreter &Interp)
+  clang::caas::IncrementalCompilerBuilder &CB;
+  clang::caas::Interpreter &MainInterp;
+  ReplListCompleter(clang::caas::IncrementalCompilerBuilder &CB,
+                    clang::caas::Interpreter &Interp)
       : CB(CB), MainInterp(Interp){};
 
   std::vector<llvm::LineEditor::Completion> operator()(llvm::StringRef Buffer,
@@ -117,7 +117,7 @@ ReplListCompleter::operator()(llvm::StringRef Buffer, size_t Pos,
 
   size_t Lines =
       std::count(Buffer.begin(), std::next(Buffer.begin(), Pos), '\n') + 1;
-  auto Interp = clang::Interpreter::create(std::move(*CI));
+  auto Interp = clang::caas::Interpreter::create(std::move(*CI));
 
   if (auto Err = Interp.takeError()) {
     // log the error and returns an empty vector;

@@ -1066,6 +1066,8 @@ public:
   Module *getCurrentNamedModule() const { return CurrentCXXNamedModule; }
 
   TranslationUnitDecl *getTranslationUnitDecl() const {
+    assert(TUDecl->getMostRecentDecl() == TUDecl &&
+           "The active TU is not current one!");
     return TUDecl->getMostRecentDecl();
   }
   void addTranslationUnitDecl() {

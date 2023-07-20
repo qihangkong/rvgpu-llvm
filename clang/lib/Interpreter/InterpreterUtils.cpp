@@ -484,7 +484,7 @@ QualType GetFullyQualifiedType(QualType QT, const ASTContext &Ctx) {
   if (Prefix) {
     // We intentionally always use ETK_None, we never want
     // the keyword (humm ... what about anonymous types?)
-    QT = Ctx.getElaboratedType(ETK_None, Prefix, QT);
+    QT = Ctx.getElaboratedType(ElaboratedTypeKeyword::None, Prefix, QT);
     QT = Ctx.getQualifiedType(QT, PrefixQualifiers);
   }
   return QT;

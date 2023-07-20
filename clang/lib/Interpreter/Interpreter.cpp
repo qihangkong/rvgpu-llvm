@@ -378,22 +378,6 @@ llvm::Error Interpreter::CreateExecutor() {
   return Err;
 }
 
-llvm::Error Interpreter::ExecuteModule(std::unique_ptr<llvm::Module> &M) {
-  if (!IncrExecutor) {
-    auto Err = CreateExecutor();
-    if (Err)
-      return Err;
-  }
-  // FIXME: Add a callback to retain the llvm::Module once the JIT is done.
-  if (auto Err = IncrExecutor->addModule(M))
-    return Err;
-
-  if (auto Err = IncrExecutor->runCtors())
-    return Err;
-
-  return llvm::Error::success();
-}
-
 llvm::Error Interpreter::Execute(PartialTranslationUnit &T) {
   assert(T.TheModule);
   if (!IncrExecutor) {

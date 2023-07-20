@@ -94,6 +94,14 @@ class Interpreter {
   Value LastValue;
 
 public:
+  class SynthesizingCodeRAII {
+
+  };
+
+  SynthesizingCodeRAII EnterCodeSynthesisScope() {
+
+  }
+
   ~Interpreter();
   static llvm::Expected<std::unique_ptr<Interpreter>>
   create(std::unique_ptr<CompilerInstance> CI);
@@ -141,6 +149,8 @@ public:
   Expr *SynthesizeExpr(Expr *E);
 
   std::unique_ptr<llvm::Module> GenModule();
+
+  
 
 private:
   size_t getEffectivePTUSize() const;
