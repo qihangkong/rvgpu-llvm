@@ -15,10 +15,10 @@ define internal i32 @f(ptr byval(%struct.ss)  %b) nounwind  {
 ; CHECK-NEXT:    store i32 [[TMP0]], ptr [[B_PRIV]], align 4
 ; CHECK-NEXT:    [[B_PRIV_0_1:%.*]] = getelementptr [[STRUCT_SS]], ptr [[B_PRIV]], i64 0, i32 1
 ; CHECK-NEXT:    store i64 [[TMP1]], ptr [[B_PRIV_0_1]], align 4
-; CHECK-NEXT:    [[TRUETMP1:%.*]] = load i32, ptr [[B_PRIV]], align 8
-; CHECK-NEXT:    [[TRUETMP2:%.*]] = add i32 [[TRUETMP1]], 1
-; CHECK-NEXT:    store i32 [[TRUETMP2]], ptr [[B_PRIV]], align 8
-; CHECK-NEXT:    ret i32 [[TRUETMP1]]
+; CHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[B_PRIV]], align 8
+; CHECK-NEXT:    [[TMP2:%.*]] = add i32 [[TMP1]], 1
+; CHECK-NEXT:    store i32 [[TMP2]], ptr [[B_PRIV]], align 8
+; CHECK-NEXT:    ret i32 [[TMP1]]
 ;
 entry:
   %tmp1 = load i32, ptr %b, align 4
@@ -37,10 +37,10 @@ define internal i32 @g(ptr byval(%struct.ss) align 32 %b) nounwind {
 ; CHECK-NEXT:    store i32 [[TMP0]], ptr [[B_PRIV]], align 4
 ; CHECK-NEXT:    [[B_PRIV_0_1:%.*]] = getelementptr [[STRUCT_SS]], ptr [[B_PRIV]], i64 0, i32 1
 ; CHECK-NEXT:    store i64 [[TMP1]], ptr [[B_PRIV_0_1]], align 4
-; CHECK-NEXT:    [[TRUETMP1:%.*]] = load i32, ptr [[B_PRIV]], align 32
-; CHECK-NEXT:    [[TRUETMP2:%.*]] = add i32 [[TRUETMP1]], 1
-; CHECK-NEXT:    store i32 [[TRUETMP2]], ptr [[B_PRIV]], align 32
-; CHECK-NEXT:    ret i32 [[TRUETMP2]]
+; CHECK-NEXT:    [[TMP1:%.*]] = load i32, ptr [[B_PRIV]], align 32
+; CHECK-NEXT:    [[TMP2:%.*]] = add i32 [[TMP1]], 1
+; CHECK-NEXT:    store i32 [[TMP2]], ptr [[B_PRIV]], align 32
+; CHECK-NEXT:    ret i32 [[TMP2]]
 ;
 entry:
   %tmp1 = load i32, ptr %b, align 4
@@ -55,16 +55,16 @@ define i32 @main() nounwind  {
 ; TUNIT-LABEL: define {{[^@]+}}@main
 ; TUNIT-SAME: () #[[ATTR0]] {
 ; TUNIT-NEXT:  entry:
-; TUNIT-NEXT:    [[S:%.*]] = alloca [[STRUCT_SS:%.*]], align 4
-; TUNIT-NEXT:    store i32 1, ptr [[S]], align 32
-; TUNIT-NEXT:    [[TRUETMP4:%.*]] = getelementptr [[STRUCT_SS]], ptr [[S]], i32 0, i32 1
-; TUNIT-NEXT:    [[TMP0:%.*]] = load i32, ptr [[S]], align 8
-; TUNIT-NEXT:    [[S_0_11:%.*]] = getelementptr [[STRUCT_SS]], ptr [[S]], i64 0, i32 1
-; TUNIT-NEXT:    [[TMP1:%.*]] = load i64, ptr [[S_0_11]], align 8
+; TUNIT-NEXT:    [[S1:%.*]] = alloca i8, i32 12, align 4
+; TUNIT-NEXT:    store i32 1, ptr [[S1]], align 32
+; TUNIT-NEXT:    [[TMP4:%.*]] = getelementptr [[STRUCT_SS:%.*]], ptr [[S1]], i32 0, i32 1
+; TUNIT-NEXT:    [[TMP0:%.*]] = load i32, ptr [[S1]], align 8
+; TUNIT-NEXT:    [[S1_0_1:%.*]] = getelementptr [[STRUCT_SS]], ptr [[S1]], i64 0, i32 1
+; TUNIT-NEXT:    [[TMP1:%.*]] = load i64, ptr [[S1_0_1]], align 8
 ; TUNIT-NEXT:    [[C0:%.*]] = call i32 @f(i32 [[TMP0]], i64 [[TMP1]]) #[[ATTR1:[0-9]+]]
-; TUNIT-NEXT:    [[TMP2:%.*]] = load i32, ptr [[S]], align 32
-; TUNIT-NEXT:    [[S_0_1:%.*]] = getelementptr [[STRUCT_SS]], ptr [[S]], i64 0, i32 1
-; TUNIT-NEXT:    [[TMP3:%.*]] = load i64, ptr [[S_0_1]], align 32
+; TUNIT-NEXT:    [[TMP2:%.*]] = load i32, ptr [[S1]], align 32
+; TUNIT-NEXT:    [[S1_0_12:%.*]] = getelementptr [[STRUCT_SS]], ptr [[S1]], i64 0, i32 1
+; TUNIT-NEXT:    [[TMP3:%.*]] = load i64, ptr [[S1_0_12]], align 32
 ; TUNIT-NEXT:    [[C1:%.*]] = call i32 @g(i32 [[TMP2]], i64 [[TMP3]]) #[[ATTR1]]
 ; TUNIT-NEXT:    [[A:%.*]] = add i32 [[C0]], [[C1]]
 ; TUNIT-NEXT:    ret i32 [[A]]
@@ -73,8 +73,8 @@ define i32 @main() nounwind  {
 ; CGSCC-LABEL: define {{[^@]+}}@main
 ; CGSCC-SAME: () #[[ATTR1:[0-9]+]] {
 ; CGSCC-NEXT:  entry:
-; CGSCC-NEXT:    [[S:%.*]] = alloca [[STRUCT_SS:%.*]], align 4
-; CGSCC-NEXT:    [[TRUETMP4:%.*]] = getelementptr [[STRUCT_SS]], ptr [[S]], i32 0, i32 1
+; CGSCC-NEXT:    [[S2:%.*]] = alloca i8, i32 12, align 4
+; CGSCC-NEXT:    [[TMP4:%.*]] = getelementptr [[STRUCT_SS:%.*]], ptr [[S2]], i32 0, i32 1
 ; CGSCC-NEXT:    [[C0:%.*]] = call i32 @f(i32 noundef 1, i64 noundef 2) #[[ATTR2:[0-9]+]]
 ; CGSCC-NEXT:    [[C1:%.*]] = call i32 @g(i32 noundef 1, i64 noundef 2) #[[ATTR2]]
 ; CGSCC-NEXT:    [[A:%.*]] = add i32 [[C0]], [[C1]]

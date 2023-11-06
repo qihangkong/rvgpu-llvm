@@ -1110,6 +1110,10 @@ struct AAPointerInfoImpl
     return State::numOffsetBins();
   }
 
+  virtual const Access &getBinAccess(unsigned Index) const override {
+    return getAccess(Index);
+  }
+
   bool forallInterferingAccesses(
       AA::RangeTy Range,
       function_ref<bool(const AAPointerInfo::Access &, bool)> CB)
@@ -1456,7 +1460,7 @@ struct AAPointerInfoImpl
   void trackPointerInfoStatistics(const IRPosition &IRP) const {}
 
   /// Dump the state into \p O.
-  void dumpState(raw_ostream &O) {
+  virtual void dumpState(raw_ostream &O) const override {
     for (auto &It : OffsetBins) {
       O << "[" << It.first.Offset << "-" << It.first.Offset + It.first.Size
         << "] : " << It.getSecond().size() << "\n";
@@ -12706,6 +12710,11 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
     return AssumedAllocatedSize;
   }
 
+  const NewOffsetsTy &getNewOffsets() const override {
+    assert(isValidState() && "the AA is invalid");
+    return NewComputedOffsets;
+  }
+
   std::optional<TypeSize> findInitialAllocationSize(Instruction *I,
                                                     const DataLayout &DL) {
 
@@ -12755,35 +12764,40 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
     if (*AllocationSize == 0)
       return indicatePessimisticFixpoint();
 
-    int64_t BinSize = PI->numOffsetBins();
+    int64_t NumBins = PI->numOffsetBins();
 
-    // TODO: implement for multiple bins
-    if (BinSize > 1)
-      return indicatePessimisticFixpoint();
-
-    if (BinSize == 0) {
+    if (NumBins == 0) {
       auto NewAllocationSize = std::optional<TypeSize>(TypeSize(0, false));
       if (!changeAllocationSize(NewAllocationSize))
         return ChangeStatus::UNCHANGED;
       return ChangeStatus::CHANGED;
     }
 
-    // TODO: refactor this to be part of multiple bin case
-    const auto &It = PI->begin();
+    // For each access bin
+    // Compute its new start Offset and store the results in a new map
+    // (NewOffsetBins).
+    int64_t PrevBinEndOffset = 0;
+    bool ChangedOffsets = false;
+    for (AAPointerInfo::OffsetBinsTy::const_iterator It = PI->begin();
+         It != PI->end(); It++) {
+      const AA::RangeTy &OldRange = It->getFirst();
+      int64_t NewStartOffset = PrevBinEndOffset;
+      int64_t NewEndOffset = NewStartOffset + OldRange.Size;
+      PrevBinEndOffset = NewEndOffset;
 
-    // TODO: handle if Offset is not zero
-    if (It->first.Offset != 0)
-      return indicatePessimisticFixpoint();
+      ChangedOffsets |= setNewOffsets(OldRange, OldRange.Offset, NewStartOffset,
+                                      OldRange.Size);
+    }
 
-    uint64_t SizeOfBin = It->first.Offset + It->first.Size;
-
-    if (SizeOfBin >= *AllocationSize)
-      return indicatePessimisticFixpoint();
-
+    // Set the new size of the allocation, the new size of the Allocation should
+    // be the size of NewEndOffset * 8, in bits.
     auto NewAllocationSize =
-        std::optional<TypeSize>(TypeSize(SizeOfBin * 8, false));
+        std::optional<TypeSize>(TypeSize(PrevBinEndOffset * 8, false));
 
     if (!changeAllocationSize(NewAllocationSize))
+      return ChangeStatus::UNCHANGED;
+
+    if (!ChangedOffsets)
       return ChangeStatus::UNCHANGED;
 
     return ChangeStatus::CHANGED;
@@ -12795,18 +12809,18 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
     assert(isValidState() &&
            "Manifest should only be called if the state is valid.");
 
-    Instruction *I = getIRPosition().getCtxI();
+    bool Changed = false;
+    const IRPosition &IRP = getIRPosition();
+    Instruction *I = IRP.getCtxI();
 
     auto FixedAllocatedSizeInBits = getAllocatedSize()->getFixedValue();
 
     unsigned long NumBytesToAllocate = (FixedAllocatedSizeInBits + 7) / 8;
-
     switch (I->getOpcode()) {
     // TODO: add case for malloc like calls
     case Instruction::Alloca: {
 
       AllocaInst *AI = cast<AllocaInst>(I);
-
       Type *CharType = Type::getInt8Ty(I->getContext());
 
       auto *NumBytesToValue =
@@ -12816,16 +12830,102 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
           new AllocaInst(CharType, AI->getAddressSpace(), NumBytesToValue,
                          AI->getAlign(), AI->getName(), AI->getNextNode());
 
-      if (A.changeAfterManifest(IRPosition::inst(*AI), *NewAllocaInst))
-        return ChangeStatus::CHANGED;
-
+      Changed |= A.changeAfterManifest(IRPosition::inst(*AI), *NewAllocaInst);
       break;
     }
     default:
       break;
     }
 
-    return ChangeStatus::UNCHANGED;
+    const AAPointerInfo *PI =
+        A.getOrCreateAAFor<AAPointerInfo>(IRP, *this, DepClassTy::REQUIRED);
+
+    if (!PI)
+      return ChangeStatus::UNCHANGED;
+
+    if (!PI->getState().isValidState())
+      return ChangeStatus::UNCHANGED;
+
+    const auto &NewOffsetsMap = getNewOffsets();
+    for (AAPointerInfo::OffsetBinsTy::const_iterator It = PI->begin();
+         It != PI->end(); It++) {
+
+      const auto &OldOffsetRange = It->getFirst();
+
+      // If the OldOffsetRange is not in the map, offsets for that bin did not
+      // change We should just continue and skip changing the offsets in that
+      // case
+      if (!NewOffsetsMap.contains(OldOffsetRange))
+        continue;
+
+      const auto &NewOffsetRange = NewOffsetsMap.lookup(OldOffsetRange);
+      for (const auto AccIndex : It->getSecond()) {
+
+        const auto &AccessInstruction = PI->getBinAccess(AccIndex);
+        auto *LocalInst = AccessInstruction.getLocalInst();
+
+        switch (LocalInst->getOpcode()) {
+        case Instruction::Load: {
+          LoadInst *OldLoadInst = cast<LoadInst>(LocalInst);
+          Value *PointerOperand = OldLoadInst->getPointerOperand();
+
+          // We need to shift the old start offset by the difference between the
+          // Old offset and the New offset.
+          Value *ShiftValueForPointerOperand = ConstantInt::get(
+              OldLoadInst->getContext(),
+              APInt(32, (OldOffsetRange.Offset - NewOffsetRange.Offset)));
+          // Cast ptr to 32 bit integer
+          CastInst *PtrOperandToInt = PtrToIntInst::CreatePointerCast(
+              PointerOperand, Type::getInt32Ty(OldLoadInst->getContext()), "",
+              OldLoadInst);
+          // Subtract shift amount from old offset
+          BinaryOperator *NewPointerOperandInt = BinaryOperator::Create(
+              Instruction::Sub, PtrOperandToInt, ShiftValueForPointerOperand,
+              "", OldLoadInst);
+          // Convert Int to ptr.
+          CastInst *IntToPtr = new IntToPtrInst(
+              NewPointerOperandInt, OldLoadInst->getPointerOperandType(), "",
+              OldLoadInst);
+          LoadInst *NewLoadInst =
+              new LoadInst(OldLoadInst->getType(), IntToPtr,
+                           OldLoadInst->getName(), OldLoadInst);
+          Changed |= A.changeAfterManifest(IRPosition::inst(*OldLoadInst),
+                                           *NewLoadInst);
+          break;
+        }
+        case Instruction::Store: {
+          StoreInst *OldStoreInst = cast<StoreInst>(LocalInst);
+          Value *PointerOperand = OldStoreInst->getPointerOperand();
+
+          Value *ShiftValueForPointerOperand = ConstantInt::get(
+              OldStoreInst->getContext(),
+              APInt(32, (OldOffsetRange.Offset - NewOffsetRange.Offset)));
+
+          // Cast ptr to 32 bit integer
+          CastInst *PtrOperandToInt = PtrToIntInst::CreatePointerCast(
+              PointerOperand, Type::getInt32Ty(OldStoreInst->getContext()), "",
+              OldStoreInst);
+          // Subtract shift amount from old offset
+          BinaryOperator *NewPointerOperandInt = BinaryOperator::Create(
+              Instruction::Sub, PtrOperandToInt, ShiftValueForPointerOperand,
+              "", OldStoreInst);
+          // Convert Int to ptr.
+          CastInst *IntToPtr = new IntToPtrInst(
+              NewPointerOperandInt, OldStoreInst->getPointerOperandType(), "",
+              OldStoreInst);
+          StoreInst *NewStoreInst = new StoreInst(
+              OldStoreInst->getValueOperand(), IntToPtr, OldStoreInst);
+          Changed |= A.changeAfterManifest(IRPosition::inst(*OldStoreInst),
+                                           *NewStoreInst);
+          break;
+        }
+        }
+      }
+    }
+
+    if (!Changed)
+      return ChangeStatus::UNCHANGED;
+    return ChangeStatus::CHANGED;
   }
 
   /// See AbstractAttribute::getAsStr().
@@ -12839,8 +12939,28 @@ struct AAAllocationInfoImpl : public AAAllocationInfo {
            ")";
   }
 
+  void dumpNewOffsetBins(raw_ostream &O) {
+
+    O << "Printing Map from [OldOffsetsRange] : [NewOffsetsRange] if the "
+         "offsets changed."
+      << "\n";
+    const auto &NewOffsetsMap = getNewOffsets();
+    for (auto It = NewOffsetsMap.begin(); It != NewOffsetsMap.end(); It++) {
+
+      const auto &OldRange = It->getFirst();
+      const auto &NewRange = It->getSecond();
+
+      O << "[" << OldRange.Offset << "," << OldRange.Offset + OldRange.Size
+        << "] : ";
+      O << "[" << NewRange.Offset << "," << NewRange.Offset + NewRange.Size
+        << "]";
+      O << "\n";
+    }
+  }
+
 private:
   std::optional<TypeSize> AssumedAllocatedSize = HasNoAllocationSize;
+  NewOffsetsTy NewComputedOffsets;
 
   // Maintain the computed allocation size of the object.
   // Returns (bool) weather the size of the allocation was modified or not.
@@ -12851,6 +12971,21 @@ private:
       return true;
     }
     return false;
+  }
+
+  // Maps an old byte range to its new Offset range in the new allocation.
+  // Returns (bool) weather the old byte range's offsets changed or not.
+  bool setNewOffsets(const AA::RangeTy &OldRange, int64_t OldOffset,
+                     int64_t NewComputedOffset, int64_t Size) {
+
+    if (OldOffset == NewComputedOffset)
+      return false;
+
+    AA::RangeTy &NewRange = NewComputedOffsets.getOrInsertDefault(OldRange);
+    NewRange.Offset = NewComputedOffset;
+    NewRange.Size = Size;
+
+    return true;
   }
 };
 
