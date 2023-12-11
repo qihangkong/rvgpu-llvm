@@ -96,7 +96,8 @@ unsigned BPFMCCodeEmitter::getMachineOpValue(const MCInst &MI,
     Fixups.push_back(MCFixup::create(0, Expr, FK_PCRel_4));
   else if (MI.getOpcode() == BPF::LD_imm64)
     Fixups.push_back(MCFixup::create(0, Expr, FK_SecRel_8));
-  else if (MI.getOpcode() == BPF::JMPL)
+  else if (MI.getOpcode() == BPF::JMPL || MI.getOpcode() == BPF::JMPL_OR_NOP ||
+           MI.getOpcode() == BPF::NOP_OR_JMPL)
     Fixups.push_back(MCFixup::create(0, Expr, (MCFixupKind)BPF::FK_BPF_PCRel_4));
   else
     // bb label
