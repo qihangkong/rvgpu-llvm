@@ -3953,6 +3953,33 @@ TEST(TransferTest, PointerEquality) {
       });
 }
 
+TEST(TransferTest, PointerEqualityUnionMembers) {
+  std::string Code = R"(
+    union U {
+      int i1;
+      int i2;
+    };
+    void target() {
+      U u;
+      bool i1_eq_i2 = (&u.i1 == &u.i2);
+
+      (void)0; // [[p]]
+    }
+  )";
+  runDataflow(
+      Code,
+      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
+         ASTContext &ASTCtx) {
+        const Environment &Env = getEnvironmentAtAnnotation(Results, "p");
+
+        // FIXME: By the standard, `u.i1` and `u.i2` should have the same
+        // address, but we don't yet model this property of union members
+        // correctly. This test documents the current wrong behavior.
+        EXPECT_EQ(&getValueForDecl<BoolValue>(ASTCtx, Env, "i1_eq_i2"),
+                  &Env.getBoolLiteralValue(false));
+      });
+}
+
 TEST(TransferTest, IntegerLiteralEquality) {
   std::string Code = R"(
     void target() {
