@@ -13,7 +13,7 @@
 // Range algorithms should return `std::ranges::dangling` when given a dangling range.
 
 #include <algorithm>
-
+#include <numeric>
 #include <array>
 #include <concepts>
 #include <functional>
@@ -23,6 +23,7 @@
 #include <utility>
 
 #include "test_iterators.h"
+#include "test_macros.h"
 
 struct NonBorrowedRange {
   using Iter = int*;
@@ -41,22 +42,22 @@ struct NonBorrowedRange {
 using R = NonBorrowedRange;
 
 // (dangling_in, ...)
-template <class ExpectedT = std::ranges::dangling, class Func, std::ranges::range Input, class ...Args>
-constexpr void dangling_1st(Func&& func, Input& in, Args&& ...args) {
+template <class ExpectedT = std::ranges::dangling, class Func, std::ranges::range Input, class... Args>
+constexpr void dangling_1st(Func&& func, Input& in, Args&&... args) {
   decltype(auto) result = func(R(in), std::forward<Args>(args)...);
   static_assert(std::same_as<decltype(result), ExpectedT>);
 }
 
 // (in, dangling_in, ...)
-template <class ExpectedT = std::ranges::dangling, class Func, std::ranges::range Input, class ...Args>
-constexpr void dangling_2nd(Func&& func, Input& in1, Input& in2, Args&& ...args) {
+template <class ExpectedT = std::ranges::dangling, class Func, std::ranges::range Input, class... Args>
+constexpr void dangling_2nd(Func&& func, Input& in1, Input& in2, Args&&... args) {
   decltype(auto) result = func(in1, R(in2), std::forward<Args>(args)...);
   static_assert(std::same_as<decltype(result), ExpectedT>);
 }
 
 // (dangling_in1, dangling_in2, ...)
-template <class ExpectedT = std::ranges::dangling, class Func, std::ranges::range Input, class ...Args>
-constexpr void dangling_both(Func&& func, Input& in1, Input& in2, Args&& ...args) {
+template <class ExpectedT = std::ranges::dangling, class Func, std::ranges::range Input, class... Args>
+constexpr void dangling_both(Func&& func, Input& in1, Input& in2, Args&&... args) {
   decltype(auto) result = func(R(in1), R(in2), std::forward<Args>(args)...);
   static_assert(std::same_as<decltype(result), ExpectedT>);
 }
@@ -68,23 +69,26 @@ constexpr bool test_all() {
   using std::ranges::dangling;
 
   using std::ranges::binary_transform_result;
-  using std::ranges::copy_result;
   using std::ranges::copy_backward_result;
   using std::ranges::copy_if_result;
+  using std::ranges::copy_result;
   using std::ranges::for_each_result;
   using std::ranges::merge_result;
   using std::ranges::minmax_result;
   using std::ranges::mismatch_result;
-  using std::ranges::move_result;
   using std::ranges::move_backward_result;
+  using std::ranges::move_result;
   using std::ranges::next_permutation_result;
+#if TEST_STD_VER >= 23
+  using std::ranges::out_value_result;
+#endif
   using std::ranges::partial_sort_copy_result;
   using std::ranges::partition_copy_result;
   using std::ranges::prev_permutation_result;
-  using std::ranges::remove_copy_result;
   using std::ranges::remove_copy_if_result;
-  using std::ranges::replace_copy_result;
+  using std::ranges::remove_copy_result;
   using std::ranges::replace_copy_if_result;
+  using std::ranges::replace_copy_result;
   using std::ranges::reverse_copy_result;
   using std::ranges::rotate_copy_result;
   using std::ranges::set_difference_result;
@@ -94,23 +98,23 @@ constexpr bool test_all() {
   using std::ranges::swap_ranges_result;
   using std::ranges::unary_transform_result;
   using std::ranges::unique_copy_result;
-  using InIter = std::array<int, 3>::iterator;
+  using InIter  = std::array<int, 3>::iterator;
   using OutIter = std::array<int, 6>::iterator;
 
-  auto unary_pred = [](int i) { return i > 0; };
+  auto unary_pred  = [](int i) { return i > 0; };
   auto binary_pred = [](int i, int j) { return i < j; };
-  auto gen = [] { return 42; };
+  auto gen         = [] { return 42; };
 
-  std::array in = {1, 2, 3};
+  std::array in  = {1, 2, 3};
   std::array in2 = {4, 5, 6};
 
   auto mid = in.data() + 1;
 
   std::array output = {7, 8, 9, 10, 11, 12};
-  auto out = output.begin();
-  auto out2 = output.begin() + 1;
+  auto out          = output.begin();
+  auto out2         = output.begin() + 1;
 
-  int x = 2;
+  int x             = 2;
   std::size_t count = 1;
 
   dangling_1st(std::ranges::find, in, x);
@@ -141,10 +145,11 @@ constexpr bool test_all() {
   dangling_1st<move_backward_result<dangling, OutIter>>(std::ranges::move_backward, in, output.end());
   dangling_1st(std::ranges::fill, in, x);
   { // transform
-    using OutTransformIter = std::array<bool, 3>::iterator;
+    using OutTransformIter   = std::array<bool, 3>::iterator;
     std::array out_transform = {false, true, true};
-    dangling_1st<unary_transform_result<dangling, OutTransformIter>>(std::ranges::transform, in, out_transform.begin(), unary_pred);
-    dangling_1st<binary_transform_result<dangling, InIter, OutTransformIter>>(
+    dangling_1st<unary_transform_result<dangling, bool*>>(
+        std::ranges::transform, in, out_transform.begin(), unary_pred);
+    dangling_1st<binary_transform_result<dangling, int*, bool*>>(
         std::ranges::transform, in, in2, out_transform.begin(), binary_pred);
     dangling_2nd<binary_transform_result<InIter, dangling, OutTransformIter>>(
         std::ranges::transform, in, in2, out_transform.begin(), binary_pred);
@@ -164,7 +169,8 @@ constexpr bool test_all() {
   dangling_1st<reverse_copy_result<dangling, OutIter>>(std::ranges::reverse_copy, in, out);
   dangling_1st<rotate_copy_result<dangling, OutIter>>(std::ranges::rotate_copy, in, mid, out);
   dangling_1st<unique_copy_result<dangling, OutIter>>(std::ranges::unique_copy, in, out);
-  dangling_1st<partition_copy_result<dangling, OutIter, OutIter>>(std::ranges::partition_copy, in, out, out2, unary_pred);
+  dangling_1st<partition_copy_result<dangling, OutIter, OutIter>>(
+      std::ranges::partition_copy, in, out, out2, unary_pred);
   dangling_1st<partial_sort_copy_result<dangling, InIter>>(std::ranges::partial_sort_copy, in, in2);
   dangling_2nd<partial_sort_copy_result<InIter, dangling>>(std::ranges::partial_sort_copy, in, in2);
   dangling_both<partial_sort_copy_result<dangling, dangling>>(std::ranges::partial_sort_copy, in, in2);
@@ -208,6 +214,10 @@ constexpr bool test_all() {
   dangling_1st(std::ranges::sort_heap, in);
   dangling_1st<prev_permutation_result<dangling>>(std::ranges::prev_permutation, in);
   dangling_1st<next_permutation_result<dangling>>(std::ranges::next_permutation, in);
+
+#if TEST_STD_VER >= 23
+  dangling_1st< out_value_result<dangling, decltype(x)>>(std::ranges::iota, in, x);
+#endif
 
   return true;
 }
