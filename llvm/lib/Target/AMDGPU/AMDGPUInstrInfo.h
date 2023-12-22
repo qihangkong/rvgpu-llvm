@@ -81,6 +81,7 @@ struct ImageDimIntrinsicInfo {
   uint8_t UnormIndex;
   uint8_t TexFailCtrlIndex;
   uint8_t CachePolicyIndex;
+  // uint8_t AtomicOrderingIndex;
 
   uint8_t BiasTyArg;
   uint8_t GradientTyArg;

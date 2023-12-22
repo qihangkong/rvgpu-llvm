@@ -381,6 +381,7 @@ enum CPol {
   SLC = 2,
   DLC = 4,
   SCC = 16,
+  // ATOMIC_ORDERING = 32,
   SC0 = GLC,
   SC1 = SCC,
   NT = SLC,
@@ -425,6 +426,7 @@ enum CPol {
   TH_TYPE_STORE = 1 << 8,   // TH_STORE policy
   TH_TYPE_ATOMIC = 1 << 9,  // TH_ATOMIC policy
   TH_REAL_BYPASS = 1 << 10, // is TH=3 bypass policy or not
+  ATOMIC_ORDERING = 0x70,   // Atomic ordering bits mask
 
   // Volatile (used to preserve/signal operation volatility for buffer
   // operations not a real instruction bit)
