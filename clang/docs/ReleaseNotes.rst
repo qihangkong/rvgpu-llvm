@@ -193,6 +193,9 @@ Non-comprehensive list of changes in this release
   with support for any unsigned integer type. Like the previous builtins, these
   new builtins are constexpr and may be used in constant expressions.
 
+- Builtins ``__builtin_shufflevector()`` and ``__builtin_convertvector()`` may
+  now be used within constant expressions.
+
 New Compiler Flags
 ------------------
 
