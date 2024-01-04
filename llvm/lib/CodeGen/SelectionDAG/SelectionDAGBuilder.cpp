@@ -5077,9 +5077,13 @@ void SelectionDAGBuilder::visitTargetIntrinsic(const CallInst &I,
       MPI = MachinePointerInfo(Info.ptrVal, Info.offset);
     else if (Info.fallbackAddressSpace)
       MPI = MachinePointerInfo(*Info.fallbackAddressSpace);
-    Result = DAG.getMemIntrinsicNode(
-        Info.opc, getCurSDLoc(), VTs, Ops, Info.memVT, MPI, Info.align,
-        Info.flags, Info.size, I.getAAMetadata(), Info.ordering);
+    if (Info.MMO)
+      Result = DAG.getMemIntrinsicNode(Info.opc, getCurSDLoc(), VTs, Ops,
+                                       Info.memVT, Info.MMO);
+    else
+      Result = DAG.getMemIntrinsicNode(
+          Info.opc, getCurSDLoc(), VTs, Ops, Info.memVT, MPI, Info.align,
+          Info.flags, Info.size, I.getAAMetadata(), Info.ordering);
   } else if (!HasChain) {
     Result = DAG.getNode(ISD::INTRINSIC_WO_CHAIN, getCurSDLoc(), VTs, Ops);
   } else if (!I.getType()->isVoidTy()) {

@@ -1732,7 +1732,6 @@ class ImageDimIntrinsicInfo<AMDGPUImageDimIntrinsic I> {
   bits<8> UnormIndex = DimEval.UnormArgIndex;
   bits<8> TexFailCtrlIndex = DimEval.TexFailCtrlArgIndex;
   bits<8> CachePolicyIndex = DimEval.CachePolicyArgIndex;
-  // bits<8> AtomicOrderingIndex = DimEval.AtomicOrderingIndex;
 
   bits<8> BiasTyArg = !add(I.P.NumRetAndDataAnyTypes,
     !if(!eq(NumOffsetArgs, 0), 0, I.P.ExtraAddrArgs[0].Type.isAny));

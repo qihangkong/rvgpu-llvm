@@ -381,7 +381,6 @@ enum CPol {
   SLC = 2,
   DLC = 4,
   SCC = 16,
-  // ATOMIC_ORDERING = 32,
   SC0 = GLC,
   SC1 = SCC,
   NT = SLC,
