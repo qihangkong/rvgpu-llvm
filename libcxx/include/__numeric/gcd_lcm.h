@@ -39,7 +39,7 @@ struct __ct_abs<_Result, _Source, true> {
     if (__t >= 0)
       return __t;
     if (__t == numeric_limits<_Source>::min())
-      return -static_cast<_Result>(__t);
+      return static_cast<_Result>(-static_cast<std::make_unsigned_t<_Result>>(__t));
     return -__t;
   }
 };
