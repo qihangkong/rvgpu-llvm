@@ -226,6 +226,8 @@ C++2c Feature Support
 
 Resolutions to C++ Defect Reports
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Implemented `CWG2351 <https://wg21.link/CWG2351>`_ which allows ``void{}``
+  as a prvalue of type ``void``.
 
 C Language Changes
 ------------------
