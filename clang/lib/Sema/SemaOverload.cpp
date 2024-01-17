@@ -433,7 +433,11 @@ NarrowingKind StandardConversionSequence::getNarrowingKind(
 
   // -- from an integer type or unscoped enumeration type to an integer type
   //    that cannot represent all the values of the original type, except where
-  //    the source is a constant expression and the actual value after
+  //    -- the source is a bit-field whose width w is less than that of its type
+  //    (or, for an enumeration type, its underlying type) and the target type
+  //    can represent all the values of a hypothetical extended integer type
+  //    with width w and with the same signedness as the original type or
+  //    -- the source is a constant expression and the actual value after
   //    conversion will fit into the target type and will produce the original
   //    value when converted back to the original type.
   case ICK_Integral_Conversion:
@@ -441,53 +445,73 @@ NarrowingKind StandardConversionSequence::getNarrowingKind(
     assert(FromType->isIntegralOrUnscopedEnumerationType());
     assert(ToType->isIntegralOrUnscopedEnumerationType());
     const bool FromSigned = FromType->isSignedIntegerOrEnumerationType();
-    const unsigned FromWidth = Ctx.getIntWidth(FromType);
+    unsigned FromWidth = Ctx.getIntWidth(FromType);
     const bool ToSigned = ToType->isSignedIntegerOrEnumerationType();
     const unsigned ToWidth = Ctx.getIntWidth(ToType);
 
-    if (FromWidth > ToWidth ||
-        (FromWidth == ToWidth && FromSigned != ToSigned) ||
-        (FromSigned && !ToSigned)) {
-      // Not all values of FromType can be represented in ToType.
-      const Expr *Initializer = IgnoreNarrowingConversion(Ctx, Converted);
+    constexpr auto CanRepresentAll = [](bool FromSigned, unsigned FromWidth,
+                                        bool ToSigned, unsigned ToWidth) {
+      return (FromWidth < ToWidth + (FromSigned == ToSigned)) &&
+             (FromSigned <= ToSigned);
+    };
 
-      // If it's value-dependent, we can't tell whether it's narrowing.
-      if (Initializer->isValueDependent())
-        return NK_Dependent_Narrowing;
+    if (CanRepresentAll(FromSigned, FromWidth, ToSigned, ToWidth))
+      return NK_Not_Narrowing;
 
-      std::optional<llvm::APSInt> OptInitializerValue;
-      if (!(OptInitializerValue = Initializer->getIntegerConstantExpr(Ctx))) {
-        // Such conversions on variables are always narrowing.
-        return NK_Variable_Narrowing;
-      }
-      llvm::APSInt &InitializerValue = *OptInitializerValue;
-      bool Narrowing = false;
-      if (FromWidth < ToWidth) {
-        // Negative -> unsigned is narrowing. Otherwise, more bits is never
-        // narrowing.
-        if (InitializerValue.isSigned() && InitializerValue.isNegative())
-          Narrowing = true;
-      } else {
-        // Add a bit to the InitializerValue so we don't have to worry about
-        // signed vs. unsigned comparisons.
-        InitializerValue = InitializerValue.extend(
-          InitializerValue.getBitWidth() + 1);
-        // Convert the initializer to and from the target width and signed-ness.
-        llvm::APSInt ConvertedValue = InitializerValue;
-        ConvertedValue = ConvertedValue.trunc(ToWidth);
-        ConvertedValue.setIsSigned(ToSigned);
-        ConvertedValue = ConvertedValue.extend(InitializerValue.getBitWidth());
-        ConvertedValue.setIsSigned(InitializerValue.isSigned());
-        // If the result is different, this was a narrowing conversion.
-        if (ConvertedValue != InitializerValue)
-          Narrowing = true;
-      }
-      if (Narrowing) {
-        ConstantType = Initializer->getType();
-        ConstantValue = APValue(InitializerValue);
-        return NK_Constant_Narrowing;
+    // Not all values of FromType can be represented in ToType.
+    const Expr *Initializer = IgnoreNarrowingConversion(Ctx, Converted);
+
+    bool DependentBitField = false;
+    if (const FieldDecl *BitField = Initializer->getSourceBitField()) {
+      DependentBitField = BitField->getBitWidth()->isValueDependent();
+      if (!DependentBitField) {
+        FromWidth = BitField->getBitWidthValue(Ctx);
+        if (CanRepresentAll(FromSigned, FromWidth, ToSigned, ToWidth))
+          return NK_Not_Narrowing;
       }
     }
+
+    // If it's value-dependent, we can't tell whether it's narrowing.
+    if (Initializer->isValueDependent())
+      return NK_Dependent_Narrowing;
+
+    std::optional<llvm::APSInt> OptInitializerValue;
+    if (!(OptInitializerValue = Initializer->getIntegerConstantExpr(Ctx))) {
+      // If the source is a bit-field, this would only be narrowing if the width
+      // ends up being too large
+      if (DependentBitField)
+        return NK_Dependent_Narrowing;
+      // Otherwise, such a conversion is always narrowing
+      return NK_Variable_Narrowing;
+    }
+    llvm::APSInt &InitializerValue = *OptInitializerValue;
+    bool Narrowing = false;
+    if (FromWidth < ToWidth) {
+      // Negative -> unsigned is narrowing. Otherwise, more bits is never
+      // narrowing.
+      if (InitializerValue.isSigned() && InitializerValue.isNegative())
+        Narrowing = true;
+    } else {
+      // Add a bit to the InitializerValue so we don't have to worry about
+      // signed vs. unsigned comparisons.
+      InitializerValue =
+          InitializerValue.extend(InitializerValue.getBitWidth() + 1);
+      // Convert the initializer to and from the target width and signed-ness.
+      llvm::APSInt ConvertedValue = InitializerValue;
+      ConvertedValue = ConvertedValue.trunc(ToWidth);
+      ConvertedValue.setIsSigned(ToSigned);
+      ConvertedValue = ConvertedValue.extend(InitializerValue.getBitWidth());
+      ConvertedValue.setIsSigned(InitializerValue.isSigned());
+      // If the result is different, this was a narrowing conversion.
+      if (ConvertedValue != InitializerValue)
+        Narrowing = true;
+    }
+    if (Narrowing) {
+      ConstantType = Initializer->getType();
+      ConstantValue = APValue(InitializerValue);
+      return NK_Constant_Narrowing;
+    }
+
     return NK_Not_Narrowing;
   }
 

@@ -6,6 +6,24 @@
 // RUN: %clang_cc1 -std=c++23 -triple x86_64-unknown-unknown %s -verify=expected,since-cxx11,since-cxx20,since-cxx23
 // RUN: %clang_cc1 -std=c++2c -triple x86_64-unknown-unknown %s -verify=expected,since-cxx11,since-cxx20,since-cxx23
 
+namespace std {
+#if __cplusplus >= 202002L
+  struct strong_ordering {
+    int n;
+    constexpr operator int() const { return n; }
+    static const strong_ordering less, equal, greater;
+  };
+  constexpr strong_ordering strong_ordering::less{-1},
+      strong_ordering::equal{0}, strong_ordering::greater{1};
+#endif
+
+  typedef __INT16_TYPE__ int16_t;
+  typedef __UINT16_TYPE__ uint16_t;
+  typedef __INT32_TYPE__ int32_t;
+  typedef __UINT32_TYPE__ uint32_t;
+  typedef __INT64_TYPE__ int64_t;
+  typedef __UINT64_TYPE__ uint64_t;
+}
 
 namespace dr2621 { // dr2621: 16
 #if __cplusplus >= 202002L
@@ -21,6 +39,68 @@ int E; // we see this
 using enum E;
 // since-cxx20-error@-1 {{unknown type name E}}
 }
+#endif
+}
+
+namespace dr2627 { // dr2627: 18
+#if __cplusplus >= 202002L
+struct C {
+  long long i : 8;
+  friend auto operator<=>(C, C) = default;
+};
+
+void f() {
+  C x{1}, y{2};
+  static_cast<void>(x <=> y);
+  static_cast<void>(x.i <=> y.i);
+}
+#endif
+
+#if __cplusplus >= 201103L
+template<int W>
+struct D {
+  __int128 i : W;
+};
+
+template<int W>
+std::int64_t f(D<W> d) {
+    return std::int64_t{ d.i }; // #dr2627-f
+}
+
+template std::int64_t f(D<63>);
+template std::int64_t f(D<64>);
+template std::int64_t f(D<65>);
+// since-cxx11-error-re@#dr2627-f {{non-constant-expression cannot be narrowed from type '__int128' to 'std::int64_t' (aka '{{.+}}') in initializer list}}
+//   since-cxx11-note@-2 {{in instantiation of function template specialization 'dr2627::f<65>' requested here}}
+//   since-cxx11-note@#dr2627-f {{insert an explicit cast to silence this issue}}
+
+template<typename Target, typename Source>
+Target g(Source x) {
+    return Target{ x.i }; // #dr2627-g
+}
+
+template<typename T, int N>
+struct E {
+  T i : N;
+};
+
+template std::int16_t g(E<int, 16>);
+template std::int16_t g(E<unsigned, 15>);
+template std::int16_t g(E<unsigned, 16>);
+// since-cxx11-error-re@#dr2627-g {{non-constant-expression cannot be narrowed from type 'unsigned int' to '{{.+}}' in initializer list}}
+//   since-cxx11-note-re@-2 {{in instantiation of function template specialization 'dr2627::g<{{.+}}, dr2627::E<unsigned int, 16>>' requested here}}
+//   since-cxx11-note@#dr2627-g {{insert an explicit cast to silence this issue}}
+template std::uint16_t g(E<unsigned, 16>);
+template std::uint16_t g(E<int, 1>);
+// since-cxx11-error-re@#dr2627-g {{non-constant-expression cannot be narrowed from type 'int' to '{{.+}}' in initializer list}}
+//   since-cxx11-note-re@-2 {{in instantiation of function template specialization 'dr2627::g<{{.+}}, dr2627::E<int, 1>>' requested here}}
+//   since-cxx11-note@#dr2627-g {{insert an explicit cast to silence this issue}}
+
+template bool g(E<unsigned, 1>);
+template bool g(E<int, 1>);
+// since-cxx11-error@#dr2627-g {{non-constant-expression cannot be narrowed from type 'int' to 'bool' in initializer list}}
+//   since-cxx11-note@-2 {{in instantiation of function template specialization 'dr2627::g<bool, dr2627::E<int, 1>>' requested here}}
+//   since-cxx11-note@#dr2627-g {{insert an explicit cast to silence this issue}}
 #endif
 }
 
