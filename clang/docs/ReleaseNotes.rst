@@ -226,6 +226,8 @@ C++2c Feature Support
 
 Resolutions to C++ Defect Reports
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- Implemented `CWG2351 <https://wg21.link/CWG2351>`_ which allows ``void{}``
+  as a prvalue of type ``void``.
 
 - Implemented `CWG2598 <https://wg21.link/CWG2598>`_ and `CWG2096 <https://wg21.link/CWG2096>`_,
   making unions (that have either no members or at least one literal member) literal types.
