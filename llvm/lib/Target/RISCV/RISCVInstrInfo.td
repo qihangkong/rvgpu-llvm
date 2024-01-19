@@ -1625,9 +1625,25 @@ let isBarrier = 1, isBranch = 1, isIndirectBranch = 1, isTerminator = 1 in
 def PseudoBRIND : Pseudo<(outs), (ins GPRJALR:$rs1, simm12:$imm12), []>,
                   PseudoInstExpansion<(JALR X0, GPR:$rs1, simm12:$imm12)>;
 
+let Predicates = [HasStdExtZicfilp],
+    isBarrier = 1, isBranch = 1, isIndirectBranch = 1, isTerminator = 1 in {
+def PseudoBRINDNonX7 : Pseudo<(outs), (ins GPRJALRNonX7:$rs1, simm12:$imm12), []>,
+                       PseudoInstExpansion<(JALR X0, GPR:$rs1, simm12:$imm12)>;
+}
+
+// For Zicfilp, need to avoid using X7/T2 for indirect branches which need
+// landing pad.
+let Predicates = [HasStdExtZicfilp] in {
+def : Pat<(brind GPRJALRNonX7:$rs1), (PseudoBRINDNonX7 GPRJALRNonX7:$rs1, 0)>;
+def : Pat<(brind (add GPRJALRNonX7:$rs1, simm12:$imm12)),
+          (PseudoBRINDNonX7 GPRJALRNonX7:$rs1, simm12:$imm12)>;
+}
+
+let Predicates = [NoStdExtZicfilp] in {
 def : Pat<(brind GPRJALR:$rs1), (PseudoBRIND GPRJALR:$rs1, 0)>;
 def : Pat<(brind (add GPRJALR:$rs1, simm12:$imm12)),
           (PseudoBRIND GPRJALR:$rs1, simm12:$imm12)>;
+}
 
 // PseudoCALLReg is a generic pseudo instruction for calls which will eventually
 // expand to auipc and jalr while encoding, with any given register used as the
