@@ -60,6 +60,11 @@ static BoolValue &evaluateBooleanEquality(const Expr &LHS, const Expr &RHS,
     if (auto *RHSBool = dyn_cast_or_null<BoolValue>(RHSValue))
       return Env.makeIff(*LHSBool, *RHSBool);
 
+  if (auto *LHSPtr = dyn_cast_or_null<PointerValue>(LHSValue))
+    if (auto *RHSPtr = dyn_cast_or_null<PointerValue>(RHSValue))
+      return Env.getBoolLiteralValue(&LHSPtr->getPointeeLoc() ==
+                                     &RHSPtr->getPointeeLoc());
+
   return Env.makeAtomicBoolValue();
 }
 

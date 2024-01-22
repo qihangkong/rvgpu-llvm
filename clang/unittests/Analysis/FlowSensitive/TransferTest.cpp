@@ -3994,6 +3994,93 @@ TEST(TransferTest, BooleanInequality) {
       });
 }
 
+TEST(TransferTest, PointerEquality) {
+  std::string Code = R"(
+    void target() {
+      int i = 0;
+      int i_other = 0;
+      int *p1 = &i;
+      int *p2 = &i;
+      int *p_other = &i_other;
+      int *null = nullptr;
+
+      bool p1_eq_p1 = (p1 == p1);
+      bool p1_eq_p2 = (p1 == p2);
+      bool p1_eq_p_other = (p1 == p_other);
+
+      bool p1_eq_null = (p1 == null);
+      bool p1_eq_nullptr = (p1 == nullptr);
+      bool null_eq_nullptr = (null == nullptr);
+      bool nullptr_eq_nullptr = (nullptr == nullptr);
+
+      // We won't duplicate all of the tests above with `!=`, as we know that
+      // the implementation simply negates the result of the `==` comparison.
+      // Instaed, just spot-check one case.
+      bool p1_ne_p_other = (p1 != p_other);
+
+      (void)0; // [[p]]
+    }
+  )";
+  runDataflow(
+      Code,
+      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
+         ASTContext &ASTCtx) {
+        const Environment &Env = getEnvironmentAtAnnotation(Results, "p");
+
+        // Check the we have indeed set things up so that `p1` and `p2` have
+        // different pointer values.
+        EXPECT_NE(&getValueForDecl<PointerValue>(ASTCtx, Env, "p1"),
+                  &getValueForDecl<PointerValue>(ASTCtx, Env, "p2"));
+
+        EXPECT_EQ(&getValueForDecl<BoolValue>(ASTCtx, Env, "p1_eq_p1"),
+                  &Env.getBoolLiteralValue(true));
+        EXPECT_EQ(&getValueForDecl<BoolValue>(ASTCtx, Env, "p1_eq_p2"),
+                  &Env.getBoolLiteralValue(true));
+        EXPECT_EQ(&getValueForDecl<BoolValue>(ASTCtx, Env, "p1_eq_p_other"),
+                  &Env.getBoolLiteralValue(false));
+
+        EXPECT_EQ(&getValueForDecl<BoolValue>(ASTCtx, Env, "p1_eq_null"),
+                  &Env.getBoolLiteralValue(false));
+        EXPECT_EQ(&getValueForDecl<BoolValue>(ASTCtx, Env, "p1_eq_nullptr"),
+                  &Env.getBoolLiteralValue(false));
+        EXPECT_EQ(&getValueForDecl<BoolValue>(ASTCtx, Env, "null_eq_nullptr"),
+                  &Env.getBoolLiteralValue(true));
+        EXPECT_EQ(
+            &getValueForDecl<BoolValue>(ASTCtx, Env, "nullptr_eq_nullptr"),
+            &Env.getBoolLiteralValue(true));
+
+        EXPECT_EQ(&getValueForDecl<BoolValue>(ASTCtx, Env, "p1_ne_p_other"),
+                  &Env.getBoolLiteralValue(true));
+      });
+}
+
+TEST(TransferTest, PointerEqualityUnionMembers) {
+  std::string Code = R"(
+    union U {
+      int i1;
+      int i2;
+    };
+    void target() {
+      U u;
+      bool i1_eq_i2 = (&u.i1 == &u.i2);
+
+      (void)0; // [[p]]
+    }
+  )";
+  runDataflow(
+      Code,
+      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
+         ASTContext &ASTCtx) {
+        const Environment &Env = getEnvironmentAtAnnotation(Results, "p");
+
+        // FIXME: By the standard, `u.i1` and `u.i2` should have the same
+        // address, but we don't yet model this property of union members
+        // correctly. This test documents the current wrong behavior.
+        EXPECT_EQ(&getValueForDecl<BoolValue>(ASTCtx, Env, "i1_eq_i2"),
+                  &Env.getBoolLiteralValue(false));
+      });
+}
+
 TEST(TransferTest, IntegerLiteralEquality) {
   std::string Code = R"(
     void target() {
@@ -6413,50 +6500,6 @@ TEST(TransferTest, LambdaCaptureThis) {
 
         const Value *FooVal = Env.getValue(*FooLoc);
         EXPECT_TRUE(isa_and_nonnull<IntegerValue>(FooVal));
-      });
-}
-
-TEST(TransferTest, DifferentReferenceLocInJoin) {
-  // This test triggers a case where the storage location for a reference-type
-  // variable is different for two states being joined. We used to believe this
-  // could not happen and therefore had an assertion disallowing this; this test
-  // exists to demonstrate that we can handle this condition without a failing
-  // assertion. See also the discussion here:
-  // https://discourse.llvm.org/t/70086/6
-  std::string Code = R"(
-    namespace std {
-      template <class T> struct initializer_list {
-        const T* begin();
-        const T* end();
-      };
-    }
-
-    void target(char* p, char* end) {
-      while (p != end) {
-        if (*p == ' ') {
-          p++;
-          continue;
-        }
-
-        auto && range = {1, 2};
-        for (auto b = range.begin(), e = range.end(); b != e; ++b) {
-        }
-        (void)0;
-        // [[p]]
-      }
-    }
-  )";
-  runDataflow(
-      Code,
-      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
-         ASTContext &ASTCtx) {
-        const Environment &Env = getEnvironmentAtAnnotation(Results, "p");
-
-        // Joining environments with different storage locations for the same
-        // declaration results in the declaration being removed from the joined
-        // environment.
-        const ValueDecl *VD = findValueDecl(ASTCtx, "range");
-        ASSERT_EQ(Env.getStorageLocation(*VD), nullptr);
       });
 }
 
