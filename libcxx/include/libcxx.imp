@@ -643,6 +643,7 @@
   { include: [ "<__ranges/single_view.h>", "private", "<ranges>", "public" ] },
   { include: [ "<__ranges/size.h>", "private", "<ranges>", "public" ] },
   { include: [ "<__ranges/split_view.h>", "private", "<ranges>", "public" ] },
+  { include: [ "<__ranges/stride_view.h>", "private", "<ranges>", "public" ] },
   { include: [ "<__ranges/subrange.h>", "private", "<ranges>", "public" ] },
   { include: [ "<__ranges/take_view.h>", "private", "<ranges>", "public" ] },
   { include: [ "<__ranges/take_while_view.h>", "private", "<ranges>", "public" ] },
