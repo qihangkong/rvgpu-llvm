@@ -1223,6 +1223,38 @@ void ASTDeclContextNameLookupTrait::ReadDataInto(internal_key_type,
   }
 }
 
+ModuleFile *SpecializationsLookupTrait::ReadFileRef(const unsigned char *&d) {
+  using namespace llvm::support;
+
+  uint32_t ModuleFileID =
+      endian::readNext<uint32_t, llvm::endianness::little, unaligned>(d);
+  return Reader.getLocalModuleFile(F, ModuleFileID);
+}
+
+SpecializationsLookupTrait::internal_key_type
+SpecializationsLookupTrait::ReadKey(const unsigned char *d, unsigned) {
+  using namespace llvm::support;
+  return endian::readNext<uint32_t, llvm::endianness::little, unaligned>(d);
+}
+
+std::pair<unsigned, unsigned>
+SpecializationsLookupTrait::ReadKeyDataLength(const unsigned char *&d) {
+  return readULEBKeyDataLength(d);
+}
+
+void SpecializationsLookupTrait::ReadDataInto(internal_key_type,
+                                              const unsigned char *d,
+                                              unsigned DataLen,
+                                              data_type_builder &Val) {
+  using namespace llvm::support;
+
+  for (unsigned NumDecls = DataLen / 4; NumDecls; --NumDecls) {
+    uint32_t LocalID =
+        endian::readNext<uint32_t, llvm::endianness::little, unaligned>(d);
+    Val.insert(Reader.getGlobalDeclID(F, LocalID));
+  }
+}
+
 bool ASTReader::ReadLexicalDeclContextStorage(ModuleFile &M,
                                               BitstreamCursor &Cursor,
                                               uint64_t Offset,
@@ -1308,7 +1340,49 @@ bool ASTReader::ReadVisibleDeclContextStorage(ModuleFile &M,
   // We can't safely determine the primary context yet, so delay attaching the
   // lookup table until we're done with recursive deserialization.
   auto *Data = (const unsigned char*)Blob.data();
-  PendingVisibleUpdates[ID].push_back(PendingVisibleUpdate{&M, Data});
+  PendingVisibleUpdates[ID].push_back(UpdateData{&M, Data});
+  return false;
+}
+
+void ASTReader::AddSpecializations(const Decl *D, const unsigned char *Data,
+                                   ModuleFile &M) {
+  D = D->getCanonicalDecl();
+  SpecializationsLookups[D].Table.add(
+      &M, Data, reader::SpecializationsLookupTrait(*this, M));
+}
+
+bool ASTReader::ReadSpecializations(ModuleFile &M, BitstreamCursor &Cursor,
+                                    uint64_t Offset, Decl *D) {
+  assert(Offset != 0);
+
+  SavedStreamPosition SavedPosition(Cursor);
+  if (llvm::Error Err = Cursor.JumpToBit(Offset)) {
+    Error(std::move(Err));
+    return true;
+  }
+
+  RecordData Record;
+  StringRef Blob;
+  Expected<unsigned> MaybeCode = Cursor.ReadCode();
+  if (!MaybeCode) {
+    Error(MaybeCode.takeError());
+    return true;
+  }
+  unsigned Code = MaybeCode.get();
+
+  Expected<unsigned> MaybeRecCode = Cursor.readRecord(Code, Record, &Blob);
+  if (!MaybeRecCode) {
+    Error(MaybeRecCode.takeError());
+    return true;
+  }
+  unsigned RecCode = MaybeRecCode.get();
+  if (RecCode != DECL_SPECIALIZATIONS) {
+    Error("Expected decl specs block");
+    return true;
+  }
+
+  auto *Data = (const unsigned char *)Blob.data();
+  AddSpecializations(D, Data, M);
   return false;
 }
 
@@ -3408,7 +3482,20 @@ llvm::Error ASTReader::ReadASTBlock(ModuleFile &F,
       unsigned Idx = 0;
       serialization::DeclID ID = ReadDeclID(F, Record, Idx);
       auto *Data = (const unsigned char*)Blob.data();
-      PendingVisibleUpdates[ID].push_back(PendingVisibleUpdate{&F, Data});
+      PendingVisibleUpdates[ID].push_back(UpdateData{&F, Data});
+      // If we've already loaded the decl, perform the updates when we finish
+      // loading this block.
+      if (Decl *D = GetExistingDecl(ID))
+        PendingUpdateRecords.push_back(
+            PendingUpdateRecord(ID, D, /*JustLoaded=*/false));
+      break;
+    }
+
+    case UPDATE_SPECIALIZATION: {
+      unsigned Idx = 0;
+      serialization::DeclID ID = ReadDeclID(F, Record, Idx);
+      auto *Data = (const unsigned char *)Blob.data();
+      PendingSpecializationsUpdates[ID].push_back(UpdateData{&F, Data});
       // If we've already loaded the decl, perform the updates when we finish
       // loading this block.
       if (Decl *D = GetExistingDecl(ID))
@@ -7547,13 +7634,13 @@ void ASTReader::CompleteRedeclChain(const Decl *D) {
   }
 
   if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(D))
-    CTSD->getSpecializedTemplate()->LoadLazySpecializations();
+    const_cast<ClassTemplateSpecializationDecl *>(CTSD)->loadExternalRedecls();
   if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(D))
-    VTSD->getSpecializedTemplate()->LoadLazySpecializations();
-  if (auto *FD = dyn_cast<FunctionDecl>(D)) {
-    if (auto *Template = FD->getPrimaryTemplate())
-      Template->LoadLazySpecializations();
-  }
+    const_cast<VarTemplateSpecializationDecl *>(VTSD)->loadExternalRedecls();
+  if (auto *FD = dyn_cast<FunctionDecl>(D))
+    if (auto *FDInfo = FD->getTemplateSpecializationInfo())
+      const_cast<FunctionTemplateSpecializationInfo *>(FDInfo)
+          ->loadExternalRedecls();
 }
 
 CXXCtorInitializer **
@@ -7982,6 +8069,66 @@ ASTReader::FindExternalVisibleDeclsByName(const DeclContext *DC,
   return !Decls.empty();
 }
 
+unsigned
+clang::GetTemplateArgsStableHash(ArrayRef<TemplateArgument> TemplateArgs) {
+  // FIXME: ODR hashing may not be the best mechanism to hash the template
+  // arguments. ODR hashing is (or perhaps, should be) about determining whether
+  // two things are spelled the same way and have the same meaning (as required
+  // by the C++ ODR), whereas what we want here is whether they have the same
+  // meaning regardless of spelling. Maybe we can get away with reusing ODR
+  // hashing anyway, on the basis that any canonical, non-dependent template
+  // argument should have the same (invented) spelling in every translation
+  // unit, but it is not sure that's true in all cases. There may still be cases
+  // where the canonical type includes some aspect of "whatever we saw first",
+  // in which case the ODR hash can differ across translation units for
+  // non-dependent, canonical template arguments that are spelled differently
+  // but have the same meaning. But it is not easy to raise examples.
+  ODRHash Hasher;
+  Hasher.AddInteger(TemplateArgs.size());
+  for (const TemplateArgument &TemplateArg : TemplateArgs)
+    Hasher.AddTemplateArgument(TemplateArg);
+  return Hasher.CalculateHash();
+}
+
+bool ASTReader::LoadExternalSpecializations(
+    const Decl *D, ArrayRef<TemplateArgument> TemplateArgs) {
+  assert(D);
+
+  auto It = SpecializationsLookups.find(D);
+  if (It == SpecializationsLookups.end())
+    return false;
+
+  Deserializing LookupResults(this);
+  auto HashValue = GetTemplateArgsStableHash(TemplateArgs);
+
+  bool LoadedAnyDecls = false;
+  for (DeclID ID : It->second.Table.find(HashValue)) {
+    if (GetExistingDecl(ID))
+      continue;
+    LoadedAnyDecls = true;
+    GetDecl(ID);
+  }
+
+  return LoadedAnyDecls;
+}
+
+void ASTReader::LoadAllExternalSpecializations(const Decl *D) {
+  assert(D);
+
+  auto It = SpecializationsLookups.find(D);
+  if (It == SpecializationsLookups.end())
+    return;
+
+  Deserializing LookupResults(this);
+
+  for (DeclID ID : It->second.Table.findAll())
+    GetDecl(ID);
+
+  // Since we've loaded all the specializations, we can erase it from
+  // the lookup table.
+  SpecializationsLookups.erase(It);
+}
+
 void ASTReader::completeVisibleDeclsMap(const DeclContext *DC) {
   if (!DC->hasExternalVisibleStorage())
     return;
@@ -8009,6 +8156,13 @@ const serialization::reader::DeclContextLookupTable *
 ASTReader::getLoadedLookupTables(DeclContext *Primary) const {
   auto I = Lookups.find(Primary);
   return I == Lookups.end() ? nullptr : &I->second;
+}
+
+serialization::reader::SpecializationsLookupTable *
+ASTReader::getLoadedSpecializationsLookupTables(const Decl *D) {
+  assert(D->isCanonicalDecl());
+  auto I = SpecializationsLookups.find(D);
+  return I == SpecializationsLookups.end() ? nullptr : &I->second;
 }
 
 /// Under non-PCH compilation the consumer receives the objc methods
