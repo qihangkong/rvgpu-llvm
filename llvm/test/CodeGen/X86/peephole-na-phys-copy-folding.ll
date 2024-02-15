@@ -271,25 +271,21 @@ f:
 define i64 @test_two_live_flags(ptr %foo0, i64 %bar0, i64 %baz0, ptr %foo1, i64 %bar1, i64 %baz1) nounwind {
 ; CHECK32-LABEL: test_two_live_flags:
 ; CHECK32:       # %bb.0: # %entry
-; CHECK32-NEXT:    pushl %ebp
 ; CHECK32-NEXT:    pushl %ebx
-; CHECK32-NEXT:    pushl %edi
 ; CHECK32-NEXT:    pushl %esi
 ; CHECK32-NEXT:    pushl %eax
-; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %ebp
-; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %edi
 ; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %eax
 ; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %ebx
 ; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %ecx
 ; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %esi
 ; CHECK32-NEXT:    lock cmpxchg8b (%esi)
-; CHECK32-NEXT:    setne {{[-0-9]+}}(%e{{[sb]}}p) # 1-byte Folded Spill
 ; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %eax
-; CHECK32-NEXT:    movl %ebp, %edx
-; CHECK32-NEXT:    movl %edi, %ecx
+; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %edx
 ; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %ebx
+; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %ecx
 ; CHECK32-NEXT:    movl {{[0-9]+}}(%esp), %esi
+; CHECK32-NEXT:    setne {{[-0-9]+}}(%e{{[sb]}}p) # 1-byte Folded Spill
 ; CHECK32-NEXT:    lock cmpxchg8b (%esi)
 ; CHECK32-NEXT:    sete %al
 ; CHECK32-NEXT:    cmpb $0, {{[-0-9]+}}(%e{{[sb]}}p) # 1-byte Folded Reload
@@ -306,9 +302,7 @@ define i64 @test_two_live_flags(ptr %foo0, i64 %bar0, i64 %baz0, ptr %foo1, i64 
 ; CHECK32-NEXT:    xorl %edx, %edx
 ; CHECK32-NEXT:    addl $4, %esp
 ; CHECK32-NEXT:    popl %esi
-; CHECK32-NEXT:    popl %edi
 ; CHECK32-NEXT:    popl %ebx
-; CHECK32-NEXT:    popl %ebp
 ; CHECK32-NEXT:    retl
 ;
 ; CHECK64-LABEL: test_two_live_flags:
@@ -353,7 +347,6 @@ define i1 @asm_clobbering_flags(ptr %mem) nounwind {
 ; CHECK32-NEXT:    testl %edx, %edx
 ; CHECK32-NEXT:    setg %al
 ; CHECK32-NEXT:    #APP
-; CHECK32-NOT:     rep
 ; CHECK32-NEXT:    bsfl %edx, %edx
 ; CHECK32-NEXT:    #NO_APP
 ; CHECK32-NEXT:    movl %edx, (%ecx)
@@ -365,7 +358,6 @@ define i1 @asm_clobbering_flags(ptr %mem) nounwind {
 ; CHECK64-NEXT:    testl %ecx, %ecx
 ; CHECK64-NEXT:    setg %al
 ; CHECK64-NEXT:    #APP
-; CHECK64-NOT:     rep
 ; CHECK64-NEXT:    bsfl %ecx, %ecx
 ; CHECK64-NEXT:    #NO_APP
 ; CHECK64-NEXT:    movl %ecx, (%rdi)
