@@ -6432,7 +6432,7 @@ void InitializationSequence::InitializeFrom(Sema &S,
   // For HLSL ext vector types we allow list initialization behavior for C++
   // constructor syntax. This is accomplished by converting initialization
   // arguments an InitListExpr late.
-  if (S.getLangOpts().HLSL && DestType->isExtVectorType() &&
+  if (S.getLangOpts().HLSL && Args.size() > 1 && DestType->isExtVectorType() &&
       (SourceType.isNull() ||
        !Context.hasSameUnqualifiedType(SourceType, DestType))) {
 
@@ -8491,6 +8491,10 @@ Sema::CreateMaterializeTemporaryExpr(QualType T, Expr *Temporary,
   // are done in both CreateMaterializeTemporaryExpr and MaybeBindToTemporary,
   // but there may be a chance to merge them.
   Cleanup.setExprNeedsCleanups(false);
+  if (isInLifetimeExtendingContext()) {
+    auto &Record = ExprEvalContexts.back();
+    Record.ForRangeLifetimeExtendTemps.push_back(MTE);
+  }
   return MTE;
 }
 
@@ -10731,7 +10735,14 @@ QualType Sema::DeduceTemplateSpecializationFromInitializer(
     bool HasAnyDeductionGuide = false;
 
     auto SynthesizeAggrGuide = [&](InitListExpr *ListInit) {
-      auto *RD = cast<CXXRecordDecl>(Template->getTemplatedDecl());
+      auto *Pattern = Template;
+      while (Pattern->getInstantiatedFromMemberTemplate()) {
+        if (Pattern->isMemberSpecialization())
+          break;
+        Pattern = Pattern->getInstantiatedFromMemberTemplate();
+      }
+
+      auto *RD = cast<CXXRecordDecl>(Pattern->getTemplatedDecl());
       if (!(RD->getDefinition() && RD->isAggregate()))
         return;
       QualType Ty = Context.getRecordType(RD);
