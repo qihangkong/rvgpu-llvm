@@ -30,6 +30,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendOptions.h"
 #include "clang/Frontend/MultiplexConsumer.h"
+#include "clang/InstallAPI/HeaderFile.h"
 #include "clang/Lex/MacroInfo.h"
 #include "clang/Lex/PPCallbacks.h"
 #include "clang/Lex/Preprocessor.h"
@@ -61,9 +62,6 @@ std::optional<std::string> getRelativeIncludeName(const CompilerInstance &CI,
          "CompilerInstance does not have a FileNamager!");
 
   using namespace llvm::sys;
-  // Matches framework include patterns
-  const llvm::Regex Rule("/(.+)\\.framework/(.+)?Headers/(.+)");
-
   const auto &FS = CI.getVirtualFileSystem();
 
   SmallString<128> FilePath(File.begin(), File.end());
@@ -105,10 +103,10 @@ std::optional<std::string> getRelativeIncludeName(const CompilerInstance &CI,
       // Special case Apple .sdk folders since the search path is typically a
       // symlink like `iPhoneSimulator14.5.sdk` while the file is instead
       // located in `iPhoneSimulator.sdk` (the real folder).
-      if (NI->endswith(".sdk") && DI->endswith(".sdk")) {
+      if (NI->ends_with(".sdk") && DI->ends_with(".sdk")) {
         StringRef NBasename = path::stem(*NI);
         StringRef DBasename = path::stem(*DI);
-        if (DBasename.startswith(NBasename))
+        if (DBasename.starts_with(NBasename))
           continue;
       }
 
@@ -147,7 +145,8 @@ std::optional<std::string> getRelativeIncludeName(const CompilerInstance &CI,
       // include name `<Framework/Header.h>`
       if (Entry.IsFramework) {
         SmallVector<StringRef, 4> Matches;
-        Rule.match(File, &Matches);
+        clang::installapi::HeaderFile::getFrameworkIncludeRule().match(
+            File, &Matches);
         // Returned matches are always in stable order.
         if (Matches.size() != 4)
           return std::nullopt;

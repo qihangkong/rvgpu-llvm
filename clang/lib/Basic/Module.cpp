@@ -166,7 +166,8 @@ bool Module::isForBuilding(const LangOptions &LangOpts) const {
   // for either.
   if (!LangOpts.isCompilingModule() && getTopLevelModule()->IsFramework &&
       CurrentModule == LangOpts.ModuleName &&
-      !CurrentModule.endswith("_Private") && TopLevelName.endswith("_Private"))
+      !CurrentModule.ends_with("_Private") &&
+      TopLevelName.ends_with("_Private"))
     TopLevelName = TopLevelName.drop_back(8);
 
   return TopLevelName == CurrentModule;
@@ -375,7 +376,7 @@ Module *Module::findOrInferSubmodule(StringRef Name) {
 
 Module *Module::getGlobalModuleFragment() const {
   assert(isNamedModuleUnit() && "We should only query the global module "
-                                "fragment from the C++ 20 Named modules");
+                                "fragment from the C++20 Named modules");
 
   for (auto *SubModule : SubModules)
     if (SubModule->isExplicitGlobalModule())
@@ -386,7 +387,7 @@ Module *Module::getGlobalModuleFragment() const {
 
 Module *Module::getPrivateModuleFragment() const {
   assert(isNamedModuleUnit() && "We should only query the private module "
-                                "fragment from the C++ 20 Named modules");
+                                "fragment from the C++20 Named modules");
 
   for (auto *SubModule : SubModules)
     if (SubModule->isPrivateModule())
