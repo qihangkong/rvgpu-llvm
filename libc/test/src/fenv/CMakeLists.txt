@@ -1,9 +1,9 @@
-add_custom_target(libc_fenv_unittests)
+add_custom_target(libc_fenv_tests)
 
-add_libc_unittest(
+add_libc_test(
   rounding_mode_test
   SUITE
-    libc_fenv_unittests
+    libc_fenv_tests
   SRCS
     rounding_mode_test.cpp
   DEPENDS
@@ -11,10 +11,10 @@ add_libc_unittest(
     libc.src.fenv.fesetround
 )
 
-add_libc_unittest(
+add_libc_test(
   exception_status_test
   SUITE
-    libc_fenv_unittests
+    libc_fenv_tests
   SRCS
     exception_status_test.cpp
   DEPENDS
@@ -24,10 +24,10 @@ add_libc_unittest(
     libc.src.__support.FPUtil.fenv_impl
 )
 
-add_libc_unittest(
+add_libc_test(
   getenv_and_setenv_test
   SUITE
-    libc_fenv_unittests
+    libc_fenv_tests
   SRCS
     getenv_and_setenv_test.cpp
   DEPENDS
@@ -35,13 +35,16 @@ add_libc_unittest(
     libc.src.fenv.fegetround
     libc.src.fenv.fesetenv
     libc.src.fenv.fesetround
+    libc.src.fenv.feclearexcept
+    libc.src.fenv.feraiseexcept
+    libc.src.fenv.fetestexcept
     libc.src.__support.FPUtil.fenv_impl
 )
 
-add_libc_unittest(
+add_libc_test(
   exception_flags_test
   SUITE
-    libc_fenv_unittests
+    libc_fenv_tests
   SRCS
     exception_flags_test.cpp
   DEPENDS
@@ -50,10 +53,10 @@ add_libc_unittest(
     libc.src.__support.FPUtil.fenv_impl
 )
 
-add_libc_unittest(
+add_libc_test(
   feupdateenv_test
   SUITE
-    libc_fenv_unittests
+    libc_fenv_tests
   SRCS
     feupdateenv_test.cpp
   DEPENDS
@@ -62,10 +65,10 @@ add_libc_unittest(
     libc.src.__support.FPUtil.fenv_impl
 )
 
-add_libc_unittest(
+add_libc_test(
   feclearexcept_test
   SUITE
-    libc_fenv_unittests
+    libc_fenv_tests
   SRCS
     feclearexcept_test.cpp
   DEPENDS
@@ -73,10 +76,10 @@ add_libc_unittest(
     libc.src.__support.FPUtil.fenv_impl
 )
 
-add_libc_unittest(
+add_libc_test(
   feenableexcept_test
   SUITE
-    libc_fenv_unittests
+    libc_fenv_tests
   SRCS
     feenableexcept_test.cpp
   DEPENDS
@@ -96,7 +99,7 @@ if (NOT (LLVM_USE_SANITIZER OR (${LIBC_TARGET_OS} STREQUAL "windows")
     enabled_exceptions_test
     UNIT_TEST_ONLY
     SUITE
-      libc_fenv_unittests
+      libc_fenv_tests
     SRCS
       enabled_exceptions_test.cpp
     DEPENDS
@@ -113,7 +116,7 @@ if (NOT (LLVM_USE_SANITIZER OR (${LIBC_TARGET_OS} STREQUAL "windows")
     feholdexcept_test
     UNIT_TEST_ONLY
     SUITE
-      libc_fenv_unittests
+      libc_fenv_tests
     SRCS
       feholdexcept_test.cpp
     DEPENDS
