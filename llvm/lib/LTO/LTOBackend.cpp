@@ -472,8 +472,9 @@ static void splitCodeGen(const Config &C, TargetMachine *TM,
 
   // Try target-specific module splitting first, then fallback to the default.
   if (!TM->splitModule(Mod, ParallelCodeGenParallelismLevel,
-                                HandleModulePartition)) {
-    SplitModule(Mod, ParallelCodeGenParallelismLevel, HandleModulePartition, false);
+                       HandleModulePartition)) {
+    SplitModule(Mod, ParallelCodeGenParallelismLevel, HandleModulePartition,
+                false);
   }
 
   // Because the inner lambda (which runs in a worker thread) captures our local
