@@ -2745,8 +2745,9 @@ static Instruction *foldSelectWithFCmpToFabs(SelectInst &SI,
     if (!SI.hasNoNaNs())
       return nullptr;
 
-    bool functionHasNoSignedZeroes = SI.getParent()->getParent()->hasFnAttribute("no-signed-zeros-fp-math");
-    if(!functionHasNoSignedZeroes && !SI.hasNoSignedZeros())
+    bool FunctionHasNoSignedZeroes =
+        SI.getParent()->getParent()->hasFnAttribute("no-signed-zeros-fp-math");
+    if (!FunctionHasNoSignedZeroes && !SI.hasNoSignedZeros())
       return nullptr;
 
     if (Swap)
