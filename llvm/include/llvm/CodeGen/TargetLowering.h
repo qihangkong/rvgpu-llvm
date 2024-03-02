@@ -30,6 +30,7 @@
 #include "llvm/CodeGen/DAGCombine.h"
 #include "llvm/CodeGen/ISDOpcodes.h"
 #include "llvm/CodeGen/LowLevelTypeUtils.h"
+#include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/RuntimeLibcalls.h"
 #include "llvm/CodeGen/SelectionDAG.h"
@@ -1196,6 +1197,11 @@ public:
     MaybeAlign align = Align(1);   // alignment
 
     MachineMemOperand::Flags flags = MachineMemOperand::MONone;
+
+    AtomicOrdering ordering = AtomicOrdering::NotAtomic;
+
+    MachineMemOperand *MMO = nullptr;
+
     IntrinsicInfo() = default;
   };
 
