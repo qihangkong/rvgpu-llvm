@@ -5495,6 +5495,34 @@ bool AMDGPULegalizerInfo::legalizeLDSKernelId(MachineInstr &MI,
   return true;
 }
 
+bool AMDGPULegalizerInfo::legalizePreloadImplicitarg(
+    MachineInstr &MI, MachineRegisterInfo &MRI, MachineIRBuilder &B) const {
+  assert(ST.hasKernargPreload());
+  MachineFunction &MF = B.getMF();
+  Register OrigReg = MI.getOperand(0).getReg();
+  const SIMachineFunctionInfo *MFI = MF.getInfo<SIMachineFunctionInfo>();
+  // A unique identifier defined as the offset from start of implicit args added
+  // to the number of formal args.
+  unsigned ImplictArgIdx =
+      MI.getOperand(2).getImm() + MF.getFunction().arg_size();
+  auto &ArgDesc =
+      MFI->getArgInfo().PreloadKernArgs.find(ImplictArgIdx)->getSecond();
+  assert(ArgDesc.Regs.size() == 1);
+  Register Reg = ArgDesc.Regs[0];
+  ArgDescriptor Arg = ArgDescriptor::createRegister(Reg, ArgDesc.getMask());
+  Register Dst = MRI.createGenericVirtualRegister(LLT::scalar(32));
+  loadInputValue(Dst, B, &Arg, &AMDGPU::SReg_32RegClass, LLT::scalar(32));
+  if (MRI.getType(OrigReg) != LLT::scalar(32)) {
+    assert(MRI.getType(OrigReg) == LLT::scalar(16));
+    B.buildTrunc(OrigReg, Dst);
+  } else {
+    B.buildCopy(OrigReg, Dst);
+  }
+
+  MI.eraseFromParent();
+  return true;
+}
+
 bool AMDGPULegalizerInfo::legalizeIsAddrSpace(MachineInstr &MI,
                                               MachineRegisterInfo &MRI,
                                               MachineIRBuilder &B,
@@ -7128,6 +7156,8 @@ bool AMDGPULegalizerInfo::legalizeIntrinsic(LegalizerHelper &Helper,
   case Intrinsic::amdgcn_lds_kernel_id:
     return legalizePreloadedArgIntrin(MI, MRI, B,
                                       AMDGPUFunctionArgInfo::LDS_KERNEL_ID);
+  case Intrinsic::amdgcn_preload_implicitarg:
+    return legalizePreloadImplicitarg(MI, MRI, B);
   case Intrinsic::amdgcn_dispatch_ptr:
     return legalizePreloadedArgIntrin(MI, MRI, B,
                                       AMDGPUFunctionArgInfo::DISPATCH_PTR);
