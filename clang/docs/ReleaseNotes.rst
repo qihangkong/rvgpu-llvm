@@ -282,6 +282,15 @@ Attribute Changes in Clang
   This allows the ``_Nullable`` and ``_Nonnull`` family of type attributes to
   apply to this class.
 
+- Introduced ``__attribute((wraps))__`` which can be added to type or variable
+  declarations. Using an attributed type or variable in an arithmetic
+  expression will define the overflow behavior for that expression as having
+  two's complement wrap-around. These expressions cannot trigger integer
+  overflow warnings or sanitizer warnings. They also cannot be optimized away
+  by some eager UB optimizations.
+
+  This attribute is ignored in C++.
+
 Improvements to Clang's diagnostics
 -----------------------------------
 - Clang now applies syntax highlighting to the code snippets it
