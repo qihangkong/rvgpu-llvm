@@ -1143,7 +1143,7 @@ genTargetOp(Fortran::lower::AbstractConverter &converter,
     }
   };
   Fortran::lower::pft::visitAllSymbols(eval, captureImplicitMap);
-  llvm::errs() << "generating targetOp\n";
+
   auto targetOp = converter.getFirOpBuilder().create<mlir::omp::TargetOp>(
       currentLocation, ifClauseOperand, deviceOperand, threadLimitOperand,
       dependTypeOperands.empty()
@@ -1151,22 +1151,9 @@ genTargetOp(Fortran::lower::AbstractConverter &converter,
           : mlir::ArrayAttr::get(converter.getFirOpBuilder().getContext(),
                                  dependTypeOperands),
       dependOperands, nowaitAttr, mapOperands);
-  mlir::Operation *targetOperation = targetOp.getOperation();
-  llvm::errs() << "NumRegions held by targetOperation = "
-               << targetOperation->getNumRegions();
-  llvm::errs() << "Number of blocks in Region 0 = "
-               << targetOperation->getRegion(0).getBlocks().size();
-  llvm::errs() << "Block that the targetOperation is in\n";
-  llvm::errs() << "generating body of TargetOp\n";
+
   genBodyOfTargetOp(converter, semaCtx, eval, genNested, targetOp, mapSymTypes,
                     mapSymLocs, mapSymbols, currentLocation);
-  llvm::errs() << "NumRegions held by targetOperation = "
-               << targetOperation->getNumRegions();
-  llvm::errs() << "Number of blocks in Region 0 = "
-               << targetOperation->getRegion(0).getBlocks().size();
-  llvm::errs() << "Block that the targetOperation is in\n";
-  //  converter.getFirOpBuilder().getInsertionBlock()->getParent()->dump();
-  targetOperation->getBlock()->dump();
 
   return targetOp;
 }
@@ -1810,10 +1797,8 @@ genOMP(Fortran::lower::AbstractConverter &converter,
               beginClauseList);
     break;
   case llvm::omp::Directive::OMPD_task:
-    //    converter.getFirOpBuilder().getInsertionBlock()->dump();
     genTaskOp(converter, semaCtx, eval, /*genNested=*/true, currentLocation,
               beginClauseList);
-    //    converter.getFirOpBuilder().getInsertionBlock()->dump();
     break;
   case llvm::omp::Directive::OMPD_taskgroup:
     genTaskGroupOp(converter, semaCtx, eval, /*genNested=*/true,
