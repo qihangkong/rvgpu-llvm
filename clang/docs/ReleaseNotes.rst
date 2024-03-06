@@ -155,6 +155,12 @@ Non-comprehensive list of changes in this release
 - ``__builtin_addc``, ``__builtin_subc``, and the other sizes of those
   builtins are now constexpr and may be used in constant expressions.
 
+* Shared libraries linked with either the ``-ffast-math``, ``-Ofast``, or
+  ``-funsafe-math-optimizations`` flags will no longer enable flush-to-zero
+  floating-point mode by default. This decision can be overridden with use of
+  ``-mdaz-ftz``. This behavior now matches GCC's behavior.
+  (`#57589 <https://github.com/llvm/llvm-project/issues/57589>`_)
+
 New Compiler Flags
 ------------------
 
