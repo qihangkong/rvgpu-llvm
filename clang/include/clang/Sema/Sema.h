@@ -7550,7 +7550,10 @@ public:
                            bool InUnqualifiedLookup = false);
   bool LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
                            CXXScopeSpec &SS);
-  bool LookupParsedName(LookupResult &R, Scope *S, CXXScopeSpec *SS,
+  bool LookupParsedName(LookupResult &R,
+                        Scope *S,
+                        CXXScopeSpec *SS,
+                        QualType ObjectType,
                         bool AllowBuiltinCreation = false,
                         bool EnteringContext = false);
   ObjCProtocolDecl *
