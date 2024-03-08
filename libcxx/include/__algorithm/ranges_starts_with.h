@@ -15,6 +15,7 @@
 #include <__functional/identity.h>
 #include <__functional/ranges_operations.h>
 #include <__iterator/concepts.h>
+#include <__iterator/distance.h>
 #include <__iterator/indirectly_comparable.h>
 #include <__ranges/access.h>
 #include <__ranges/concepts.h>
@@ -50,6 +51,17 @@ struct __fn {
       _Pred __pred   = {},
       _Proj1 __proj1 = {},
       _Proj2 __proj2 = {}) const {
+    if constexpr (sized_sentinel_for<_Sent1, _Iter1> && sized_sentinel_for<_Sent2, _Iter2>) {
+      auto __n1 = ranges::distance(__first1, __last1);
+      auto __n2 = ranges::distance(__first2, __last2);
+      if (__n2 == 0) {
+        return true;
+      }
+      if (__n2 > __n1) {
+        return false;
+      }
+    }
+
     return __mismatch::__fn::__go(
                std::move(__first1),
                std::move(__last1),
@@ -69,6 +81,17 @@ struct __fn {
     requires indirectly_comparable<iterator_t<_Range1>, iterator_t<_Range2>, _Pred, _Proj1, _Proj2>
   _LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI constexpr bool operator()(
       _Range1&& __range1, _Range2&& __range2, _Pred __pred = {}, _Proj1 __proj1 = {}, _Proj2 __proj2 = {}) const {
+    if constexpr (sized_range<_Range1> && sized_range<_Range2>) {
+      auto __n1 = ranges::size(__range1);
+      auto __n2 = ranges::size(__range2);
+      if (__n2 == 0) {
+        return true;
+      }
+      if (__n2 > __n1) {
+        return false;
+      }
+    }
+
     return __mismatch::__fn::__go(
                ranges::begin(__range1),
                ranges::end(__range1),
