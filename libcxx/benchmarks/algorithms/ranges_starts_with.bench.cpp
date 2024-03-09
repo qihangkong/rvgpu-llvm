@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <benchmark/benchmark.h>
-#include <functional>
 #include <vector>
 
 #include "test_iterators.h"
