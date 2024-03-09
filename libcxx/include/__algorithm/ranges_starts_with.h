@@ -18,6 +18,7 @@
 #include <__iterator/concepts.h>
 #include <__iterator/distance.h>
 #include <__iterator/indirectly_comparable.h>
+#include <__iterator/next.h>
 #include <__ranges/access.h>
 #include <__ranges/concepts.h>
 #include <__utility/move.h>
