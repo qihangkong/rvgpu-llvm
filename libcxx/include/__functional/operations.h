@@ -318,17 +318,17 @@ struct _LIBCPP_TEMPLATE_VIS equal_to<void> {
 template <class _Tp>
 struct __desugars_to<__equal_tag, equal_to<_Tp>, _Tp, _Tp> : true_type {};
 template <class _Tp>
-struct __desugars_to<__equal_tag, reference_wrapper<equal_to<_Tp>>, _Tp, _Tp> : true_type {};
+struct __desugars_to<__equal_tag, reference_wrapper<equal_to<_Tp> >, _Tp, _Tp> : true_type {};
 template <class _Tp>
-struct __desugars_to<__equal_tag, reference_wrapper<const equal_to<_Tp>>, _Tp, _Tp> : true_type {};
+struct __desugars_to<__equal_tag, reference_wrapper<const equal_to<_Tp> >, _Tp, _Tp> : true_type {};
 
 // In the transparent case, we do not enforce that
 template <class _Tp, class _Up>
 struct __desugars_to<__equal_tag, equal_to<void>, _Tp, _Up> : true_type {};
 template <class _Tp, class _Up>
-struct __desugars_to<__equal_tag, reference_wrapper<equal_to<void>>, _Tp, _Up> : true_type {};
+struct __desugars_to<__equal_tag, reference_wrapper<equal_to<void> >, _Tp, _Up> : true_type {};
 template <class _Tp, class _Up>
-struct __desugars_to<__equal_tag, reference_wrapper<const equal_to<void>>, _Tp, _Up> : true_type {};
+struct __desugars_to<__equal_tag, reference_wrapper<const equal_to<void> >, _Tp, _Up> : true_type {};
 
 #if _LIBCPP_STD_VER >= 14
 template <class _Tp = void>
