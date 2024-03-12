@@ -840,8 +840,6 @@ define amdgpu_kernel void @s_test_udiv24_i48(ptr addrspace(1) %out, i48 %x, i48 
 ; GCN-IR-NEXT:    s_and_b32 s4, s6, 0xff000000
 ; GCN-IR-NEXT:    s_lshr_b64 s[8:9], s[2:3], 24
 ; GCN-IR-NEXT:    s_lshr_b64 s[2:3], s[4:5], 24
-; GCN-IR-NEXT:    s_and_b32 s9, s9, 0xffff
-; GCN-IR-NEXT:    s_and_b32 s3, s3, 0xffff
 ; GCN-IR-NEXT:    v_cmp_eq_u64_e64 s[4:5], s[2:3], 0
 ; GCN-IR-NEXT:    v_cmp_eq_u64_e64 s[6:7], s[8:9], 0
 ; GCN-IR-NEXT:    s_flbit_i32_b64 s10, s[2:3]

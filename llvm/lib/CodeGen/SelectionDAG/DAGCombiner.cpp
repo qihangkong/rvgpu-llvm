@@ -15383,6 +15383,12 @@ SDValue DAGCombiner::visitFREEZE(SDNode *N) {
   if (DAG.isGuaranteedNotToBeUndefOrPoison(N0, /*PoisonOnly*/ false))
     return N0;
 
+  // There is a reverse transform in visitEXTRACT_VECTOR_ELT, so we need to
+  // avoid infinite looping by not pulling freeze through EXTRACT_VECTOR_ELT
+  // here.
+  if (N0.getOpcode() == ISD::EXTRACT_VECTOR_ELT)
+    return SDValue();
+
   // Fold freeze(op(x, ...)) -> op(freeze(x), ...).
   // Try to push freeze through instructions that propagate but don't produce
   // poison as far as possible. If an operand of freeze follows three
