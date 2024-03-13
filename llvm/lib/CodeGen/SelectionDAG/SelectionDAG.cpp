@@ -5012,6 +5012,10 @@ bool SelectionDAG::isGuaranteedNotToBeUndefOrPoison(SDValue Op,
   case ISD::TargetFrameIndex:
     return true;
 
+  case ISD::CopyFromReg:
+    // Treat CopyFromReg as freezing the value.
+    return true;
+
   case ISD::UNDEF:
     return PoisonOnly;
 
