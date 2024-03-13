@@ -1511,9 +1511,6 @@ static bool IsSVECalleeSave(MachineBasicBlock::iterator I) {
   case AArch64::PTRUE_C_B:
   case AArch64::LD1B_2Z_IMM:
   case AArch64::ST1B_2Z_IMM:
-    assert((I->getMF()->getSubtarget<AArch64Subtarget>().hasSVE2p1() ||
-            I->getMF()->getSubtarget<AArch64Subtarget>().hasSME2()) &&
-           "Expected SME2 or SVE2.1 Targer Architecture.");
   case AArch64::STR_ZXI:
   case AArch64::STR_PXI:
   case AArch64::LDR_ZXI:
@@ -3081,8 +3078,6 @@ bool AArch64FrameLowering::spillCalleeSavedRegisters(
       PairRegs = AArch64::Z0_Z1 + (RPI.Reg1 - AArch64::Z0);
       if (!PtrueCreated) {
         PtrueCreated = true;
-        // Any one of predicate-as-count will be free to use
-        // This can be replaced in the future if needed
         PnReg = AArch64::PN8;
         BuildMI(MBB, MI, DL, TII.get(AArch64::PTRUE_C_B), PnReg)
             .setMIFlags(MachineInstr::FrameSetup);
@@ -3228,9 +3223,8 @@ bool AArch64FrameLowering::restoreCalleeSavedRegisters(
       PairRegs = AArch64::Z0_Z1 + (RPI.Reg1 - AArch64::Z0);
       if (!PtrueCreated) {
         PtrueCreated = true;
-        // Any one of predicate-as-count will be free to use
-        // This can be replaced in the future if needed
         PnReg = AArch64::PN8;
+        ;
         BuildMI(MBB, MBBI, DL, TII.get(AArch64::PTRUE_C_B), PnReg)
             .setMIFlags(MachineInstr::FrameDestroy);
       }
@@ -3257,7 +3251,6 @@ bool AArch64FrameLowering::restoreCalleeSavedRegisters(
     if (NeedsWinCFI)
       InsertSEH(MIB, TII, MachineInstr::FrameDestroy);
   }
-
   return true;
 }
 
@@ -3339,6 +3332,15 @@ void AArch64FrameLowering::determineCalleeSaves(MachineFunction &MF,
           !RegInfo->isReservedReg(MF, PairedReg))
         ExtraCSSpill = PairedReg;
     }
+
+    // If ZPR has pair registers and predicate register is not reserved, save it
+    // because it will be clobbered in spillCalleeSavedRegisters and
+    // restoreCalleeSavedRegisters
+    if (Subtarget.hasSVE2p1() || Subtarget.hasSME2())
+      if (AArch64::ZPRRegClass.contains(Reg, CSRegs[i ^ 1]) &&
+          SavedRegs.test(CSRegs[i ^ 1]) &&
+          !RegInfo->isReservedReg(MF, AArch64::P8))
+        SavedRegs.set(AArch64::P8);
   }
 
   if (MF.getFunction().getCallingConv() == CallingConv::Win64 &&
