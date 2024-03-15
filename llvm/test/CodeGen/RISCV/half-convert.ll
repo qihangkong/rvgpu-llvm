@@ -2524,42 +2524,38 @@ define i64 @fcvt_l_h_sat(half %a) nounwind {
 ; RV32ID-NEXT:    sw ra, 28(sp) # 4-byte Folded Spill
 ; RV32ID-NEXT:    sw s0, 24(sp) # 4-byte Folded Spill
 ; RV32ID-NEXT:    sw s1, 20(sp) # 4-byte Folded Spill
-; RV32ID-NEXT:    sw s2, 16(sp) # 4-byte Folded Spill
-; RV32ID-NEXT:    sw s3, 12(sp) # 4-byte Folded Spill
-; RV32ID-NEXT:    fsd fs0, 0(sp) # 8-byte Folded Spill
+; RV32ID-NEXT:    fsd fs0, 8(sp) # 8-byte Folded Spill
 ; RV32ID-NEXT:    call __extendhfsf2
-; RV32ID-NEXT:    lui a0, %hi(.LCPI10_0)
-; RV32ID-NEXT:    flw fa5, %lo(.LCPI10_0)(a0)
 ; RV32ID-NEXT:    fmv.s fs0, fa0
-; RV32ID-NEXT:    flt.s s0, fa5, fa0
-; RV32ID-NEXT:    neg s1, s0
 ; RV32ID-NEXT:    lui a0, 913408
 ; RV32ID-NEXT:    fmv.w.x fa5, a0
-; RV32ID-NEXT:    fle.s s2, fa5, fa0
-; RV32ID-NEXT:    neg s3, s2
+; RV32ID-NEXT:    fle.s s0, fa5, fa0
+; RV32ID-NEXT:    neg s1, s0
 ; RV32ID-NEXT:    call __fixsfdi
-; RV32ID-NEXT:    and a0, s3, a0
-; RV32ID-NEXT:    or a0, s1, a0
+; RV32ID-NEXT:    lui a2, %hi(.LCPI10_0)
+; RV32ID-NEXT:    flw fa5, %lo(.LCPI10_0)(a2)
+; RV32ID-NEXT:    and a0, s1, a0
+; RV32ID-NEXT:    flt.s a4, fa5, fs0
+; RV32ID-NEXT:    neg a2, a4
+; RV32ID-NEXT:    or a0, a2, a0
 ; RV32ID-NEXT:    feq.s a2, fs0, fs0
 ; RV32ID-NEXT:    neg a2, a2
-; RV32ID-NEXT:    lui a4, 524288
+; RV32ID-NEXT:    lui a5, 524288
 ; RV32ID-NEXT:    lui a3, 524288
-; RV32ID-NEXT:    beqz s2, .LBB10_2
+; RV32ID-NEXT:    beqz s0, .LBB10_2
 ; RV32ID-NEXT:  # %bb.1: # %start
 ; RV32ID-NEXT:    mv a3, a1
 ; RV32ID-NEXT:  .LBB10_2: # %start
 ; RV32ID-NEXT:    and a0, a2, a0
-; RV32ID-NEXT:    beqz s0, .LBB10_4
+; RV32ID-NEXT:    beqz a4, .LBB10_4
 ; RV32ID-NEXT:  # %bb.3:
-; RV32ID-NEXT:    addi a3, a4, -1
+; RV32ID-NEXT:    addi a3, a5, -1
 ; RV32ID-NEXT:  .LBB10_4: # %start
 ; RV32ID-NEXT:    and a1, a2, a3
 ; RV32ID-NEXT:    lw ra, 28(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s0, 24(sp) # 4-byte Folded Reload
 ; RV32ID-NEXT:    lw s1, 20(sp) # 4-byte Folded Reload
-; RV32ID-NEXT:    lw s2, 16(sp) # 4-byte Folded Reload
-; RV32ID-NEXT:    lw s3, 12(sp) # 4-byte Folded Reload
-; RV32ID-NEXT:    fld fs0, 0(sp) # 8-byte Folded Reload
+; RV32ID-NEXT:    fld fs0, 8(sp) # 8-byte Folded Reload
 ; RV32ID-NEXT:    addi sp, sp, 32
 ; RV32ID-NEXT:    ret
 ;

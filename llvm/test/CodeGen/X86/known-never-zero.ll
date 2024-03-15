@@ -325,12 +325,13 @@ define i32 @rotr_known_nonzero(i32 %xx, i32 %y) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    movl %esi, %ecx
 ; CHECK-NEXT:    orl $256, %edi # imm = 0x100
+; CHECK-NEXT:    movl %edi, %eax
 ; CHECK-NEXT:    # kill: def $cl killed $cl killed $ecx
-; CHECK-NEXT:    rorl %cl, %edi
+; CHECK-NEXT:    rorl %cl, %eax
 ; CHECK-NEXT:    testl %edi, %edi
 ; CHECK-NEXT:    je .LBB18_1
 ; CHECK-NEXT:  # %bb.2: # %cond.false
-; CHECK-NEXT:    rep bsfl %edi, %eax
+; CHECK-NEXT:    rep bsfl %eax, %eax
 ; CHECK-NEXT:    retq
 ; CHECK-NEXT:  .LBB18_1:
 ; CHECK-NEXT:    movl $32, %eax
@@ -348,12 +349,13 @@ define i32 @rotr_maybe_zero(i32 %x, i32 %y) {
 ; CHECK-LABEL: rotr_maybe_zero:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    movl %esi, %ecx
+; CHECK-NEXT:    movl %edi, %eax
 ; CHECK-NEXT:    # kill: def $cl killed $cl killed $ecx
-; CHECK-NEXT:    rorl %cl, %edi
+; CHECK-NEXT:    rorl %cl, %eax
 ; CHECK-NEXT:    testl %edi, %edi
 ; CHECK-NEXT:    je .LBB19_1
 ; CHECK-NEXT:  # %bb.2: # %cond.false
-; CHECK-NEXT:    rep bsfl %edi, %eax
+; CHECK-NEXT:    rep bsfl %eax, %eax
 ; CHECK-NEXT:    retq
 ; CHECK-NEXT:  .LBB19_1:
 ; CHECK-NEXT:    movl $32, %eax
@@ -385,12 +387,13 @@ define i32 @rotr_with_fshr_maybe_zero(i32 %x, i32 %y) {
 ; CHECK-LABEL: rotr_with_fshr_maybe_zero:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    movl %esi, %ecx
+; CHECK-NEXT:    movl %edi, %eax
 ; CHECK-NEXT:    # kill: def $cl killed $cl killed $ecx
-; CHECK-NEXT:    rorl %cl, %edi
+; CHECK-NEXT:    rorl %cl, %eax
 ; CHECK-NEXT:    testl %edi, %edi
 ; CHECK-NEXT:    je .LBB21_1
 ; CHECK-NEXT:  # %bb.2: # %cond.false
-; CHECK-NEXT:    rep bsfl %edi, %eax
+; CHECK-NEXT:    rep bsfl %eax, %eax
 ; CHECK-NEXT:    retq
 ; CHECK-NEXT:  .LBB21_1:
 ; CHECK-NEXT:    movl $32, %eax
@@ -405,12 +408,13 @@ define i32 @rotl_known_nonzero(i32 %xx, i32 %y) {
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    movl %esi, %ecx
 ; CHECK-NEXT:    orl $256, %edi # imm = 0x100
+; CHECK-NEXT:    movl %edi, %eax
 ; CHECK-NEXT:    # kill: def $cl killed $cl killed $ecx
-; CHECK-NEXT:    roll %cl, %edi
+; CHECK-NEXT:    roll %cl, %eax
 ; CHECK-NEXT:    testl %edi, %edi
 ; CHECK-NEXT:    je .LBB22_1
 ; CHECK-NEXT:  # %bb.2: # %cond.false
-; CHECK-NEXT:    rep bsfl %edi, %eax
+; CHECK-NEXT:    rep bsfl %eax, %eax
 ; CHECK-NEXT:    retq
 ; CHECK-NEXT:  .LBB22_1:
 ; CHECK-NEXT:    movl $32, %eax
@@ -428,12 +432,13 @@ define i32 @rotl_maybe_zero(i32 %x, i32 %y) {
 ; CHECK-LABEL: rotl_maybe_zero:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    movl %esi, %ecx
+; CHECK-NEXT:    movl %edi, %eax
 ; CHECK-NEXT:    # kill: def $cl killed $cl killed $ecx
-; CHECK-NEXT:    roll %cl, %edi
+; CHECK-NEXT:    roll %cl, %eax
 ; CHECK-NEXT:    testl %edi, %edi
 ; CHECK-NEXT:    je .LBB23_1
 ; CHECK-NEXT:  # %bb.2: # %cond.false
-; CHECK-NEXT:    rep bsfl %edi, %eax
+; CHECK-NEXT:    rep bsfl %eax, %eax
 ; CHECK-NEXT:    retq
 ; CHECK-NEXT:  .LBB23_1:
 ; CHECK-NEXT:    movl $32, %eax
@@ -465,12 +470,13 @@ define i32 @rotl_with_fshl_maybe_zero(i32 %x, i32 %y) {
 ; CHECK-LABEL: rotl_with_fshl_maybe_zero:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    movl %esi, %ecx
+; CHECK-NEXT:    movl %edi, %eax
 ; CHECK-NEXT:    # kill: def $cl killed $cl killed $ecx
-; CHECK-NEXT:    roll %cl, %edi
+; CHECK-NEXT:    roll %cl, %eax
 ; CHECK-NEXT:    testl %edi, %edi
 ; CHECK-NEXT:    je .LBB25_1
 ; CHECK-NEXT:  # %bb.2: # %cond.false
-; CHECK-NEXT:    rep bsfl %edi, %eax
+; CHECK-NEXT:    rep bsfl %eax, %eax
 ; CHECK-NEXT:    retq
 ; CHECK-NEXT:  .LBB25_1:
 ; CHECK-NEXT:    movl $32, %eax
