@@ -80,7 +80,7 @@ struct __fn {
                std::move(__first1),
                std::move(__last1),
                std::move(__first2),
-               std::move(__last2),
+               __last2,
                std::ref(__pred),
                std::ref(__proj1),
                std::ref(__proj2))
