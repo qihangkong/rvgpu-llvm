@@ -10,7 +10,9 @@
 #ifndef _LIBCPP___NUMERIC_GCD_LCM_H
 #define _LIBCPP___NUMERIC_GCD_LCM_H
 
+#include <__algorithm/min.h>
 #include <__assert>
+#include <__bit/countr.h>
 #include <__config>
 #include <__type_traits/common_type.h>
 #include <__type_traits/is_integral.h>
@@ -39,7 +41,7 @@ struct __ct_abs<_Result, _Source, true> {
     if (__t >= 0)
       return __t;
     if (__t == numeric_limits<_Source>::min())
-      return -static_cast<_Result>(__t);
+      return static_cast<_Result>(-static_cast<std::make_unsigned_t<_Result>>(__t));
     return -__t;
   }
 };
@@ -50,9 +52,25 @@ struct __ct_abs<_Result, _Source, false> {
 };
 
 template <class _Tp>
-_LIBCPP_CONSTEXPR _LIBCPP_HIDDEN _Tp __gcd(_Tp __m, _Tp __n) {
+_LIBCPP_CONSTEXPR _LIBCPP_HIDDEN _Tp __gcd(_Tp __a, _Tp __b) {
   static_assert((!is_signed<_Tp>::value), "");
-  return __n == 0 ? __m : std::__gcd<_Tp>(__n, __m % __n);
+  if (__a == 0)
+    return __b;
+  if (__b == 0)
+    return __a;
+
+  int __az    = std::__countr_zero(__a);
+  int __bz    = std::__countr_zero(__b);
+  int __shift = std::min(__az, __bz);
+  __b >>= __bz;
+  while (__a != 0) {
+    __a >>= __az;
+    _Tp __absdiff = __a > __b ? __a - __b : __b - __a;
+    __b           = std::min(__a, __b);
+    __a           = __absdiff;
+    __az          = std::__countr_zero(__absdiff);
+  }
+  return __b << __shift;
 }
 
 template <class _Tp, class _Up>
