@@ -10,10 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
 // ARM specific DAG Nodes.
 //
-
 // Type profiles.
 def SDT_ARMCallSeqStart : SDCallSeqStart<[ SDTCisVT<0, i32>,
                                            SDTCisVT<1, i32> ]>;
@@ -2675,6 +2673,9 @@ let isCall = 1, isTerminator = 1, isReturn = 1, isBarrier = 1, Uses = [SP] in {
                    Sched<[WriteBr]>;
 
   def TCRETURNri : PseudoInst<(outs), (ins tcGPR:$dst, i32imm:$SPDiff), IIC_Br, []>,
+                   Sched<[WriteBr]>;
+
+  def TCRETURNrinotr12 : PseudoInst<(outs), (ins tcGPRnotr12:$dst, i32imm:$SPDiff), IIC_Br, []>,
                    Sched<[WriteBr]>;
 
   def TAILJMPd : ARMPseudoExpand<(outs), (ins arm_br_target:$dst),
@@ -6081,8 +6082,14 @@ def : ARMPat<(ARMWrapperJT tjumptable:$dst),
 // TODO: add,sub,and, 3-instr forms?
 
 // Tail calls. These patterns also apply to Thumb mode.
+// Regular indirect tail call
 def : Pat<(ARMtcret tcGPR:$dst, (i32 timm:$SPDiff)),
-          (TCRETURNri tcGPR:$dst, timm:$SPDiff)>;
+          (TCRETURNri tcGPR:$dst, timm:$SPDiff)>,
+          Requires<[TailCall]>;
+// Indirect tail call when PACBTI is enabled
+def : Pat<(ARMtcret tcGPRnotr12:$dst, (i32 timm:$SPDiff)),
+          (TCRETURNrinotr12 tcGPRnotr12:$dst, timm:$SPDiff)>,
+          Requires<[TailCallNotR12]>;
 def : Pat<(ARMtcret (i32 tglobaladdr:$dst), (i32 timm:$SPDiff)),
           (TCRETURNdi texternalsym:$dst, (i32 timm:$SPDiff))>;
 def : Pat<(ARMtcret (i32 texternalsym:$dst), (i32 timm:$SPDiff)),
