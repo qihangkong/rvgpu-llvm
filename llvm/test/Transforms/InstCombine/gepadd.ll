@@ -51,8 +51,7 @@ define ptr @nooff(ptr %p, i64 %o, i64 %n) {
 define ptr @inbounds(ptr %p, i64 %o, i64 %n) {
 ; CHECK-LABEL: define ptr @inbounds(
 ; CHECK-SAME: ptr [[P:%.*]], i64 [[O:%.*]], i64 [[N:%.*]]) {
-; CHECK-NEXT:    [[A:%.*]] = add i64 [[O]], 1
-; CHECK-NEXT:    [[G:%.*]] = getelementptr inbounds [10 x [10 x [10 x [10 x i32]]]], ptr [[P]], i64 0, i64 [[A]], i64 1, i64 -6, i64 [[N]]
+; CHECK-NEXT:    [[G:%.*]] = getelementptr [10 x [10 x [10 x [10 x i32]]]], ptr [[P]], i64 0, i64 [[O]], i64 11, i64 -6, i64 [[N]]
 ; CHECK-NEXT:    ret ptr [[G]]
 ;
   %a = add i64 %o, 1
