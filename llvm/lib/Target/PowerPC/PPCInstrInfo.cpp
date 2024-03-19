@@ -5224,10 +5224,6 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
                                                   MachineRegisterInfo *MRI,
                                                   unsigned BinOpDepth,
                                                   LiveVariables *LV) const {
-  const TargetRegisterClass *RC = MRI->getRegClass(Reg);
-  if (RC == &PPC::G8RCRegClass || RC == &PPC::GPRC_and_GPRC_NOR0RegClass)
-    return;
-
   MachineInstr *MI = MRI->getVRegDef(Reg);
   if (!MI)
     return;
@@ -5240,9 +5236,6 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
   case PPC::PHI:
   case PPC::ISEL:
     if (BinOpDepth < MAX_BINOP_DEPTH) {
-      if (Opcode == PPC::OR || Opcode == PPC::ISEL)
-        // if (Opcode == PPC::OR)
-        IsRelplaceIntr = true;
       unsigned OperandEnd = 3, OperandStride = 1;
       if (Opcode == PPC::PHI) {
         OperandEnd = MI->getNumOperands();
@@ -5254,6 +5247,11 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
         Register SrcReg = MI->getOperand(I).getReg();
         replaceInstrAfterElimExt32To64(SrcReg, MRI, BinOpDepth + 1, LV);
       }
+
+      if (Opcode == PPC::OR || Opcode == PPC::ISEL)
+        IsRelplaceIntr = true;
+      else
+        return;
     }
     break;
   case PPC::COPY: {
@@ -5261,17 +5259,18 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
     const MachineFunction *MF = MI->getMF();
     if (!MF->getSubtarget<PPCSubtarget>().isSVR4ABI()) {
       replaceInstrAfterElimExt32To64(SrcReg, MRI, BinOpDepth, LV);
-      break;
+      return;
     }
     // From here on everything is SVR4ABI
     if (MI->getParent()->getBasicBlock() == &MF->getFunction().getEntryBlock())
-      break;
+      return;
 
     if (SrcReg != PPC::X3) {
       replaceInstrAfterElimExt32To64(SrcReg, MRI, BinOpDepth, LV);
-      break;
+      return;
     }
-  } break;
+  }
+    return;
   case PPC::ORI:
   case PPC::XORI:
   case PPC::ORI8:
@@ -5280,22 +5279,27 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
   case PPC::XORIS:
   case PPC::ORIS8:
   case PPC::XORIS8: {
+    Register SrcReg = MI->getOperand(1).getReg();
+    replaceInstrAfterElimExt32To64(SrcReg, MRI, BinOpDepth, LV);
+
     if (Opcode == PPC::ORI || Opcode == PPC::XORI || Opcode == PPC::ORIS ||
         Opcode == PPC::ORIS || Opcode == PPC::XORIS)
       IsRelplaceIntr = true;
-    Register SrcReg = MI->getOperand(1).getReg();
-    replaceInstrAfterElimExt32To64(SrcReg, MRI, BinOpDepth, LV);
+    else
+      return;
     break;
   }
   case PPC::AND:
   case PPC::AND8: {
     if (BinOpDepth < MAX_BINOP_DEPTH) {
-      if (Opcode == PPC::AND)
-        IsRelplaceIntr = true;
       Register SrcReg1 = MI->getOperand(1).getReg();
       replaceInstrAfterElimExt32To64(SrcReg1, MRI, BinOpDepth, LV);
       Register SrcReg2 = MI->getOperand(2).getReg();
       replaceInstrAfterElimExt32To64(SrcReg2, MRI, BinOpDepth, LV);
+      if (Opcode == PPC::AND)
+        IsRelplaceIntr = true;
+      else
+        return;
     }
     break;
   }
@@ -5309,9 +5313,14 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
        !isOpZeroOfSubwordPreincLoad(Opcode)) ||
       IsRelplaceIntr) {
 
-    // Fix Me: Most of the opcode of 64-bit instruction equal to the opcode of
-    // 32-bit version of same instruction plus one. But there are some
-    // exception: PPC::ANDC_rec, PPC::ANDI_rec, PPC::ANDIS_rec.
+    const TargetRegisterClass *RC = MRI->getRegClass(Reg);
+    assert(RC != &PPC::G8RCRegClass && RC != &PPC::G8RC_and_G8RC_NOX0RegClass &&
+           "Must be 32-bit Register!");
+
+    // Fix Me: Most of the pseudo-opcode of 64-bit instruction are equal to
+    // the pseudo-opcode of the 32-bit version of the same instruction plus
+    // one. However, there are some exceptions: PPC::ANDC_rec,
+    // PPC::ANDI_rec, PPC::ANDIS_rec.
     unsigned NewOpcode = Opcode + 1;
 
     if (Opcode == PPC::ANDC_rec)
@@ -5335,8 +5344,11 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
     DebugLoc DL = MI->getDebugLoc();
     auto MBB = MI->getParent();
 
-    // If the oprand of the instruction is Register which isPPC::GRCRegClass, we
-    // need to promot the Oprande to PPC::G8RCRegClass.
+    // Since the pseudo-opcode of the instruction is promoted from 32-bit to
+    // 64-bit, if the operand of the original instruction belongs to
+    // PPC::GRCRegClass or PPC::GPRC_and_GPRC_NOR0RegClass, we need to promote
+    // the operand to PPC::G8CRegClass or PPC::G8RC_and_G8RC_NOR0RegClass,
+    // respectively.
     DenseMap<unsigned, Register> PromoteRegs;
     DenseMap<unsigned, Register> ReCalRegs;
     for (unsigned i = 1; i < MI->getNumOperands(); i++) {
