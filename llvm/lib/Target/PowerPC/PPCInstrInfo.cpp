@@ -5224,7 +5224,8 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
                                                   MachineRegisterInfo *MRI,
                                                   unsigned BinOpDepth,
                                                   LiveVariables *LV) const {
-  if (MRI->getRegClass(Reg) == &PPC::G8RCRegClass)
+  const TargetRegisterClass *RC = MRI->getRegClass(Reg);
+  if (RC == &PPC::G8RCRegClass || RC == &PPC::GPRC_and_GPRC_NOR0RegClass)
     return;
 
   MachineInstr *MI = MRI->getVRegDef(Reg);
@@ -5240,6 +5241,7 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
   case PPC::ISEL:
     if (BinOpDepth < MAX_BINOP_DEPTH) {
       if (Opcode == PPC::OR || Opcode == PPC::ISEL)
+        // if (Opcode == PPC::OR)
         IsRelplaceIntr = true;
       unsigned OperandEnd = 3, OperandStride = 1;
       if (Opcode == PPC::PHI) {
@@ -5254,15 +5256,22 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
       }
     }
     break;
-    /*
   case PPC::COPY: {
     Register SrcReg = MI->getOperand(1).getReg();
     const MachineFunction *MF = MI->getMF();
     if (!MF->getSubtarget<PPCSubtarget>().isSVR4ABI()) {
       replaceInstrAfterElimExt32To64(SrcReg, MRI, BinOpDepth, LV);
+      break;
     }
+    // From here on everything is SVR4ABI
+    if (MI->getParent()->getBasicBlock() == &MF->getFunction().getEntryBlock())
+      break;
 
-  } break;*/
+    if (SrcReg != PPC::X3) {
+      replaceInstrAfterElimExt32To64(SrcReg, MRI, BinOpDepth, LV);
+      break;
+    }
+  } break;
   case PPC::ORI:
   case PPC::XORI:
   case PPC::ORI8:
