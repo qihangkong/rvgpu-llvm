@@ -546,14 +546,18 @@ body:             |
     %151:gprc_and_gprc_nor0 = EXTSH %0
 
     ; CHECK:      %159:g8rc = IMPLICIT_DEF
-    ; CHECK-NEXT: %160:g8rc = INSERT_SUBREG %159, %0, %subreg.sub_32 
+    ; CHECK-NEXT: %160:g8rc = INSERT_SUBREG %159, %0, %subreg.sub_32
     ; CHECK-NEXT: %161:g8rc = EXTSH8 killed %160
     ; CHECK-NEXT: %151:gprc_and_gprc_nor0 = COPY killed %161.sub_32
 
     %152:crrc = CMPW %151, %150
     %153:gprc = ISEL %151, %150, %152.sub_lt
     %154:g8rc = EXTSW_32_64 killed %153
-    ; CHECK-NOT: %154:g8rc = EXTSW_32_64 killed %153 
+    ; CHECK:      %165:g8rc = IMPLICIT_DEF
+    ; CHECK-NEXT: %166:g8rc = INSERT_SUBREG %165, %150, %subreg.sub_32
+    ; CHECK-NEXT: %167:g8rc = ISEL8 killed %164, killed %166, %152.sub_lt
+    ; CHECK-NEXT: %153:gprc = COPY killed %167.sub_32
+    ; CHECK-NOT: %154:g8rc = EXTSW_32_64 killed %153
     %155:g8rc_and_g8rc_nox0 = LDtoc @computedResultUll, $x2 :: (load (s64) from got)
     STD %154, 0, killed %155 :: (store (s64) into @computedResultUll, !tbaa !7)
     ADJCALLSTACKDOWN 112, 0, implicit-def dead $r1, implicit $r1
