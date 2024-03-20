@@ -5010,10 +5010,7 @@ bool SelectionDAG::isGuaranteedNotToBeUndefOrPoison(SDValue Op,
   case ISD::VALUETYPE:
   case ISD::FrameIndex:
   case ISD::TargetFrameIndex:
-    return true;
-
   case ISD::CopyFromReg:
-    // Treat CopyFromReg as freezing the value.
     return true;
 
   case ISD::UNDEF:
