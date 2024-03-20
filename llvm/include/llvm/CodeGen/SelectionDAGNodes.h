@@ -542,6 +542,7 @@ BEGIN_TWO_BYTE_PACK()
     friend class MaskedLoadStoreSDNode;
     friend class MaskedGatherScatterSDNode;
     friend class VPGatherScatterSDNode;
+    friend class MaskedHistogramSDNode;
 
     uint16_t : NumMemSDNodeBits;
 
@@ -564,6 +565,7 @@ BEGIN_TWO_BYTE_PACK()
     friend class MaskedLoadSDNode;
     friend class MaskedGatherSDNode;
     friend class VPGatherSDNode;
+    friend class MaskedHistogramSDNode;
 
     uint16_t : NumLSBaseSDNodeBits;
 
@@ -1411,6 +1413,7 @@ public:
       return getOperand(2);
     case ISD::MGATHER:
     case ISD::MSCATTER:
+    case ISD::EXPERIMENTAL_HISTOGRAM:
       return getOperand(3);
     default:
       return getOperand(1);
@@ -1459,6 +1462,7 @@ public:
     case ISD::EXPERIMENTAL_VP_STRIDED_STORE:
     case ISD::GET_FPENV_MEM:
     case ISD::SET_FPENV_MEM:
+    case ISD::EXPERIMENTAL_HISTOGRAM:
       return true;
     default:
       return N->isMemIntrinsic() || N->isTargetMemoryOpcode();
@@ -2936,6 +2940,26 @@ public:
 
   static bool classof(const SDNode *N) {
     return N->getOpcode() == ISD::MSCATTER;
+  }
+};
+
+class MaskedHistogramSDNode : public MemSDNode {
+public:
+  friend class SelectionDAG;
+
+  MaskedHistogramSDNode(unsigned Order, const DebugLoc &DL, SDVTList VTs,
+                        EVT MemVT, MachineMemOperand *MMO,
+                        ISD::MemIndexType IndexType)
+      : MemSDNode(ISD::EXPERIMENTAL_HISTOGRAM, Order, DL, VTs, MemVT, MMO) {
+    LSBaseSDNodeBits.AddressingMode = IndexType;
+  }
+
+  ISD::MemIndexType getIndexType() const {
+    return static_cast<ISD::MemIndexType>(LSBaseSDNodeBits.AddressingMode);
+  }
+
+  static bool classof(const SDNode *N) {
+    return N->getOpcode() == ISD::EXPERIMENTAL_HISTOGRAM;
   }
 };
 

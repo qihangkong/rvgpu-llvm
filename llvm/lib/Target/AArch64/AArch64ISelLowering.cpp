@@ -1603,6 +1603,10 @@ AArch64TargetLowering::AArch64TargetLowering(const TargetMachine &TM,
         setOperationAction(ISD::VECREDUCE_SEQ_FADD, VT, Custom);
     }
 
+    // Histcnt is SVE2 only
+    if (Subtarget->hasSVE2() && Subtarget->isSVEAvailable())
+      setOperationAction(ISD::EXPERIMENTAL_HISTOGRAM, MVT::Other, Custom);
+
     if (!Subtarget->isNeonAvailable()) {
       setTruncStoreAction(MVT::v2f32, MVT::v2bf16, Custom);
       setTruncStoreAction(MVT::v4f32, MVT::v4bf16, Custom);
@@ -6673,6 +6677,56 @@ SDValue AArch64TargetLowering::LowerOperation(SDValue Op,
     return LowerFunnelShift(Op, DAG);
   case ISD::FLDEXP:
     return LowerFLDEXP(Op, DAG);
+  case ISD::EXPERIMENTAL_HISTOGRAM: {
+    // FIXME: Move to another function.
+    // FIXME: Maybe share some code with LowerMGather/Scatter?
+    MaskedHistogramSDNode *HG = cast<MaskedHistogramSDNode>(Op);
+    SDLoc DL(HG);
+    SDValue Chain = HG->getOperand(0);
+    SDValue Inc = HG->getOperand(1);
+    SDValue Mask = HG->getOperand(2);
+    SDValue Ptr = HG->getOperand(3);
+    SDValue Index = HG->getOperand(4);
+    SDValue Scale = HG->getOperand(5);
+
+    EVT IncVT = Inc.getValueType();
+    EVT IndexVT = Index.getValueType();
+    EVT MemVT = EVT::getVectorVT(*DAG.getContext(), IncVT,
+                                 IndexVT.getVectorElementCount());
+    SDValue Zero = DAG.getConstant(0, DL, MVT::i64);
+    SDValue PassThru = DAG.getSplatVector(MemVT, DL, Zero);
+    SDValue IncSplat = DAG.getSplatVector(MemVT, DL, Inc);
+    SDValue Ops[] = {Chain, PassThru, Mask, Ptr, Index, Scale};
+
+    // Set the MMO to load only, rather than load|store.
+    MachineMemOperand *GMMO = HG->getMemOperand();
+    GMMO->setFlags(MachineMemOperand::MOLoad);
+    ISD::MemIndexType IndexType = HG->getIndexType();
+    SDValue Gather =
+                DAG.getMaskedGather(DAG.getVTList(MemVT, MVT::Other), MemVT, DL,
+                                    Ops, HG->getMemOperand(),
+                                    IndexType, ISD::NON_EXTLOAD);
+
+    SDValue GChain = Gather.getValue(1);
+
+    // Perform the histcnt, multiply by inc, add to bucket data.
+    SDValue ID = DAG.getTargetConstant(Intrinsic::aarch64_sve_histcnt, DL, IncVT);
+    SDValue HistCnt = DAG.getNode(ISD::INTRINSIC_WO_CHAIN, DL, IndexVT, ID, Mask,
+                                  Index, Index);
+    SDValue Mul = DAG.getNode(ISD::MUL, DL, MemVT, HistCnt, IncSplat);
+    SDValue Add = DAG.getNode(ISD::ADD, DL, MemVT, Gather, Mul);
+
+
+    // Create a new MMO for the scatter.
+    MachineMemOperand *SMMO = DAG.getMachineFunction().getMachineMemOperand(
+        GMMO->getPointerInfo(), MachineMemOperand::MOStore,
+        GMMO->getSize(), GMMO->getAlign(), GMMO->getAAInfo());
+
+    SDValue ScatterOps[] = { GChain, Add, Mask, Ptr, Index, Scale };
+    SDValue Scatter = DAG.getMaskedScatter(DAG.getVTList(MVT::Other), MemVT, DL,
+                                           ScatterOps, SMMO, IndexType, false);
+    return Scatter;
+  }
   }
 }
 

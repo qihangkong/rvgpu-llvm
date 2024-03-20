@@ -9530,6 +9530,39 @@ SDValue SelectionDAG::getMaskedScatter(SDVTList VTs, EVT MemVT, const SDLoc &dl,
   return V;
 }
 
+SDValue SelectionDAG::getMaskedHistogram(SDVTList VTs, EVT MemVT,
+                                         const SDLoc &dl,
+                                         ArrayRef<SDValue> Ops,
+                                         MachineMemOperand *MMO,
+                                         ISD::MemIndexType IndexType) {
+  assert(Ops.size() == 6 && "Incompatible number of operands");
+
+  FoldingSetNodeID ID;
+  AddNodeIDNode(ID, ISD::EXPERIMENTAL_HISTOGRAM, VTs, Ops);
+  ID.AddInteger(MemVT.getRawBits());
+  ID.AddInteger(getSyntheticNodeSubclassData<MaskedHistogramSDNode>(
+      dl.getIROrder(), VTs, MemVT, MMO, IndexType));
+  ID.AddInteger(MMO->getPointerInfo().getAddrSpace());
+  ID.AddInteger(MMO->getFlags());
+  void *IP = nullptr;
+  if (SDNode *E = FindNodeOrInsertPos(ID, dl, IP)) {
+    cast<MaskedGatherSDNode>(E)->refineAlignment(MMO);
+    return SDValue(E, 0);
+  }
+
+  auto *N = newSDNode<MaskedHistogramSDNode>(dl.getIROrder(), dl.getDebugLoc(),
+                                             VTs, MemVT, MMO, IndexType);
+  createOperands(N, Ops);
+
+  // FIXME: assert conditions on operands.
+
+  CSEMap.InsertNode(N, IP);
+  InsertNode(N);
+  SDValue V(N, 0);
+  NewSDValueDbgMsg(V, "Creating new node: ", this);
+  return V;
+}
+
 SDValue SelectionDAG::getGetFPEnv(SDValue Chain, const SDLoc &dl, SDValue Ptr,
                                   EVT MemVT, MachineMemOperand *MMO) {
   assert(Chain.getValueType() == MVT::Other && "Invalid chain type");
