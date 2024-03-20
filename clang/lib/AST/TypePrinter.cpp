@@ -986,6 +986,12 @@ void TypePrinter::printFunctionProtoAfter(const FunctionProtoType *T,
   }
   T->printExceptionSpecification(OS, Policy);
 
+  if (const FunctionEffectSet FX = T->getFunctionEffects()) {
+    for (const auto &Effect : FX) {
+      OS << " __attribute__((clang_" << Effect.name() << "))";
+    }
+  }
+
   if (T->hasTrailingReturn()) {
     OS << " -> ";
     print(T->getReturnType(), OS, StringRef());
@@ -1940,6 +1946,12 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
 
   // Nothing to print for this attribute.
   case attr::HLSLParamModifier:
+    break;
+  case attr::NoLock:
+    OS << "clang_nolock(false)";
+    break;
+  case attr::NoAlloc:
+    OS << "clang_noalloc(false)";
     break;
   }
   OS << "))";

@@ -144,6 +144,8 @@ static void diagnoseBadTypeAttribute(Sema &S, const ParsedAttr &attr,
 #define FUNCTION_TYPE_ATTRS_CASELIST                                           \
   case ParsedAttr::AT_NSReturnsRetained:                                       \
   case ParsedAttr::AT_NoReturn:                                                \
+  case ParsedAttr::AT_NoLock:                                                  \
+  case ParsedAttr::AT_NoAlloc:                                                 \
   case ParsedAttr::AT_Regparm:                                                 \
   case ParsedAttr::AT_CmseNSCall:                                              \
   case ParsedAttr::AT_ArmStreaming:                                            \
@@ -169,6 +171,8 @@ static void diagnoseBadTypeAttribute(Sema &S, const ParsedAttr &attr,
   case ParsedAttr::AT_TypeNullable:                                            \
   case ParsedAttr::AT_TypeNullableResult:                                      \
   case ParsedAttr::AT_TypeNullUnspecified
+
+enum class BoolAttrState : uint8_t { Unseen, False, True };
 
 namespace {
   /// An object which stores processing state for the entire
@@ -209,10 +213,19 @@ namespace {
     /// validating that noderef was used on a pointer or array.
     bool parsedNoDeref;
 
+    // Flags to diagnose illegal permutations of nolock(cond) and noalloc(cond).
+    // Manual logic for finding previous attributes would be more complex,
+    // unless we transformed nolock/noalloc(false) into distinct separate
+    // attributes from the ones which are parsed.
+    BoolAttrState parsedNolock : 2;
+    BoolAttrState parsedNoalloc : 2;
+
   public:
     TypeProcessingState(Sema &sema, Declarator &declarator)
         : sema(sema), declarator(declarator),
-          chunkIndex(declarator.getNumTypeObjects()), parsedNoDeref(false) {}
+          chunkIndex(declarator.getNumTypeObjects()), parsedNoDeref(false),
+          parsedNolock(BoolAttrState::Unseen),
+          parsedNoalloc(BoolAttrState::Unseen) {}
 
     Sema &getSema() const {
       return sema;
@@ -338,6 +351,11 @@ namespace {
     void setParsedNoDeref(bool parsed) { parsedNoDeref = parsed; }
 
     bool didParseNoDeref() const { return parsedNoDeref; }
+
+    void setParsedNolock(BoolAttrState v) { parsedNolock = v; }
+    BoolAttrState getParsedNolock() const { return parsedNolock; }
+    void setParsedNoalloc(BoolAttrState v) { parsedNoalloc = v; }
+    BoolAttrState getParsedNoalloc() const { return parsedNoalloc; }
 
     ~TypeProcessingState() {
       if (savedAttrs.empty())
@@ -7935,6 +7953,110 @@ static Attr *getCCTypeAttr(ASTContext &Ctx, ParsedAttr &Attr) {
   llvm_unreachable("unexpected attribute kind!");
 }
 
+static bool handleNoLockNoAllocTypeAttr(TypeProcessingState &state,
+                                        ParsedAttr &PAttr, QualType &type,
+                                        FunctionTypeUnwrapper &unwrapped) {
+  // Delay if this is not a function type.
+  if (!unwrapped.isFunctionType())
+    return false;
+
+  const bool isNoLock = PAttr.getKind() == ParsedAttr::AT_NoLock;
+  Sema &S = state.getSema();
+
+  // Require FunctionProtoType
+  auto *FPT = unwrapped.get()->getAs<FunctionProtoType>();
+  if (FPT == nullptr) {
+    // TODO: special diagnostic?
+    return false;
+  }
+
+  // Parse the conditional expression, if any
+  // TODO: There's a better way to do this. See PR feedback.
+  // TODO: Handle a type-dependent expression.
+  bool Cond = true; // default
+  if (PAttr.getNumArgs() > 0) {
+    if (!S.checkBoolExprArgumentAttr(PAttr, 0, Cond)) {
+      PAttr.setInvalid();
+      return false;
+    }
+  }
+
+  FunctionProtoType::ExtProtoInfo EPI = FPT->getExtProtoInfo();
+
+  auto incompatible = [&](StringRef attrTrue, StringRef attrFalse) {
+    Sema &S = state.getSema();
+    S.Diag(PAttr.getLoc(), diag::err_attributes_are_not_compatible)
+        << attrTrue << attrFalse << false;
+    // we don't necessarily have the location of the previous attribute,
+    // so no note.
+    PAttr.setInvalid();
+    return true;
+  };
+
+  // check nolock(true) against nolock(false), and same for noalloc
+  const BoolAttrState newState =
+      Cond ? BoolAttrState::True : BoolAttrState::False;
+  const BoolAttrState oppositeNewState =
+      Cond ? BoolAttrState::False : BoolAttrState::True;
+  if (isNoLock) {
+    if (state.getParsedNolock() == oppositeNewState) {
+      return incompatible("nolock(true)", "nolock(false)");
+    }
+    // also check nolock(true) against noalloc(false)
+    if (Cond && state.getParsedNoalloc() == BoolAttrState::False) {
+      return incompatible("nolock(true)", "noalloc(false)");
+    }
+    state.setParsedNolock(newState);
+  } else {
+    if (state.getParsedNoalloc() == oppositeNewState) {
+      return incompatible("noalloc(true)", "noalloc(false)");
+    }
+    // also check nolock(true) against noalloc(false)
+    if (state.getParsedNolock() == BoolAttrState::True) {
+      if (!Cond) {
+        return incompatible("nolock(true)", "noalloc(false)");
+      }
+      // Ignore noalloc(true) since we already have nolock(true).
+      return true;
+    }
+    state.setParsedNoalloc(newState);
+  }
+
+  if (!Cond) {
+    // nolock(false) and noalloc(false) are represented as sugar, with
+    // AttributedType
+    Attr *A = nullptr;
+    if (isNoLock) {
+      A = NoLockAttr::Create(S.Context, false);
+    } else {
+      A = NoAllocAttr::Create(S.Context, false);
+    }
+    type = state.getAttributedType(A, type, type);
+    return true;
+  }
+
+  // nolock(true) and noalloc(true) are represented as FunctionEffects, in a
+  // FunctionEffectSet attached to a FunctionProtoType.
+  const FunctionEffect NewEffect(isNoLock ? FunctionEffect::Type::NoLockTrue
+                                          : FunctionEffect::Type::NoAllocTrue);
+
+  MutableFunctionEffectSet NewFX(NewEffect);
+  if (EPI.FunctionEffects) {
+    // Preserve any previous effects - except noalloc, when we are adding nolock
+    for (const auto &Effect : EPI.FunctionEffects) {
+      if (!(isNoLock && Effect.type() == FunctionEffect::Type::NoAllocTrue))
+        NewFX.insert(Effect);
+    }
+  }
+
+  EPI.FunctionEffects =
+      state.getSema().getASTContext().getUniquedFunctionEffectSet(NewFX);
+  QualType newtype = S.Context.getFunctionType(FPT->getReturnType(),
+                                               FPT->getParamTypes(), EPI);
+  type = unwrapped.wrap(S, newtype->getAs<FunctionType>());
+  return true;
+}
+
 static bool checkMutualExclusion(TypeProcessingState &state,
                                  const FunctionProtoType::ExtProtoInfo &EPI,
                                  ParsedAttr &Attr,
@@ -8246,6 +8368,11 @@ static bool handleFunctionTypeAttr(TypeProcessingState &state, ParsedAttr &attr,
                    FunctionProtoType::ExceptionSpecInfo{EST_NoThrow})
                ->getAs<FunctionType>());
     return true;
+  }
+
+  if (attr.getKind() == ParsedAttr::AT_NoLock ||
+      attr.getKind() == ParsedAttr::AT_NoAlloc) {
+    return handleNoLockNoAllocTypeAttr(state, attr, type, unwrapped);
   }
 
   // Delay if the type didn't work out to a function.

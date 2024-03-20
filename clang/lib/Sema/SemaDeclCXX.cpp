@@ -18321,6 +18321,28 @@ bool Sema::CheckOverridingFunctionAttributes(const CXXMethodDecl *New,
     return true;
   }
 
+  // Virtual overrides: check for matching effects.
+  const auto OldFX = Old->getFunctionEffects();
+  const auto NewFX = New->getFunctionEffects();
+
+  if (OldFX != NewFX) {
+    const auto Diffs = FunctionEffectSet::differences(OldFX, NewFX);
+    bool AnyDiags = false;
+
+    for (const auto &Item : Diffs) {
+      const FunctionEffect &Effect = Item.first;
+      const bool Adding = Item.second;
+      if (Effect.diagnoseMethodOverride(Adding, *Old, OldFX, *New, NewFX)) {
+        Diag(New->getLocation(), diag::warn_mismatched_func_effect_override)
+            << Effect.name();
+        Diag(Old->getLocation(), diag::note_overridden_virtual_function);
+        AnyDiags = true;
+      }
+    }
+    if (AnyDiags)
+      return true;
+  }
+
   CallingConv NewCC = NewFT->getCallConv(), OldCC = OldFT->getCallConv();
 
   // If the calling conventions match, everything is fine

@@ -4049,8 +4049,12 @@ public:
     LLVM_PREFERRED_TYPE(bool)
     unsigned HasArmTypeAttributes : 1;
 
+    LLVM_PREFERRED_TYPE(bool)
+    unsigned HasFunctionEffects : 1;
+
     FunctionTypeExtraBitfields()
-        : NumExceptionType(0), HasArmTypeAttributes(false) {}
+        : NumExceptionType(0), HasArmTypeAttributes(false),
+          HasFunctionEffects(false) {}
   };
 
   /// The AArch64 SME ACLE (Arm C/C++ Language Extensions) define a number
@@ -4183,6 +4187,208 @@ public:
   }
 };
 
+// ------------------------------------------------------------------------------
+
+// TODO: Should FunctionEffect be located elsewhere, where Decl is not
+// forward-declared?
+class Decl;
+class CXXMethodDecl;
+class FunctionEffectSet;
+class TypeSourceInfo;
+
+/// Represents an abstract function effect.
+class FunctionEffect {
+public:
+  enum class Type {
+    None = 0,
+    NoLockTrue,
+    NoAllocTrue,
+  };
+
+  /// Flags describing behaviors of the effect.
+  // (Why not a struct with bitfields? There's one function that would like to
+  // test a caller-specified bit. There are some potential optimizations that
+  // would OR together the bits of multiple effects.)
+  using Flags = unsigned;
+  enum FlagBit : unsigned {
+    // Some effects require verification, e.g. nolock(true); others might not?
+    // (no example yet; TODO: maybe always true, vestigial from nolock(false)).
+    FE_RequiresVerification = 0x1,
+
+    // Does this effect want to verify all function calls originating in
+    // functions having this effect? TODO: maybe always true, vestigial.
+    FE_VerifyCalls = 0x2,
+
+    // Can verification inspect callees' implementations? (e.g. nolock: yes,
+    // tcb+types: no)
+    FE_InferrableOnCallees = 0x4,
+
+    // Language constructs which effects can diagnose as disallowed.
+    FE_ExcludeThrow = 0x8,
+    FE_ExcludeCatch = 0x10,
+    FE_ExcludeObjCMessageSend = 0x20,
+    FE_ExcludeStaticLocalVars = 0x40,
+    FE_ExcludeThreadLocalVars = 0x80
+  };
+
+private:
+  // For uniqueness, currently only Type_ is significant.
+
+  LLVM_PREFERRED_TYPE(Type)
+  unsigned Type_ : 2;
+  Flags Flags_ : 8; // A constant function of Type but cached here.
+
+  // Expansion: for hypothetical TCB+types, there could be one Type for TCB,
+  // then ~16(?) bits "Subtype" to map to a specific named TCB. Subtype would
+  // be considered for uniqueness.
+
+public:
+  using CalleeDeclOrType =
+      llvm::PointerUnion<const Decl *, const FunctionProtoType *>;
+
+  FunctionEffect() : Type_(unsigned(Type::None)), Flags_(0) {}
+
+  explicit FunctionEffect(Type T);
+
+  /// The type of the effect.
+  Type type() const { return Type(Type_); }
+
+  /// Flags describing behaviors of the effect.
+  Flags flags() const { return Flags_; }
+
+  /// The description printed in diagnostics, e.g. 'nolock'.
+  StringRef name() const;
+
+  /// A serializable, hashable representation.
+  uint32_t opaqueRepr() const { return Type_ | (Flags_ << 2u); }
+
+  /// Return true if adding or removing the effect as part of a type conversion
+  /// should generate a diagnostic.
+  bool diagnoseConversion(bool Adding, QualType OldType,
+                          FunctionEffectSet OldFX, QualType NewType,
+                          FunctionEffectSet NewFX) const;
+
+  /// Return true if adding or removing the effect in a redeclaration should
+  /// generate a diagnostic.
+  bool diagnoseRedeclaration(bool Adding, const FunctionDecl &OldFunction,
+                             FunctionEffectSet OldFX,
+                             const FunctionDecl &NewFunction,
+                             FunctionEffectSet NewFX) const;
+
+  /// Return true if adding or removing the effect in a C++ virtual method
+  /// override should generate a diagnostic.
+  bool diagnoseMethodOverride(bool Adding, const CXXMethodDecl &OldMethod,
+                              FunctionEffectSet OldFX,
+                              const CXXMethodDecl &NewMethod,
+                              FunctionEffectSet NewFX) const;
+
+  /// Return true if the effect is allowed to be inferred on a Decl of the
+  /// specified type (generally a FunctionProtoType but TypeSourceInfo is
+  /// provided so any AttributedType sugar can be examined). TSI can be null
+  /// on an implicit function like a default constructor.
+  ///
+  /// This is only used if the effect has FE_InferrableOnCallees flag set.
+  /// Example: This allows nolock(false) to prevent inference for the function.
+  bool canInferOnFunction(QualType QT, const TypeSourceInfo *FType) const;
+
+  // Called if FE_VerifyCalls flag is set; return false for success. When true
+  // is returned for a direct call, then the FE_InferrableOnCallees flag may
+  // trigger inference rather than an immediate diagnostic. Caller should be
+  // assumed to have the effect (it may not have it explicitly when inferring).
+  bool diagnoseFunctionCall(bool Direct, FunctionEffectSet CalleeFX) const;
+
+  friend bool operator==(const FunctionEffect &LHS, const FunctionEffect &RHS) {
+    return LHS.Type_ == RHS.Type_;
+  }
+  friend bool operator!=(const FunctionEffect &LHS, const FunctionEffect &RHS) {
+    return LHS.Type_ != RHS.Type_;
+  }
+  friend bool operator<(const FunctionEffect &LHS, const FunctionEffect &RHS) {
+    return LHS.Type_ < RHS.Type_;
+  }
+};
+
+// It is the user's responsibility to keep this in set form: elements are
+// ordered and unique.
+// We could hide the mutating methods which are capable of breaking the
+// invariant, but they're needed and safe when used with STL set algorithms.
+class MutableFunctionEffectSet : public SmallVector<FunctionEffect, 4> {
+public:
+  using SmallVector::insert;
+  using SmallVector::SmallVector;
+
+  MutableFunctionEffectSet(const FunctionEffect &Effect);
+  using Base = SmallVector<FunctionEffect, 4>;
+
+  /// Maintains order/uniquenesss.
+  void insert(const FunctionEffect &Effect);
+
+  MutableFunctionEffectSet &operator|=(FunctionEffectSet RHS);
+
+  operator llvm::ArrayRef<const FunctionEffect>() const {
+    return {data(), size()};
+  }
+};
+
+/// A constant, uniqued set of FunctionEffect instances.
+// These sets will tend to be very small (0-1 elements), so represent them as
+// sorted spans, which are compatible with the STL set algorithms.
+class FunctionEffectSet {
+private:
+  friend class ASTContext; // so it can call the private constructor
+
+  explicit FunctionEffectSet(llvm::ArrayRef<const FunctionEffect> Array)
+      : Impl(Array) {}
+
+  // Points to a separately allocated array, uniqued.
+  llvm::ArrayRef<const FunctionEffect> Impl;
+
+public:
+  using Differences = SmallVector<std::pair<FunctionEffect, /*added=*/bool>>;
+
+  FunctionEffectSet() = default;
+
+  const void *getOpaqueValue() const { return Impl.data(); }
+
+  explicit operator bool() const { return !empty(); }
+  bool empty() const { return Impl.empty(); }
+  size_t size() const { return Impl.size(); }
+
+  using iterator = const FunctionEffect *;
+
+  iterator begin() const { return Impl.begin(); }
+
+  iterator end() const { return Impl.end(); }
+
+  ArrayRef<const FunctionEffect> items() const { return Impl; }
+
+  bool operator==(const FunctionEffectSet &RHS) const {
+    return Impl.data() == RHS.Impl.data();
+  }
+  bool operator!=(const FunctionEffectSet &RHS) const {
+    return Impl.data() != RHS.Impl.data();
+  }
+  bool operator<(const FunctionEffectSet &RHS) const;
+
+  void dump(llvm::raw_ostream &OS) const;
+
+  /// Intersection.
+  MutableFunctionEffectSet operator&(const FunctionEffectSet &RHS) const;
+  /// Difference.
+  MutableFunctionEffectSet operator-(const FunctionEffectSet &RHS) const;
+
+  static FunctionEffectSet getUnion(ASTContext &C, const FunctionEffectSet &LHS,
+                                    const FunctionEffectSet &RHS);
+
+  /// Caller should short-circuit by checking for equality first.
+  static Differences differences(const FunctionEffectSet &Old,
+                                 const FunctionEffectSet &New);
+
+  /// Extract the effects from a Type if it is a BlockType or FunctionProtoType,
+  /// or pointer to one.
+  static FunctionEffectSet get(const Type &TyRef);
+};
+
 /// Represents a prototype with parameter type info, e.g.
 /// 'int foo(int)' or 'int foo(void)'.  'void' is represented as having no
 /// parameters, not as having a single void parameter. Such a type can have
@@ -4197,7 +4403,8 @@ class FunctionProtoType final
           FunctionProtoType, QualType, SourceLocation,
           FunctionType::FunctionTypeExtraBitfields,
           FunctionType::FunctionTypeArmAttributes, FunctionType::ExceptionType,
-          Expr *, FunctionDecl *, FunctionType::ExtParameterInfo, Qualifiers> {
+          Expr *, FunctionDecl *, FunctionType::ExtParameterInfo,
+          FunctionEffectSet, Qualifiers> {
   friend class ASTContext; // ASTContext creates these.
   friend TrailingObjects;
 
@@ -4228,9 +4435,12 @@ class FunctionProtoType final
   //   an ExtParameterInfo for each of the parameters. Present if and
   //   only if hasExtParameterInfos() is true.
   //
+  // * Optionally, a FunctionEffectSet. Present if and only if
+  //   hasFunctionEffects() is true.
+  //
   // * Optionally a Qualifiers object to represent extra qualifiers that can't
-  //   be represented by FunctionTypeBitfields.FastTypeQuals. Present if and only
-  //   if hasExtQualifiers() is true.
+  //   be represented by FunctionTypeBitfields.FastTypeQuals. Present if and
+  //   only if hasExtQualifiers() is true.
   //
   // The optional FunctionTypeExtraBitfields has to be before the data
   // related to the exception specification since it contains the number
@@ -4286,6 +4496,7 @@ public:
     ExceptionSpecInfo ExceptionSpec;
     const ExtParameterInfo *ExtParameterInfos = nullptr;
     SourceLocation EllipsisLoc;
+    FunctionEffectSet FunctionEffects;
 
     ExtProtoInfo()
         : Variadic(false), HasTrailingReturn(false),
@@ -4303,7 +4514,7 @@ public:
 
     bool requiresFunctionProtoTypeExtraBitfields() const {
       return ExceptionSpec.Type == EST_Dynamic ||
-             requiresFunctionProtoTypeArmAttributes();
+             requiresFunctionProtoTypeArmAttributes() || FunctionEffects;
     }
 
     bool requiresFunctionProtoTypeArmAttributes() const {
@@ -4349,6 +4560,10 @@ private:
 
   unsigned numTrailingObjects(OverloadToken<ExtParameterInfo>) const {
     return hasExtParameterInfos() ? getNumParams() : 0;
+  }
+
+  unsigned numTrailingObjects(OverloadToken<FunctionEffectSet>) const {
+    return hasFunctionEffects();
   }
 
   /// Determine whether there are any argument types that
@@ -4452,6 +4667,7 @@ public:
     EPI.RefQualifier = getRefQualifier();
     EPI.ExtParameterInfos = getExtParameterInfosOrNull();
     EPI.AArch64SMEAttributes = getAArch64SMEAttributes();
+    EPI.FunctionEffects = getFunctionEffects();
     return EPI;
   }
 
@@ -4661,6 +4877,18 @@ public:
     if (hasExtParameterInfos())
       return getTrailingObjects<ExtParameterInfo>()[I].isConsumed();
     return false;
+  }
+
+  bool hasFunctionEffects() const {
+    if (!hasExtraBitfields())
+      return false;
+    return getTrailingObjects<FunctionTypeExtraBitfields>()->HasFunctionEffects;
+  }
+
+  FunctionEffectSet getFunctionEffects() const {
+    if (hasFunctionEffects())
+      return *getTrailingObjects<FunctionEffectSet>();
+    return {};
   }
 
   bool isSugared() const { return false; }

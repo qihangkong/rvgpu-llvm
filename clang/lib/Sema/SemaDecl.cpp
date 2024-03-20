@@ -3926,6 +3926,46 @@ bool Sema::MergeFunctionDecl(FunctionDecl *New, NamedDecl *&OldD, Scope *S,
     return true;
   }
 
+  const auto OldFX = Old->getFunctionEffects();
+  const auto NewFX = New->getFunctionEffects();
+  QualType OldQTypeForComparison = OldQType;
+  if (OldFX != NewFX) {
+    const auto Diffs = FunctionEffectSet::differences(OldFX, NewFX);
+    for (const auto &Item : Diffs) {
+      const FunctionEffect &Effect = Item.first;
+      const bool Adding = Item.second;
+      if (Effect.diagnoseRedeclaration(Adding, *Old, OldFX, *New, NewFX)) {
+        Diag(New->getLocation(),
+             diag::warn_mismatched_func_effect_redeclaration)
+            << Effect.name();
+        Diag(Old->getLocation(), diag::note_previous_declaration);
+      }
+    }
+    // Following a warning, we could skip merging effects from the previous
+    // declaration, but that would trigger an additional "conflicting types"
+    // error.
+    if (const auto *NewFPT = NewQType->getAs<FunctionProtoType>()) {
+      auto MergedFX = FunctionEffectSet::getUnion(Context, OldFX, NewFX);
+
+      FunctionProtoType::ExtProtoInfo EPI = NewFPT->getExtProtoInfo();
+      EPI.FunctionEffects = MergedFX;
+      QualType ModQT = Context.getFunctionType(NewFPT->getReturnType(),
+                                               NewFPT->getParamTypes(), EPI);
+
+      New->setType(ModQT);
+      NewQType = New->getType();
+
+      // Revise OldQTForComparison to include the merged effects,
+      // so as not to fail due to differences later.
+      if (const auto *OldFPT = OldQType->getAs<FunctionProtoType>()) {
+        EPI = OldFPT->getExtProtoInfo();
+        EPI.FunctionEffects = MergedFX;
+        OldQTypeForComparison = Context.getFunctionType(
+            OldFPT->getReturnType(), OldFPT->getParamTypes(), EPI);
+      }
+    }
+  }
+
   if (getLangOpts().CPlusPlus) {
     OldQType = Context.getCanonicalType(Old->getType());
     NewQType = Context.getCanonicalType(New->getType());
@@ -4090,9 +4130,8 @@ bool Sema::MergeFunctionDecl(FunctionDecl *New, NamedDecl *&OldD, Scope *S,
     // We also want to respect all the extended bits except noreturn.
 
     // noreturn should now match unless the old type info didn't have it.
-    QualType OldQTypeForComparison = OldQType;
     if (!OldTypeInfo.getNoReturn() && NewTypeInfo.getNoReturn()) {
-      auto *OldType = OldQType->castAs<FunctionProtoType>();
+      auto *OldType = OldQTypeForComparison->castAs<FunctionProtoType>();
       const FunctionType *OldTypeForComparison
         = Context.adjustFunctionType(OldType, OldTypeInfo.withNoReturn(true));
       OldQTypeForComparison = QualType(OldTypeForComparison, 0);
@@ -11104,6 +11143,49 @@ Attr *Sema::getImplicitCodeSegOrSectionAttrForFunction(const FunctionDecl *FD,
   return nullptr;
 }
 
+// Should only be called when getFunctionEffects() returns a non-empty set.
+// Decl should be a FunctionDecl or BlockDecl.
+void Sema::CheckAddCallableWithEffects(const Decl *D, FunctionEffectSet FX) {
+  if (!D->hasBody()) {
+    if (const auto *FD = D->getAsFunction()) {
+      if (!FD->willHaveBody()) {
+        return;
+      }
+    }
+  }
+
+  if (Diags.getIgnoreAllWarnings() ||
+      (Diags.getSuppressSystemWarnings() &&
+       SourceMgr.isInSystemHeader(D->getLocation())))
+    return;
+
+  if (hasUncompilableErrorOccurred())
+    return;
+
+  // For code in dependent contexts, we'll do this at instantiation time
+  // Without this check, we would analyze the function based on placeholder
+  // template parameters, and potentially generate spurious diagnostics.
+  if (cast<DeclContext>(D)->isDependentContext()) {
+    return;
+  }
+
+  // Filter out declarations that the FunctionEffect analysis should skip
+  // and not verify.
+  bool FXNeedVerification = false;
+  for (const auto &Effect : FX) {
+    if (Effect.flags() & FunctionEffect::FE_RequiresVerification) {
+      AllEffectsToVerify.insert(Effect);
+      FXNeedVerification = true;
+    }
+  }
+  if (!FXNeedVerification) {
+    return;
+  }
+
+  // Record the declaration for later analysis.
+  DeclsWithUnverifiedEffects.push_back(D);
+}
+
 /// Determines if we can perform a correct type check for \p D as a
 /// redeclaration of \p PrevDecl. If not, we can generally still perform a
 /// best-effort check.
@@ -15915,6 +15997,10 @@ Decl *Sema::ActOnStartOfFunctionDef(Scope *FnBodyScope, Decl *D,
       getCurLexicalContext()->getDeclKind() != Decl::ObjCCategoryImpl &&
       getCurLexicalContext()->getDeclKind() != Decl::ObjCImplementation)
     Diag(FD->getLocation(), diag::warn_function_def_in_objc_container);
+
+  if (const auto FX = FD->getCanonicalDecl()->getFunctionEffects()) {
+    CheckAddCallableWithEffects(FD, FX);
+  }
 
   return D;
 }

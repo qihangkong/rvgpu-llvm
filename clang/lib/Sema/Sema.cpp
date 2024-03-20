@@ -585,6 +585,24 @@ void Sema::diagnoseNullableToNonnullConversion(QualType DstType,
   Diag(Loc, diag::warn_nullability_lost) << SrcType << DstType;
 }
 
+// Generate diagnostics when adding or removing effects in a type conversion.
+void Sema::diagnoseFunctionEffectConversion(QualType DstType, QualType SrcType,
+                                            SourceLocation Loc) {
+  const auto SrcFX = FunctionEffectSet::get(*SrcType);
+  const auto DstFX = FunctionEffectSet::get(*DstType);
+  if (SrcFX != DstFX) {
+    for (const auto &Item : FunctionEffectSet::differences(SrcFX, DstFX)) {
+      const FunctionEffect &Effect = Item.first;
+      const bool Adding = Item.second;
+      if (Effect.diagnoseConversion(Adding, SrcType, SrcFX, DstType, DstFX)) {
+        Diag(Loc, Adding ? diag::warn_invalid_add_func_effects
+                         : diag::warn_invalid_remove_func_effects)
+            << Effect.name();
+      }
+    }
+  }
+}
+
 void Sema::diagnoseZeroToNullptrConversion(CastKind Kind, const Expr *E) {
   // nullptr only exists from C++11 on, so don't warn on its absence earlier.
   if (!getLangOpts().CPlusPlus11)
@@ -661,6 +679,10 @@ ExprResult Sema::ImpCastExprToType(Expr *E, QualType Ty,
 
   diagnoseNullableToNonnullConversion(Ty, E->getType(), E->getBeginLoc());
   diagnoseZeroToNullptrConversion(Kind, E);
+  if (!isCast(CCK) && !E->isNullPointerConstant(
+                          Context, Expr::NPC_NeverValueDependent /* ???*/)) {
+    diagnoseFunctionEffectConversion(Ty, E->getType(), E->getBeginLoc());
+  }
 
   QualType ExprTy = Context.getCanonicalType(E->getType());
   QualType TypeTy = Context.getCanonicalType(Ty);

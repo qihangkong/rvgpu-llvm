@@ -4505,6 +4505,18 @@ unsigned FunctionDecl::getODRHash() {
   return ODRHash;
 }
 
+// Effects may differ between redeclarations, so collect all effects from
+// all redeclarations.
+FunctionEffectSet FunctionDecl::getFunctionEffects() const {
+  MutableFunctionEffectSet FX;
+  for (FunctionDecl *FD : redecls()) {
+    if (const auto *FPT = FD->getType()->getAs<FunctionProtoType>()) {
+      FX |= FPT->getFunctionEffects();
+    }
+  }
+  return getASTContext().getUniquedFunctionEffectSet(FX);
+}
+
 //===----------------------------------------------------------------------===//
 // FieldDecl Implementation
 //===----------------------------------------------------------------------===//
@@ -5227,6 +5239,15 @@ bool BlockDecl::capturesVariable(const VarDecl *variable) const {
 
 SourceRange BlockDecl::getSourceRange() const {
   return SourceRange(getLocation(), Body ? Body->getEndLoc() : getLocation());
+}
+
+FunctionEffectSet BlockDecl::getFunctionEffects() const {
+  if (auto *TSI = getSignatureAsWritten()) {
+    if (auto *FPT = TSI->getType()->getAs<FunctionProtoType>()) {
+      return FPT->getFunctionEffects();
+    }
+  }
+  return {};
 }
 
 //===----------------------------------------------------------------------===//
