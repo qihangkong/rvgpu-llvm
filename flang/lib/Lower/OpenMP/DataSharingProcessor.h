@@ -49,8 +49,9 @@ private:
   // Symbols in private, firstprivate, and/or lastprivate clauses.
   llvm::SetVector<const Fortran::semantics::Symbol *> privatizedSymbols;
   llvm::SetVector<const Fortran::semantics::Symbol *> defaultSymbols;
-  llvm::SetVector<const Fortran::semantics::Symbol *> symbolsInNestedRegions;
+  llvm::SetVector<const Fortran::semantics::Symbol *> implicitSymbols;
   Fortran::lower::AbstractConverter &converter;
+  Fortran::semantics::SemanticsContext &semaCtx;
   fir::FirOpBuilder &firOpBuilder;
   omp::List<omp::Clause> clauses;
   Fortran::lower::pft::Evaluation &eval;
@@ -59,15 +60,19 @@ private:
   DelayedPrivatizationInfo delayedPrivatizationInfo;
 
   bool needBarrier();
-  void collectSymbols(Fortran::semantics::Symbol::Flag flag);
+  void
+  collectSymbols(Fortran::semantics::Symbol::Flag flag,
+                 llvm::SetVector<const Fortran::semantics::Symbol *> &symbols);
   void collectOmpObjectListSymbol(
       const omp::ObjectList &objects,
       llvm::SetVector<const Fortran::semantics::Symbol *> &symbolSet);
   void collectSymbolsForPrivatization();
   void insertBarrier();
   void collectDefaultSymbols();
+  void collectImplicitSymbols();
   void privatize();
   void defaultPrivatize();
+  void implicitPrivatize();
   void doPrivatize(const Fortran::semantics::Symbol *sym);
   void copyLastPrivatize(mlir::Operation *op);
   void insertLastPrivateCompare(mlir::Operation *op);
@@ -86,7 +91,7 @@ public:
                        Fortran::lower::pft::Evaluation &eval,
                        bool useDelayedPrivatization = false,
                        Fortran::lower::SymMap *symTable = nullptr)
-      : hasLastPrivateOp(false), converter(converter),
+      : hasLastPrivateOp(false), converter(converter), semaCtx(semaCtx),
         firOpBuilder(converter.getFirOpBuilder()),
         clauses(omp::makeList(opClauseList, semaCtx)), eval(eval),
         useDelayedPrivatization(useDelayedPrivatization), symTable(symTable) {}

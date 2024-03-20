@@ -26,8 +26,10 @@ namespace omp {
 void DataSharingProcessor::processStep1() {
   collectSymbolsForPrivatization();
   collectDefaultSymbols();
+  collectImplicitSymbols();
   privatize();
   defaultPrivatize();
+  implicitPrivatize();
   insertBarrier();
 }
 
@@ -268,16 +270,94 @@ void DataSharingProcessor::insertLastPrivateCompare(mlir::Operation *op) {
   firOpBuilder.restoreInsertionPoint(localInsPt);
 }
 
+static const Fortran::parser::CharBlock *
+getSource(const Fortran::semantics::SemanticsContext &semaCtx,
+          const Fortran::lower::pft::Evaluation &eval) {
+  const Fortran::parser::CharBlock *source = nullptr;
+
+  auto ompConsVisit = [&](const Fortran::parser::OpenMPConstruct &x) {
+    std::visit(Fortran::common::visitors{
+                   [&](const Fortran::parser::OpenMPSectionsConstruct &x) {
+                     source = &std::get<0>(x.t).source;
+                   },
+                   [&](const Fortran::parser::OpenMPLoopConstruct &x) {
+                     source = &std::get<0>(x.t).source;
+                   },
+                   [&](const Fortran::parser::OpenMPBlockConstruct &x) {
+                     source = &std::get<0>(x.t).source;
+                   },
+                   [&](const Fortran::parser::OpenMPCriticalConstruct &x) {
+                     source = &std::get<0>(x.t).source;
+                   },
+                   [&](const Fortran::parser::OpenMPAtomicConstruct &x) {
+                     std::visit([&](const auto &x) { source = &x.source; },
+                                x.u);
+                   },
+                   [&](const auto &x) { source = &x.source; },
+               },
+               x.u);
+  };
+
+  eval.visit(Fortran::common::visitors{
+      [&](const Fortran::parser::OpenMPConstruct &x) { ompConsVisit(x); },
+      [&](const Fortran::parser::OpenMPDeclarativeConstruct &x) {
+        source = &x.source;
+      },
+      [&](const Fortran::parser::OmpEndLoopDirective &x) {
+        source = &x.source;
+      },
+      [&](const auto &x) {},
+  });
+
+  return source;
+}
+
 void DataSharingProcessor::collectSymbols(
-    Fortran::semantics::Symbol::Flag flag) {
-  converter.collectSymbolSet(eval, defaultSymbols, flag,
+    Fortran::semantics::Symbol::Flag flag,
+    llvm::SetVector<const Fortran::semantics::Symbol *> &symbols) {
+  // Collect all scopes associated with 'eval'.
+  llvm::SetVector<const Fortran::semantics::Scope *> clauseScopes;
+  std::function<void(const Fortran::semantics::Scope *)> collectScopes =
+      [&](const Fortran::semantics::Scope *scope) {
+        clauseScopes.insert(scope);
+        for (const Fortran::semantics::Scope &child : scope->children())
+          collectScopes(&child);
+      };
+  const Fortran::parser::CharBlock *source =
+      clauses.empty() ? getSource(semaCtx, eval) : &clauses.front().source;
+  const Fortran::semantics::Scope *curScope = nullptr;
+  if (source && !source->empty()) {
+    curScope = &semaCtx.FindScope(*source);
+    collectScopes(curScope);
+  }
+  // Collect all symbols referenced in the evaluation being processed,
+  // that matches 'flag'.
+  llvm::SetVector<const Fortran::semantics::Symbol *> allSymbols;
+  converter.collectSymbolSet(eval, allSymbols, flag,
                              /*collectSymbols=*/true,
                              /*collectHostAssociatedSymbols=*/true);
-  for (Fortran::lower::pft::Evaluation &e : eval.getNestedEvaluations()) {
+  llvm::SetVector<const Fortran::semantics::Symbol *> symbolsInNestedRegions;
+  for (Fortran::lower::pft::Evaluation &e : eval.getNestedEvaluations())
     if (e.hasNestedEvaluations() && !e.isConstruct())
       converter.collectSymbolSet(e, symbolsInNestedRegions, flag,
                                  /*collectSymbols=*/true,
                                  /*collectHostAssociatedSymbols=*/false);
+  // Filter-out symbols that must not be privatized.
+  bool collectImplicit = flag == Fortran::semantics::Symbol::Flag::OmpImplicit;
+  auto isPrivatizable = [](const Fortran::semantics::Symbol &sym) -> bool {
+    return !Fortran::semantics::IsProcedure(sym) &&
+           !sym.GetUltimate().has<Fortran::semantics::DerivedTypeDetails>() &&
+           !sym.GetUltimate().has<Fortran::semantics::NamelistDetails>();
+  };
+  for (const auto *sym : allSymbols) {
+    assert(curScope && "couldn't find current scope");
+    if (isPrivatizable(*sym) && !symbolsInNestedRegions.contains(sym) &&
+        !privatizedSymbols.contains(sym) &&
+        !sym->test(Fortran::semantics::Symbol::Flag::OmpPreDetermined) &&
+        (collectImplicit ||
+         !sym->test(Fortran::semantics::Symbol::Flag::OmpImplicit)) &&
+        clauseScopes.contains(&sym->owner()))
+      symbols.insert(sym);
   }
 }
 
@@ -286,11 +366,20 @@ void DataSharingProcessor::collectDefaultSymbols() {
     if (const auto *defaultClause =
             std::get_if<omp::clause::Default>(&clause.u)) {
       if (defaultClause->v == omp::clause::Default::Type::Private)
-        collectSymbols(Fortran::semantics::Symbol::Flag::OmpPrivate);
+        collectSymbols(Fortran::semantics::Symbol::Flag::OmpPrivate,
+                       defaultSymbols);
       else if (defaultClause->v == omp::clause::Default::Type::Firstprivate)
-        collectSymbols(Fortran::semantics::Symbol::Flag::OmpFirstPrivate);
+        collectSymbols(Fortran::semantics::Symbol::Flag::OmpFirstPrivate,
+                       defaultSymbols);
     }
   }
+}
+
+void DataSharingProcessor::collectImplicitSymbols() {
+  // There will be no implicit symbols when a default clause is present.
+  if (defaultSymbols.empty())
+    collectSymbols(Fortran::semantics::Symbol::Flag::OmpImplicit,
+                   implicitSymbols);
 }
 
 void DataSharingProcessor::privatize() {
@@ -318,14 +407,13 @@ void DataSharingProcessor::copyLastPrivatize(mlir::Operation *op) {
 }
 
 void DataSharingProcessor::defaultPrivatize() {
-  for (const Fortran::semantics::Symbol *sym : defaultSymbols) {
-    if (!Fortran::semantics::IsProcedure(*sym) &&
-        !sym->GetUltimate().has<Fortran::semantics::DerivedTypeDetails>() &&
-        !sym->GetUltimate().has<Fortran::semantics::NamelistDetails>() &&
-        !symbolsInNestedRegions.contains(sym) &&
-        !privatizedSymbols.contains(sym))
-      doPrivatize(sym);
-  }
+  for (const Fortran::semantics::Symbol *sym : defaultSymbols)
+    doPrivatize(sym);
+}
+
+void DataSharingProcessor::implicitPrivatize() {
+  for (const Fortran::semantics::Symbol *sym : implicitSymbols)
+    doPrivatize(sym);
 }
 
 void DataSharingProcessor::doPrivatize(const Fortran::semantics::Symbol *sym) {
