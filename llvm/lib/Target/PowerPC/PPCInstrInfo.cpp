@@ -5229,7 +5229,7 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
     return;
 
   unsigned Opcode = MI->getOpcode();
-  bool IsRelplaceIntr = false;
+  bool IsReplaceInstr = false;
   switch (Opcode) {
   case PPC::OR:
   case PPC::OR8:
@@ -5249,7 +5249,7 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
       }
 
       if (Opcode == PPC::OR || Opcode == PPC::ISEL)
-        IsRelplaceIntr = true;
+        IsReplaceInstr = true;
       else
         return;
     }
@@ -5284,7 +5284,7 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
 
     if (Opcode == PPC::ORI || Opcode == PPC::XORI || Opcode == PPC::ORIS ||
         Opcode == PPC::ORIS || Opcode == PPC::XORIS)
-      IsRelplaceIntr = true;
+      IsReplaceInstr = true;
     else
       return;
     break;
@@ -5297,7 +5297,7 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
       Register SrcReg2 = MI->getOperand(2).getReg();
       replaceInstrAfterElimExt32To64(SrcReg2, MRI, BinOpDepth, LV);
       if (Opcode == PPC::AND)
-        IsRelplaceIntr = true;
+        IsReplaceInstr = true;
       else
         return;
     }
@@ -5311,7 +5311,7 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
       MI->getMF()->getSubtarget<PPCSubtarget>().getInstrInfo();
   if ((definedBySignExtendingOp(Reg, MRI) && !TII->isZExt32To64(Opcode) &&
        !isOpZeroOfSubwordPreincLoad(Opcode)) ||
-      IsRelplaceIntr) {
+      IsReplaceInstr) {
 
     const TargetRegisterClass *RC = MRI->getRegClass(Reg);
     assert(RC != &PPC::G8RCRegClass && RC != &PPC::G8RC_and_G8RC_NOX0RegClass &&
@@ -5352,16 +5352,16 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
     DenseMap<unsigned, Register> PromoteRegs;
     DenseMap<unsigned, Register> ReCalRegs;
     for (unsigned i = 1; i < MI->getNumOperands(); i++) {
-      MachineOperand &Oprand = MI->getOperand(i);
-      if (Oprand.isReg()) {
-        Register OprandReg = Oprand.getReg();
-        if (!OprandReg.isVirtual())
+      MachineOperand &Operand = MI->getOperand(i);
+      if (Operand.isReg()) {
+        Register OperandReg = Operand.getReg();
+        if (!OperandReg.isVirtual())
           continue;
 
         const TargetRegisterClass *RC =
             TRI->getRegClass(MCID.operands()[i].RegClass);
-        const TargetRegisterClass *OrgRC = MRI->getRegClass(OprandReg);
-        if (RC != MRI->getRegClass(OprandReg) &&
+        const TargetRegisterClass *OrgRC = MRI->getRegClass(OperandReg);
+        if (RC != MRI->getRegClass(OperandReg) &&
             (OrgRC == &PPC::GPRCRegClass ||
              OrgRC == &PPC::GPRC_and_GPRC_NOR0RegClass)) {
           Register TmpReg = MRI->createVirtualRegister(RC);
@@ -5369,12 +5369,12 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
           BuildMI(*MBB, MI, DL, TII->get(PPC::IMPLICIT_DEF), TmpReg);
           BuildMI(*MBB, MI, DL, TII->get(PPC::INSERT_SUBREG), DstTmpReg)
               .addReg(TmpReg)
-              .addReg(OprandReg)
+              .addReg(OperandReg)
               .addImm(PPC::sub_32);
           PromoteRegs[i] = DstTmpReg;
           ReCalRegs[i] = DstTmpReg;
         } else {
-          ReCalRegs[i] = OprandReg;
+          ReCalRegs[i] = OperandReg;
         }
       }
     }
