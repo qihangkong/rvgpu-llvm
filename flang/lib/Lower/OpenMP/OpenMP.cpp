@@ -926,7 +926,7 @@ genEnterExitUpdateDataOp(Fortran::lower::AbstractConverter &converter,
   ClauseProcessor cp(converter, semaCtx, clauseList);
   cp.processIf(directiveName, ifClauseOperand);
   cp.processDevice(stmtCtx, deviceOperand);
-  cp.processDepend(dependTypeOperands, dependOperands);
+  cp.processTargetDepend(currentLocation);
   cp.processNowait(nowaitAttr);
 
   if constexpr (std::is_same_v<OpTy, mlir::omp::UpdateDataOp>) {
@@ -939,13 +939,9 @@ genEnterExitUpdateDataOp(Fortran::lower::AbstractConverter &converter,
     cp.processMap(currentLocation, directive, stmtCtx, mapOperands);
   }
 
-  return firOpBuilder.create<OpTy>(
-      currentLocation, ifClauseOperand, deviceOperand,
-      dependTypeOperands.empty()
-          ? nullptr
-          : mlir::ArrayAttr::get(converter.getFirOpBuilder().getContext(),
-                                 dependTypeOperands),
-      dependOperands, nowaitAttr, mapOperands);
+  return firOpBuilder.create<OpTy>(currentLocation, ifClauseOperand,
+                                   deviceOperand, nullptr, mlir::ValueRange(),
+                                   nowaitAttr, mapOperands);
 }
 
 // This functions creates a block for the body of the targetOp's region. It adds
@@ -1122,7 +1118,7 @@ genTargetOp(Fortran::lower::AbstractConverter &converter,
   cp.processIf(clause::If::DirectiveNameModifier::Target, ifClauseOperand);
   cp.processDevice(stmtCtx, deviceOperand);
   cp.processThreadLimit(stmtCtx, threadLimitOperand);
-  cp.processDepend(dependTypeOperands, dependOperands);
+  cp.processTargetDepend(currentLocation);
   cp.processNowait(nowaitAttr);
   cp.processMap(currentLocation, directive, stmtCtx, mapOperands, &mapSymTypes,
                 &mapSymLocs, &mapSymbols);
@@ -1224,11 +1220,7 @@ genTargetOp(Fortran::lower::AbstractConverter &converter,
 
   auto targetOp = converter.getFirOpBuilder().create<mlir::omp::TargetOp>(
       currentLocation, ifClauseOperand, deviceOperand, threadLimitOperand,
-      dependTypeOperands.empty()
-          ? nullptr
-          : mlir::ArrayAttr::get(converter.getFirOpBuilder().getContext(),
-                                 dependTypeOperands),
-      dependOperands, nowaitAttr, mapOperands);
+      nullptr, mlir::ValueRange(), nowaitAttr, mapOperands);
 
   genBodyOfTargetOp(converter, semaCtx, eval, genNested, targetOp, mapSymTypes,
                     mapSymLocs, mapSymbols, currentLocation);
