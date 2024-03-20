@@ -73,9 +73,8 @@ define i64 @test_floor_si64(double %x) nounwind {
 ; RV32IFD-NEXT:    feq.d a2, fs0, fs0
 ; RV32IFD-NEXT:    neg a2, a2
 ; RV32IFD-NEXT:    lui a4, 524288
-; RV32IFD-NEXT:    li a5, 1
 ; RV32IFD-NEXT:    lui a3, 524288
-; RV32IFD-NEXT:    bne s2, a5, .LBB1_2
+; RV32IFD-NEXT:    beqz s2, .LBB1_2
 ; RV32IFD-NEXT:  # %bb.1:
 ; RV32IFD-NEXT:    mv a3, a1
 ; RV32IFD-NEXT:  .LBB1_2:
@@ -353,9 +352,8 @@ define i64 @test_ceil_si64(double %x) nounwind {
 ; RV32IFD-NEXT:    feq.d a2, fs0, fs0
 ; RV32IFD-NEXT:    neg a2, a2
 ; RV32IFD-NEXT:    lui a4, 524288
-; RV32IFD-NEXT:    li a5, 1
 ; RV32IFD-NEXT:    lui a3, 524288
-; RV32IFD-NEXT:    bne s2, a5, .LBB5_2
+; RV32IFD-NEXT:    beqz s2, .LBB5_2
 ; RV32IFD-NEXT:  # %bb.1:
 ; RV32IFD-NEXT:    mv a3, a1
 ; RV32IFD-NEXT:  .LBB5_2:
@@ -633,9 +631,8 @@ define i64 @test_trunc_si64(double %x) nounwind {
 ; RV32IFD-NEXT:    feq.d a2, fs0, fs0
 ; RV32IFD-NEXT:    neg a2, a2
 ; RV32IFD-NEXT:    lui a4, 524288
-; RV32IFD-NEXT:    li a5, 1
 ; RV32IFD-NEXT:    lui a3, 524288
-; RV32IFD-NEXT:    bne s2, a5, .LBB9_2
+; RV32IFD-NEXT:    beqz s2, .LBB9_2
 ; RV32IFD-NEXT:  # %bb.1:
 ; RV32IFD-NEXT:    mv a3, a1
 ; RV32IFD-NEXT:  .LBB9_2:
@@ -913,9 +910,8 @@ define i64 @test_round_si64(double %x) nounwind {
 ; RV32IFD-NEXT:    feq.d a2, fs0, fs0
 ; RV32IFD-NEXT:    neg a2, a2
 ; RV32IFD-NEXT:    lui a4, 524288
-; RV32IFD-NEXT:    li a5, 1
 ; RV32IFD-NEXT:    lui a3, 524288
-; RV32IFD-NEXT:    bne s2, a5, .LBB13_2
+; RV32IFD-NEXT:    beqz s2, .LBB13_2
 ; RV32IFD-NEXT:  # %bb.1:
 ; RV32IFD-NEXT:    mv a3, a1
 ; RV32IFD-NEXT:  .LBB13_2:
@@ -1193,9 +1189,8 @@ define i64 @test_roundeven_si64(double %x) nounwind {
 ; RV32IFD-NEXT:    feq.d a2, fs0, fs0
 ; RV32IFD-NEXT:    neg a2, a2
 ; RV32IFD-NEXT:    lui a4, 524288
-; RV32IFD-NEXT:    li a5, 1
 ; RV32IFD-NEXT:    lui a3, 524288
-; RV32IFD-NEXT:    bne s2, a5, .LBB17_2
+; RV32IFD-NEXT:    beqz s2, .LBB17_2
 ; RV32IFD-NEXT:  # %bb.1:
 ; RV32IFD-NEXT:    mv a3, a1
 ; RV32IFD-NEXT:  .LBB17_2:
@@ -1473,9 +1468,8 @@ define i64 @test_rint_si64(double %x) nounwind {
 ; RV32IFD-NEXT:    feq.d a2, fs0, fs0
 ; RV32IFD-NEXT:    neg a2, a2
 ; RV32IFD-NEXT:    lui a4, 524288
-; RV32IFD-NEXT:    li a5, 1
 ; RV32IFD-NEXT:    lui a3, 524288
-; RV32IFD-NEXT:    bne s2, a5, .LBB21_2
+; RV32IFD-NEXT:    beqz s2, .LBB21_2
 ; RV32IFD-NEXT:  # %bb.1:
 ; RV32IFD-NEXT:    mv a3, a1
 ; RV32IFD-NEXT:  .LBB21_2:
