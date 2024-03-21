@@ -5,7 +5,7 @@
 define amdgpu_kernel void @flat_last_use_load_0(ptr %in, ptr %out) {
 ; GFX12-LABEL: flat_last_use_load_0:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
+; GFX12-NEXT:    s_load_b128 s[0:3], s[2:3], 0x0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
 ; GFX12-NEXT:    flat_load_b32 v2, v[0:1] th:TH_LOAD_LU
@@ -22,11 +22,13 @@ entry:
 define amdgpu_kernel void @flat_last_use_load_1(ptr %in, ptr %out) {
 ; GFX12-LABEL: flat_last_use_load_1:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
+; GFX12-NEXT:    s_load_b128 s[0:3], s[2:3], 0x0
+; GFX12-NEXT:    v_and_b32_e32 v0, 0x3ff, v0
+; GFX12-NEXT:    s_delay_alu instid0(VALU_DEP_1) | instskip(SKIP_1) | instid1(VALU_DEP_1)
 ; GFX12-NEXT:    v_lshlrev_b32_e32 v0, 2, v0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
-; GFX12-NEXT:    s_delay_alu instid0(VALU_DEP_1) | instskip(NEXT) | instid1(VALU_DEP_1)
 ; GFX12-NEXT:    v_add_co_u32 v0, s0, s0, v0
+; GFX12-NEXT:    s_delay_alu instid0(VALU_DEP_1)
 ; GFX12-NEXT:    v_add_co_ci_u32_e64 v1, null, s1, 0, s0
 ; GFX12-NEXT:    flat_load_b32 v2, v[0:1] th:TH_LOAD_LU
 ; GFX12-NEXT:    v_dual_mov_b32 v1, s3 :: v_dual_mov_b32 v0, s2
@@ -44,7 +46,7 @@ entry:
 define amdgpu_kernel void @flat_last_use_and_volatile_load(ptr %in, ptr %out) {
 ; GFX12-LABEL: flat_last_use_and_volatile_load:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
+; GFX12-NEXT:    s_load_b128 s[0:3], s[2:3], 0x0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
 ; GFX12-NEXT:    flat_load_b32 v2, v[0:1] th:TH_LOAD_BYPASS scope:SCOPE_SYS
@@ -62,7 +64,7 @@ entry:
 define amdgpu_kernel void @flat_last_use_and_nontemporal_load(ptr %in, ptr %out) {
 ; GFX12-LABEL: flat_last_use_and_nontemporal_load:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
+; GFX12-NEXT:    s_load_b128 s[0:3], s[2:3], 0x0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    v_dual_mov_b32 v0, s0 :: v_dual_mov_b32 v1, s1
 ; GFX12-NEXT:    flat_load_b32 v2, v[0:1] th:TH_LOAD_LU

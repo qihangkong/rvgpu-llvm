@@ -5,7 +5,7 @@
 define amdgpu_kernel void @global_last_use_load_0(ptr addrspace(1) %in, ptr addrspace(1) %out) {
 ; GFX12-LABEL: global_last_use_load_0:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
+; GFX12-NEXT:    s_load_b128 s[0:3], s[2:3], 0x0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    s_load_b32 s0, s[0:1], 0x0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
@@ -23,8 +23,10 @@ entry:
 define amdgpu_kernel void @global_last_use_load_1(ptr addrspace(1) %in, ptr addrspace(1) %out) {
 ; GFX12-LABEL: global_last_use_load_1:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
-; GFX12-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_lshlrev_b32 v0, 2, v0
+; GFX12-NEXT:    s_load_b128 s[0:3], s[2:3], 0x0
+; GFX12-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_and_b32 v0, 0x3ff, v0
+; GFX12-NEXT:    s_delay_alu instid0(VALU_DEP_1)
+; GFX12-NEXT:    v_lshlrev_b32_e32 v0, 2, v0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    global_load_b32 v0, v0, s[0:1] th:TH_LOAD_LU
 ; GFX12-NEXT:    s_wait_loadcnt 0x0
@@ -43,7 +45,7 @@ entry:
 define amdgpu_kernel void @global_last_use_and_volatile_load(ptr addrspace(1) %in, ptr addrspace(1) %out) {
 ; GFX12-LABEL: global_last_use_and_volatile_load:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
+; GFX12-NEXT:    s_load_b128 s[0:3], s[2:3], 0x0
 ; GFX12-NEXT:    v_mov_b32_e32 v0, 0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    global_load_b32 v1, v0, s[0:1] th:TH_LOAD_BYPASS scope:SCOPE_SYS
@@ -61,8 +63,10 @@ entry:
 define amdgpu_kernel void @global_last_use_and_nontemporal_load(ptr addrspace(1) %in, ptr addrspace(1) %out) {
 ; GFX12-LABEL: global_last_use_and_nontemporal_load:
 ; GFX12:       ; %bb.0: ; %entry
-; GFX12-NEXT:    s_load_b128 s[0:3], s[0:1], 0x0
-; GFX12-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_lshlrev_b32 v0, 2, v0
+; GFX12-NEXT:    s_load_b128 s[0:3], s[2:3], 0x0
+; GFX12-NEXT:    v_dual_mov_b32 v1, 0 :: v_dual_and_b32 v0, 0x3ff, v0
+; GFX12-NEXT:    s_delay_alu instid0(VALU_DEP_1)
+; GFX12-NEXT:    v_lshlrev_b32_e32 v0, 2, v0
 ; GFX12-NEXT:    s_wait_kmcnt 0x0
 ; GFX12-NEXT:    global_load_b32 v0, v0, s[0:1] th:TH_LOAD_LU
 ; GFX12-NEXT:    s_wait_loadcnt 0x0
