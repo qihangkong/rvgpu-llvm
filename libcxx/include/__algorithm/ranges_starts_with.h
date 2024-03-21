@@ -93,8 +93,8 @@ struct __fn {
             class _Proj1 = identity,
             class _Proj2 = identity>
     requires indirectly_comparable<iterator_t<_Range1>, iterator_t<_Range2>, _Pred, _Proj1, _Proj2>
-  _LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI static constexpr bool
-  operator()(_Range1&& __range1, _Range2&& __range2, _Pred __pred = {}, _Proj1 __proj1 = {}, _Proj2 __proj2 = {}) {
+  _LIBCPP_NODISCARD_EXT _LIBCPP_HIDE_FROM_ABI constexpr bool operator()(
+      _Range1&& __range1, _Range2&& __range2, _Pred __pred = {}, _Proj1 __proj1 = {}, _Proj2 __proj2 = {}) const {
     if constexpr (sized_range<_Range1> && sized_range<_Range2>) {
       auto __n1 = ranges::size(__range1);
       auto __n2 = ranges::size(__range2);
