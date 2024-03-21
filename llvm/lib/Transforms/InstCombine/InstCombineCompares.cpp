@@ -2488,7 +2488,7 @@ Instruction *InstCombinerImpl::foldICmpShrConstant(ICmpInst &Cmp,
       // performed, prefer this form so the produced constant is close to a
       // power of two.
       // icmp slt/ult (ashr exact X, ShAmtC), C
-      // --> icmp slt/ult (C - 1) << ShAmtC) -1
+      // --> icmp slt/ult X, (C - 1) << ShAmtC) + 1
       APInt ShiftedC = (C - 1).shl(ShAmtVal) + 1;
       return new ICmpInst(Pred, X, ConstantInt::get(ShrTy, ShiftedC));
     }
