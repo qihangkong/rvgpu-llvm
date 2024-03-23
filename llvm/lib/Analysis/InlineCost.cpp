@@ -536,16 +536,10 @@ public:
 // Considering comparisons from leaf and non-leaf nodes, we can estimate the
 // number of comparisons in a simple closed form :
 //   n + n / 2 - 1 = n * 3 / 2 - 1
-int64_t getExpectedNumberOfCompare(int NumCaseCluster,
-                                   bool DefaultDestUndefined) {
-  int64_t ExpectedNumber = 3 * static_cast<int64_t>(NumCaseCluster) / 2 - 1;
+int64_t getExpectedNumberOfCompare(int NumCaseCluster) {
   // FIXME: The compare instruction count should be less than the branch count
-  // when default branch is undefined. But this will cause some performance
-  // regressions. At least, we can now try to remove a compare instruction.
-  if (DefaultDestUndefined) {
-    ExpectedNumber -= 1;
-  }
-  return ExpectedNumber;
+  // when default branch is undefined: https://llvm.godbolt.org/z/x6ETdfY79.
+  return 3 * static_cast<int64_t>(NumCaseCluster) / 2 - 1;
 }
 
 /// FIXME: if it is necessary to derive from InlineCostCallAnalyzer, note
@@ -733,7 +727,7 @@ class InlineCostCallAnalyzer final : public CallAnalyzer {
     }
 
     int64_t ExpectedNumberOfCompare =
-        getExpectedNumberOfCompare(NumCaseCluster, DefaultDestUndefined);
+        getExpectedNumberOfCompare(NumCaseCluster);
     int64_t SwitchCost = ExpectedNumberOfCompare * 2 * InstrCost;
 
     addCost(SwitchCost);
@@ -1266,7 +1260,7 @@ private:
     }
 
     int64_t ExpectedNumberOfCompare =
-        getExpectedNumberOfCompare(NumCaseCluster, DefaultDestUndefined);
+        getExpectedNumberOfCompare(NumCaseCluster);
 
     int64_t SwitchCost =
         ExpectedNumberOfCompare * SwitchCostMultiplier * InstrCost;
