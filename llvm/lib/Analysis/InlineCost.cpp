@@ -538,12 +538,14 @@ public:
 //   n + n / 2 - 1 = n * 3 / 2 - 1
 int64_t getExpectedNumberOfCompare(int NumCaseCluster,
                                    bool DefaultDestUndefined) {
-  // The compare instruction count should be less than the branch count
-  // when default branch is undefined.
+  int64_t ExpectedNumber = 3 * static_cast<int64_t>(NumCaseCluster) / 2 - 1;
+  // FIXME: The compare instruction count should be less than the branch count
+  // when default branch is undefined. But this will cause some performance
+  // regressions. At least, we can now try to remove a compare instruction.
   if (DefaultDestUndefined) {
-    return static_cast<int64_t>(NumCaseCluster) - 1;
+    ExpectedNumber -= 1;
   }
-  return 3 * static_cast<int64_t>(NumCaseCluster) / 2 - 1;
+  return ExpectedNumber;
 }
 
 /// FIXME: if it is necessary to derive from InlineCostCallAnalyzer, note
