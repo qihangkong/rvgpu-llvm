@@ -252,15 +252,17 @@ define i32 @ctlz_lshr_i32(i32 signext %a) {
 ; RV64I-NEXT:    .cfi_def_cfa_offset 16
 ; RV64I-NEXT:    sd ra, 8(sp) # 8-byte Folded Spill
 ; RV64I-NEXT:    .cfi_offset ra, -8
-; RV64I-NEXT:    srliw a1, a0, 1
+; RV64I-NEXT:    srli a1, a0, 1
 ; RV64I-NEXT:    or a0, a0, a1
-; RV64I-NEXT:    srliw a1, a0, 2
+; RV64I-NEXT:    srli a1, a0, 2
 ; RV64I-NEXT:    or a0, a0, a1
-; RV64I-NEXT:    srliw a1, a0, 4
+; RV64I-NEXT:    srli a1, a0, 4
 ; RV64I-NEXT:    or a0, a0, a1
-; RV64I-NEXT:    srliw a1, a0, 8
+; RV64I-NEXT:    slli a1, a0, 33
+; RV64I-NEXT:    srli a1, a1, 41
 ; RV64I-NEXT:    or a0, a0, a1
-; RV64I-NEXT:    srliw a1, a0, 16
+; RV64I-NEXT:    slli a1, a0, 33
+; RV64I-NEXT:    srli a1, a1, 49
 ; RV64I-NEXT:    or a0, a0, a1
 ; RV64I-NEXT:    not a0, a0
 ; RV64I-NEXT:    srli a1, a0, 1
