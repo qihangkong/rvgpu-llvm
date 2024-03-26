@@ -16439,7 +16439,8 @@ static void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
       S.Context, E, S.isConstantEvaluatedContext(), /*Approximate=*/true);
   IntRange TargetRange = IntRange::forTargetOfCanonicalType(S.Context, Target);
 
-  if (LikelySourceRange.Width > TargetRange.Width) {
+  if (LikelySourceRange.Width > TargetRange.Width &&
+      !T.getTypePtr()->hasAttr(attr::Wraps)) {
     // If the source is a constant, use a default-on diagnostic.
     // TODO: this should happen for bitfield stores, too.
     Expr::EvalResult Result;
@@ -16487,7 +16488,7 @@ static void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
 
   if (TargetRange.Width == LikelySourceRange.Width &&
       !TargetRange.NonNegative && LikelySourceRange.NonNegative &&
-      Source->isSignedIntegerType()) {
+      Source->isSignedIntegerType() && !T.getTypePtr()->hasAttr(attr::Wraps)) {
     // Warn when doing a signed to signed conversion, warn if the positive
     // source value is exactly the width of the target type, which will
     // cause a negative value to be stored.
