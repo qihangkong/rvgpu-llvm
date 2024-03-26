@@ -876,6 +876,64 @@ TEST_F(
   EXPECT_EQ(44u, newCursor(Code, 48));
 }
 
+TEST_F(
+    SortIncludesTest,
+    CalculatesCorrectCursorPositionWhenNewLineReplacementsWithRegroupingAndCRLF) {
+  Style.IncludeBlocks = Style.IBS_Regroup;
+  FmtStyle.LineEnding = FormatStyle::LE_CRLF;
+  Style.IncludeCategories = {
+      {"^\"a\"", 0, 0, false}, {"^\"b\"", 1, 1, false}, {".*", 2, 2, false}};
+  std::string Code = "#include \"a\"\r\n"     // Start of line: 0
+                     "#include \"b\"\r\n"     // Start of line: 14
+                     "#include \"c\"\r\n"     // Start of line: 28
+                     "\r\n"                   // Start of line: 42
+                     "int i;";                // Start of line: 44
+  std::string Expected = "#include \"a\"\r\n" // Start of line: 0
+                         "\r\n"               // Start of line: 14
+                         "#include \"b\"\r\n" // Start of line: 16
+                         "\r\n"               // Start of line: 30
+                         "#include \"c\"\r\n" // Start of line: 32
+                         "\r\n"               // Start of line: 46
+                         "int i;";            // Start of line: 48
+  EXPECT_EQ(Expected, sort(Code));
+  EXPECT_EQ(0u, newCursor(Code, 0));
+  EXPECT_EQ(15u, newCursor(Code, 16));
+  EXPECT_EQ(30u, newCursor(Code, 32));
+  EXPECT_EQ(44u, newCursor(Code, 46));
+  EXPECT_EQ(46u, newCursor(Code, 48));
+}
+
+TEST_F(
+    SortIncludesTest,
+    CalculatesCorrectCursorPositionWhenNoNewLineReplacementsWithRegroupingAndCRLF) {
+  Style.IncludeBlocks = Style.IBS_Regroup;
+  FmtStyle.LineEnding = FormatStyle::LE_CRLF;
+  Style.IncludeCategories = {
+      {"^\"a\"", 0, 0, false}, {"^\"b\"", 1, 1, false}, {".*", 2, 2, false}};
+  std::string Code = "#include \"a\"\r\n"     // Start of line: 0
+                     "\r\n"                   // Start of line: 14
+                     "#include \"c\"\r\n"     // Start of line: 16
+                     "\r\n"                   // Start of line: 30
+                     "#include \"b\"\r\n"     // Start of line: 32
+                     "\r\n"                   // Start of line: 46
+                     "int i;";                // Start of line: 48
+  std::string Expected = "#include \"a\"\r\n" // Start of line: 0
+                         "\r\n"               // Start of line: 14
+                         "#include \"b\"\r\n" // Start of line: 16
+                         "\r\n"               // Start of line: 30
+                         "#include \"c\"\r\n" // Start of line: 32
+                         "\r\n"               // Start of line: 46
+                         "int i;";            // Start of line: 48
+  EXPECT_EQ(Expected, sort(Code));
+  EXPECT_EQ(0u, newCursor(Code, 0));
+  EXPECT_EQ(14u, newCursor(Code, 14));
+  EXPECT_EQ(30u, newCursor(Code, 32));
+  EXPECT_EQ(30u, newCursor(Code, 30));
+  EXPECT_EQ(15u, newCursor(Code, 15));
+  EXPECT_EQ(44u, newCursor(Code, 46));
+  EXPECT_EQ(46u, newCursor(Code, 48));
+}
+
 TEST_F(SortIncludesTest, DeduplicateIncludes) {
   EXPECT_EQ("#include <a>\n"
             "#include <b>\n"

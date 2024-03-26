@@ -3114,8 +3114,8 @@ static void sortCppIncludes(const FormatStyle &Style,
     return;
   }
 
+  const auto OldCursor = Cursor ? *Cursor : 0;
   std::string result;
-  unsigned NewCursor = UINT_MAX;
   for (unsigned Index : Indices) {
     if (!result.empty()) {
       result += "\n";
@@ -3127,22 +3127,20 @@ static void sortCppIncludes(const FormatStyle &Style,
     }
     result += Includes[Index].Text;
     if (Cursor && CursorIndex == Index)
-      NewCursor = IncludesBeginOffset + result.size() - CursorToEOLOffset;
+      *Cursor = IncludesBeginOffset + result.size() - CursorToEOLOffset;
     CurrentCategory = Includes[Index].Category;
   }
+
+  if (Cursor && *Cursor >= IncludesEndOffset)
+    *Cursor += result.size() - IncludesBlockSize;
 
   // If the #includes are out of order, we generate a single replacement fixing
   // the entire range of blocks. Otherwise, no replacement is generated.
   if (replaceCRLF(result) == replaceCRLF(std::string(Code.substr(
                                  IncludesBeginOffset, IncludesBlockSize)))) {
+    if (Cursor)
+        *Cursor = OldCursor;
     return;
-  }
-
-  if (Cursor) {
-    if (NewCursor != UINT_MAX)
-      *Cursor = NewCursor;
-    else if (*Cursor >= IncludesEndOffset)
-      *Cursor += result.size() - IncludesBlockSize;
   }
 
   auto Err = Replaces.add(tooling::Replacement(
