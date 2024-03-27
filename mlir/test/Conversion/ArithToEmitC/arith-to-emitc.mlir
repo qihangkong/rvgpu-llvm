@@ -93,3 +93,18 @@ func.func @arith_select(%arg0: i1, %arg1: tensor<8xi32>, %arg2: tensor<8xi32>) -
   %0 = arith.select %arg0, %arg1, %arg2 : i1, tensor<8xi32>
   return
 }
+
+// -----
+
+func.func @arith_int_to_float_cast_ops(%arg0: i8, %arg1: i64) {
+  // CHECK: emitc.cast %arg0 : i8 to f32
+  %0 = arith.sitofp %arg0 : i8 to f32
+
+  // CHECK: emitc.cast %arg1 : i64 to f32
+  %1 = arith.sitofp %arg1 : i64 to f32
+
+  // CHECK: emitc.cast %arg0 : i8 to f32
+  %2 = arith.uitofp %arg0 : i8 to f32
+
+  return
+}
