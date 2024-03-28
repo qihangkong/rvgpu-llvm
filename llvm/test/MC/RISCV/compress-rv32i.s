@@ -202,6 +202,12 @@ lw ra, 252(sp)
 # CHECK: # encoding:  [0x82,0x80]
 jalr zero, 0(ra)
 
+# CHECK-BYTES: 81 40
+# CHECK-ALIAS: li ra, 0
+# CHECK-INST: c.li ra, 0
+# CHECK:  # encoding: [0x81,0x40]
+add ra, zero, zero
+
 # CHECK-BYTES: 92 80
 # CHECK-ALIAS: mv ra, tp
 # CHECK-INST: c.mv ra, tp
