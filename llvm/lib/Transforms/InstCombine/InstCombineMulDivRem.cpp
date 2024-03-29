@@ -580,12 +580,15 @@ Instruction *InstCombinerImpl::foldFPSignBitOps(BinaryOperator &I) {
 
 Instruction *InstCombinerImpl::foldPowiReassoc(BinaryOperator &I) {
   auto createPowiExpr = [](BinaryOperator &I, InstCombinerImpl &IC, Value *X,
-                           Value *Y, Value *Z) {
+                           Value *Y, Value *Z, bool UpdateUsers = true) {
     InstCombiner::BuilderTy &Builder = IC.Builder;
     Value *YZ = Builder.CreateAdd(Y, Z);
-    auto *NewPow = Builder.CreateIntrinsic(
+    Instruction *NewPow = Builder.CreateIntrinsic(
         Intrinsic::powi, {X->getType(), YZ->getType()}, {X, YZ}, &I);
-    return IC.replaceInstUsesWith(I, NewPow);
+    if (UpdateUsers)
+      return IC.replaceInstUsesWith(I, NewPow);
+
+    return NewPow;
   };
 
   Value *X, *Y, *Z;
@@ -614,16 +617,30 @@ Instruction *InstCombinerImpl::foldPowiReassoc(BinaryOperator &I) {
       Y->getType() == Z->getType())
     return createPowiExpr(I, *this, X, Y, Z);
 
-  // powi(X, Y) / X --> powi(X, Y-1)
-  // This is legal when (Y - 1) can't wraparound, in which case reassoc and nnan
-  // are required.
-  // TODO: Multi-use may be also better off creating Powi(x,y-1)
-  if (Opcode == Instruction::FDiv && I.hasAllowReassoc() && I.hasNoNaNs() &&
-      match(Op0, m_OneUse(m_AllowReassoc(m_Intrinsic<Intrinsic::powi>(
-                     m_Specific(Op1), m_Value(Y))))) &&
-      willNotOverflowSignedSub(Y, ConstantInt::get(Y->getType(), 1), I)) {
-    Constant *NegOne = ConstantInt::getAllOnesValue(Y->getType());
-    return createPowiExpr(I, *this, Op1, Y, NegOne);
+  if (Opcode == Instruction::FDiv && I.hasAllowReassoc() && I.hasNoNaNs()) {
+    // powi(X, Y) / X --> powi(X, Y-1)
+    // This is legal when (Y - 1) can't wraparound, in which case reassoc and
+    // nnan are required.
+    // TODO: Multi-use may be also better off creating Powi(x,y-1)
+    if (match(Op0, m_OneUse(m_AllowReassoc(m_Intrinsic<Intrinsic::powi>(
+                       m_Specific(Op1), m_Value(Y))))) &&
+        willNotOverflowSignedSub(Y, ConstantInt::get(Y->getType(), 1), I)) {
+      Constant *NegOne = ConstantInt::getAllOnesValue(Y->getType());
+      return createPowiExpr(I, *this, Op1, Y, NegOne);
+    }
+
+    // powi(X, Y) / (X * Z) --> powi(X, Y-1) / Z
+    // This is legal when (Y - 1) can't wraparound, in which case reassoc and
+    // nnan are required.
+    // TODO: Multi-use may be also better off creating Powi(x,y-1)
+    if (match(Op0, m_OneUse(m_AllowReassoc(m_Intrinsic<Intrinsic::powi>(
+                       m_Value(X), m_Value(Y))))) &&
+        match(Op1, m_AllowReassoc(m_c_FMul(m_Specific(X), m_Value(Z)))) &&
+        willNotOverflowSignedSub(Y, ConstantInt::get(Y->getType(), 1), I)) {
+      Constant *NegOne = ConstantInt::getAllOnesValue(Y->getType());
+      auto *NewPow = createPowiExpr(I, *this, X, Y, NegOne, false);
+      return BinaryOperator::CreateFDivFMF(NewPow, Z, &I);
+    }
   }
 
   return nullptr;
