@@ -1,5 +1,4 @@
-// RUN: %clang_cc1 -verify -std=c++2a -fsyntax-only %s
-// expected-no-diagnostics
+// RUN: %clang_cc1 -verify -std=c++2a -fsyntax-only -Wno-bit-int-extension %s
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define LITTLE_END 1
@@ -9,18 +8,29 @@
 #error "huh?"
 #endif
 
+// We also support _BitInt as long as it is >=8 and a power of 2.
+typedef _BitInt(8) BitInt8;
+typedef _BitInt(32) BitInt32;
+typedef _BitInt(128) BitInt128;
+
 typedef double vector4double __attribute__((__vector_size__(32)));
 typedef float vector4float __attribute__((__vector_size__(16)));
 typedef long long vector4long __attribute__((__vector_size__(32)));
 typedef int vector4int __attribute__((__vector_size__(16)));
 typedef short vector4short __attribute__((__vector_size__(8)));
 typedef char vector4char __attribute__((__vector_size__(4)));
+typedef BitInt8 vector4BitInt8 __attribute__((__vector_size__(4)));
+typedef BitInt32 vector4BitInt32 __attribute__((__vector_size__(16)));
+typedef BitInt128 vector4BitInt128 __attribute__((__vector_size__(64)));
 typedef double vector8double __attribute__((__vector_size__(64)));
 typedef float vector8float __attribute__((__vector_size__(32)));
 typedef long long vector8long __attribute__((__vector_size__(64)));
 typedef int vector8int __attribute__((__vector_size__(32)));
 typedef short vector8short __attribute__((__vector_size__(16)));
 typedef char vector8char __attribute__((__vector_size__(8)));
+typedef BitInt8 vector8BitInt8 __attribute__((__vector_size__(8)));
+typedef BitInt32 vector8BitInt32 __attribute__((__vector_size__(32)));
+typedef BitInt128 vector8BitInt128 __attribute__((__vector_size__(128)));
 
 #define CHECK_NUM(__size, __typeFrom, __typeTo, ...)                            \
   constexpr vector##__size##__typeTo                                            \
@@ -34,6 +44,9 @@ typedef char vector8char __attribute__((__vector_size__(8)));
   CHECK_NUM(__size, __typeFrom, int, __VA_ARGS__)                              \
   CHECK_NUM(__size, __typeFrom, short, __VA_ARGS__)                            \
   CHECK_NUM(__size, __typeFrom, char, __VA_ARGS__)                             \
+  CHECK_NUM(__size, __typeFrom, BitInt8, __VA_ARGS__)                          \
+  CHECK_NUM(__size, __typeFrom, BitInt32, __VA_ARGS__)                         \
+  CHECK_NUM(__size, __typeFrom, BitInt128, __VA_ARGS__)                        \
   static_assert(                                                               \
       __builtin_bit_cast(                                                      \
           unsigned,                                                            \
@@ -56,7 +69,10 @@ typedef char vector8char __attribute__((__vector_size__(8)));
   CHECK_TO_ALL_TYPES(__size, long, __VA_ARGS__)                                \
   CHECK_TO_ALL_TYPES(__size, int, __VA_ARGS__)                                 \
   CHECK_TO_ALL_TYPES(__size, short, __VA_ARGS__)                               \
-  CHECK_TO_ALL_TYPES(__size, char, __VA_ARGS__)
+  CHECK_TO_ALL_TYPES(__size, char, __VA_ARGS__)                                \
+  CHECK_TO_ALL_TYPES(__size, BitInt8, __VA_ARGS__)                             \
+  CHECK_TO_ALL_TYPES(__size, BitInt32, __VA_ARGS__)                            \
+  CHECK_TO_ALL_TYPES(__size, BitInt128, __VA_ARGS__)
 
 CHECK_ALL_COMBINATIONS(4, 0, 1, 2, 3);
 CHECK_ALL_COMBINATIONS(8, 0, 1, 2, 3, 4, 5, 6, 7);
@@ -77,23 +93,28 @@ constexpr vector4char vectorShuffle2 =
     __builtin_shufflevector(vector4charConst1, vector4charConst2, 4, 5, 6, 7);
 static_assert(__builtin_bit_cast(unsigned, vectorShuffle2) ==
               (LITTLE_END ? 0x07060504 : 0x04050607));
-constexpr vector4char vectorShuffle3 = __builtin_shufflevector(
-    vector4charConst1, vector4charConst2, -1, -1, -1, -1);
-static_assert(__builtin_bit_cast(unsigned, vectorShuffle3) ==
-              (LITTLE_END ? 0x00000000 : 0x00000000));
-constexpr vector4char vectorShuffle4 =
+constexpr vector4char vectorShuffle3 =
     __builtin_shufflevector(vector4charConst1, vector4charConst2, 0, 2, 4, 6);
-static_assert(__builtin_bit_cast(unsigned, vectorShuffle4) ==
+static_assert(__builtin_bit_cast(unsigned, vectorShuffle3) ==
               (LITTLE_END ? 0x06040200 : 0x00020406));
-constexpr vector8char vectorShuffle5 = __builtin_shufflevector(
+constexpr vector8char vectorShuffle4 = __builtin_shufflevector(
     vector8intConst, vector8intConst, 0, 2, 4, 6, 8, 10, 12, 14);
-static_assert(__builtin_bit_cast(unsigned long long, vectorShuffle5) ==
+static_assert(__builtin_bit_cast(unsigned long long, vectorShuffle4) ==
               (LITTLE_END ? 0x0E0C0A080E0C0A08 : 0x080A0C0E080A0C0E));
-constexpr vector4char vectorShuffle6 =
+constexpr vector4char vectorShuffle5 =
     __builtin_shufflevector(vector8intConst, vector8intConst, 0, 2, 4, 6);
-static_assert(__builtin_bit_cast(unsigned, vectorShuffle6) ==
+static_assert(__builtin_bit_cast(unsigned, vectorShuffle5) ==
               (LITTLE_END ? 0x0E0C0A08 : 0x080A0C0E));
-constexpr vector8char vectorShuffle7 = __builtin_shufflevector(
+constexpr vector8char vectorShuffle6 = __builtin_shufflevector(
     vector4charConst1, vector4charConst2, 0, 2, 4, 6, 1, 3, 5, 7);
-static_assert(__builtin_bit_cast(unsigned long long, vectorShuffle7) ==
+static_assert(__builtin_bit_cast(unsigned long long, vectorShuffle6) ==
               (LITTLE_END ? 0x0705030106040200 : 0x0002040601030507));
+
+constexpr vector4char
+    vectorShuffleFail1 = // expected-error {{constexpr variable 'vectorShuffleFail1'\
+ must be initialized by a constant expression}}
+    __builtin_shufflevector( // expected-error {{index for __builtin_shufflevector must be within\
+ the bounds of the input vectors in a constexpr context. An index of\
+ -1 at position 0 was found. -1 is only allowed at runtime.}}
+        vector4charConst1,
+        vector4charConst2, -1, -1, -1, -1);

@@ -2706,8 +2706,11 @@ static bool checkFloatingPointResult(EvalInfo &Info, const Expr *E,
 static bool HandleFloatToFloatCast(EvalInfo &Info, const Expr *E,
                                    QualType SrcType, QualType DestType,
                                    APFloat &Result) {
-  assert(isa<CastExpr>(E) || isa<CompoundAssignOperator>(E) ||
-         isa<ConvertVectorExpr>(E));
+  assert((isa<CastExpr>(E) || isa<CompoundAssignOperator>(E) ||
+          isa<ConvertVectorExpr>(E)) &&
+         "HandleFloatToFloatCast has been checked with only CastExpr, "
+         "CompoundAssignOperator and ConvertVectorExpr. Please either validate "
+         "the new expression or address the root cause of this usage.");
   llvm::RoundingMode RM = getActiveRoundingMode(Info, E);
   APFloat::opStatus St;
   APFloat Value = Result;
@@ -10714,7 +10717,7 @@ namespace {
     bool VisitShuffleVectorExpr(const ShuffleVectorExpr *E);
 
     // FIXME: Missing: conditional operator (for GNU
-    //                 conditional select), shufflevector, ExtVectorElementExpr
+    //                 conditional select), ExtVectorElementExpr
   };
 } // end anonymous namespace
 
@@ -10965,27 +10968,10 @@ bool VectorExprEvaluator::VisitUnaryOperator(const UnaryOperator *E) {
   return Success(APValue(ResultElements.data(), ResultElements.size()), E);
 }
 
-static bool EvaluateVectorOrLValue(APValue &Result, EvalInfo &Info,
-                                   const Expr *E, const QualType &Type) {
-  if (!Evaluate(Result, Info, E))
-    return false;
-
-  if (Result.isLValue()) {
-    // Source of the data is an lvalue; Manually handle the lvalue as if
-    // it was an rvalue to get the current APValue.
-    LValue LValueFound;
-    LValueFound.setFrom(Info.Ctx, Result);
-    if (!handleLValueToRValueConversion(Info, E, Type, LValueFound, Result))
-      return false;
-  }
-
-  return Result.isVector();
-}
-
-static bool handleVectorConversion(EvalInfo &Info, const FPOptions FPO,
-                                   const Expr *E, QualType SourceTy,
-                                   QualType DestTy, APValue const &Original,
-                                   APValue &Result) {
+static bool handleVectorElementCast(EvalInfo &Info, const FPOptions FPO,
+                                    const Expr *E, QualType SourceTy,
+                                    QualType DestTy, APValue const &Original,
+                                    APValue &Result) {
   if (SourceTy->isIntegerType()) {
     if (DestTy->isRealFloatingType()) {
       Result = APValue(APFloat(0.0));
@@ -11015,7 +11001,7 @@ static bool handleVectorConversion(EvalInfo &Info, const FPOptions FPO,
 bool VectorExprEvaluator::VisitConvertVectorExpr(const ConvertVectorExpr *E) {
   APValue Source;
   QualType SourceVecType = E->getSrcExpr()->getType();
-  if (!EvaluateVectorOrLValue(Source, Info, E->getSrcExpr(), SourceVecType))
+  if (!EvaluateAsRValue(Info, E->getSrcExpr(), Source))
     return false;
 
   QualType DestTy = E->getType()->castAs<VectorType>()->getElementType();
@@ -11028,8 +11014,8 @@ bool VectorExprEvaluator::VisitConvertVectorExpr(const ConvertVectorExpr *E) {
   ResultElements.reserve(SourceLen);
   for (unsigned EltNum = 0; EltNum < SourceLen; ++EltNum) {
     APValue Elt;
-    if (!handleVectorConversion(Info, FPO, E, SourceTy, DestTy,
-                                Source.getVectorElt(EltNum), Elt))
+    if (!handleVectorElementCast(Info, FPO, E, SourceTy, DestTy,
+                                 Source.getVectorElt(EltNum), Elt))
       return false;
     ResultElements.push_back(std::move(Elt));
   }
@@ -11041,21 +11027,24 @@ static bool handleVectorShuffle(EvalInfo &Info, const ShuffleVectorExpr *E,
                                 QualType ElemType, APValue const &VecVal1,
                                 APValue const &VecVal2, unsigned EltNum,
                                 APValue &Result) {
-  unsigned const TotalElementsInAVector = VecVal1.getVectorLength();
+  unsigned const TotalElementsInInputVector = VecVal1.getVectorLength();
 
-  Expr const *IndexExpr = E->getExpr(2 + EltNum);
-  APSInt IndexVal;
-  if (!EvaluateInteger(IndexExpr, IndexVal, Info))
-    return false;
-
-  uint32_t index = IndexVal.getZExtValue();
+  APSInt IndexVal = E->getShuffleMaskIdx(Info.Ctx, EltNum);
+  int64_t index = IndexVal.getExtValue();
   // The spec says that -1 should be treated as undef for optimizations,
   // but in constexpr we need to choose a value. We'll choose 0.
-  if (index >= TotalElementsInAVector * 2)
-    index = 0;
+  if (index == -1) {
+    Info.FFDiag(
+        E, diag::err_shufflevector_minus_one_is_undefined_behavior_constexpr)
+        << EltNum;
+    return false;
+  }
 
-  if (index >= TotalElementsInAVector)
-    Result = VecVal2.getVectorElt(index - TotalElementsInAVector);
+  if (index < 0 || index >= TotalElementsInInputVector * 2)
+    llvm_unreachable("Out of bounds shuffle index");
+
+  if (index >= TotalElementsInInputVector)
+    Result = VecVal2.getVectorElt(index - TotalElementsInInputVector);
   else
     Result = VecVal1.getVectorElt(index);
   return true;
@@ -11064,11 +11053,11 @@ static bool handleVectorShuffle(EvalInfo &Info, const ShuffleVectorExpr *E,
 bool VectorExprEvaluator::VisitShuffleVectorExpr(const ShuffleVectorExpr *E) {
   APValue VecVal1;
   const Expr *Vec1 = E->getExpr(0);
-  if (!EvaluateVectorOrLValue(VecVal1, Info, Vec1, Vec1->getType()))
+  if (!EvaluateAsRValue(Info, Vec1, VecVal1))
     return false;
   APValue VecVal2;
   const Expr *Vec2 = E->getExpr(1);
-  if (!EvaluateVectorOrLValue(VecVal2, Info, Vec2, Vec2->getType()))
+  if (!EvaluateAsRValue(Info, Vec2, VecVal2))
     return false;
 
   VectorType const *DestVecTy = E->getType()->castAs<VectorType>();
