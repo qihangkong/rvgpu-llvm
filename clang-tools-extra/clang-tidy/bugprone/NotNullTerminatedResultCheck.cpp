@@ -621,7 +621,7 @@ void NotNullTerminatedResultCheck::registerMatchers(MatchFinder *Finder) {
   auto MallocLengthExpr = allOf(
       callee(functionDecl(
           hasAnyName("::alloca", "::calloc", "malloc", "realloc"))),
-      hasAnyArgument(allOf(unless(SizeExpr), expr().bind(DestMallocExprName))));
+      hasAnyArgument(ignoringParenImpCasts(allOf(unless(SizeExpr), expr().bind(DestMallocExprName)))));
 
   // - Example:  (char *)malloc(length);
   auto DestMalloc = anyOf(callExpr(MallocLengthExpr),

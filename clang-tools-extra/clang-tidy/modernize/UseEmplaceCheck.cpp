@@ -178,15 +178,15 @@ void UseEmplaceCheck::registerMatchers(MatchFinder *Finder) {
 
   // Bitfields binds only to consts and emplace_back take it by universal ref.
   auto BitFieldAsArgument = hasAnyArgument(
-      ignoringImplicit(memberExpr(hasDeclaration(fieldDecl(isBitField())))));
+      ignoringParenImpCasts(memberExpr(hasDeclaration(fieldDecl(isBitField())))));
 
   // Initializer list can't be passed to universal reference.
   auto InitializerListAsArgument = hasAnyArgument(
-      ignoringImplicit(allOf(cxxConstructExpr(isListInitialization()),
+      ignoringParenImpCasts(allOf(cxxConstructExpr(isListInitialization()),
                              unless(cxxTemporaryObjectExpr()))));
 
   // We could have leak of resource.
-  auto NewExprAsArgument = hasAnyArgument(ignoringImplicit(cxxNewExpr()));
+  auto NewExprAsArgument = hasAnyArgument(ignoringParenImpCasts(cxxNewExpr()));
   // We would call another constructor.
   auto ConstructingDerived =
       hasParent(implicitCastExpr(hasCastKind(CastKind::CK_DerivedToBase)));

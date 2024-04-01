@@ -24,7 +24,7 @@ void MisplacedOperatorInStrlenInAllocCheck::registerMatchers(
 
   const auto BadUse =
       callExpr(callee(StrLenFunc),
-               hasAnyArgument(ignoringImpCasts(
+               hasAnyArgument(ignoringParenImpCasts(
                    binaryOperator(
                        hasOperatorName("+"),
                        hasRHS(ignoringParenImpCasts(integerLiteral(equals(1)))))
