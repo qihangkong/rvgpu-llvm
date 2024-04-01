@@ -1596,10 +1596,9 @@ void RISCVInsertVSETVLI::doPRE(MachineBasicBlock &MBB) {
   // we need to prove the value is available at the point we're going
   // to insert the vsetvli at.
   if (AvailableInfo.hasAVLReg() && RISCV::X0 != AvailableInfo.getAVLReg()) {
-    const MachineInstr *AVLDefMI = getReachingDefMI(
-        AvailableInfo.getAVLReg(),
-        UnavailablePred->empty() ? nullptr : &UnavailablePred->instr_back(),
-        MRI, LIS);
+    const MachineInstr *AVLDefMI =
+        getReachingDefMI(AvailableInfo.getAVLReg(),
+                         MBB.empty() ? nullptr : &MBB.instr_front(), MRI, LIS);
     if (!AVLDefMI)
       return;
     // This is an inline dominance check which covers the case of
