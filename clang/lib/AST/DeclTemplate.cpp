@@ -985,7 +985,7 @@ ClassTemplateSpecializationDecl::getSpecializedTemplate() const {
 SourceRange
 ClassTemplateSpecializationDecl::getSourceRange() const {
   if (getSpecializationKind() == TSK_ExplicitInstantiationDeclaration) {
-    return SourceRange(getExternLoc(),
+    return SourceRange(getExternKeywordLoc(),
                        getTemplateArgsAsWritten()->getRAngleLoc());
   } else if (getSpecializationKind() == TSK_ExplicitInstantiationDefinition) {
     return SourceRange(getTemplateKeywordLoc(),
@@ -1016,7 +1016,7 @@ ClassTemplateSpecializationDecl::getSourceRange() const {
   return SourceRange(Begin, End);
 }
 
-void ClassTemplateSpecializationDecl::setExternLoc(SourceLocation Loc) {
+void ClassTemplateSpecializationDecl::setExternKeywordLoc(SourceLocation Loc) {
   auto *Info = ExplicitInfo.dyn_cast<ExplicitInstantiationInfo *>();
   if (!Info) {
     // Don't allocate if the location is invalid.
@@ -1026,7 +1026,7 @@ void ClassTemplateSpecializationDecl::setExternLoc(SourceLocation Loc) {
     Info->TemplateArgsAsWritten = getTemplateArgsAsWritten();
     ExplicitInfo = Info;
   }
-  Info->ExternLoc = Loc;
+  Info->ExternKeywordLoc = Loc;
 }
 
 void ClassTemplateSpecializationDecl::setTemplateKeywordLoc(
@@ -1385,7 +1385,7 @@ SourceRange VarTemplateSpecializationDecl::getSourceRange() const {
   } else if (getTemplateSpecializationKind() ==
              TSK_ExplicitInstantiationDeclaration) {
     if (const ASTTemplateArgumentListInfo *Info = getTemplateArgsAsWritten())
-      return SourceRange(getExternLoc(), Info->getRAngleLoc());
+      return SourceRange(getExternKeywordLoc(), Info->getRAngleLoc());
   } else if (getTemplateSpecializationKind() ==
              TSK_ExplicitInstantiationDefinition) {
     if (const ASTTemplateArgumentListInfo *Info = getTemplateArgsAsWritten())
@@ -1394,7 +1394,7 @@ SourceRange VarTemplateSpecializationDecl::getSourceRange() const {
   return VarDecl::getSourceRange();
 }
 
-void VarTemplateSpecializationDecl::setExternLoc(SourceLocation Loc) {
+void VarTemplateSpecializationDecl::setExternKeywordLoc(SourceLocation Loc) {
   auto *Info = ExplicitInfo.dyn_cast<ExplicitInstantiationInfo *>();
   if (!Info) {
     // Don't allocate if the location is invalid.
@@ -1404,7 +1404,7 @@ void VarTemplateSpecializationDecl::setExternLoc(SourceLocation Loc) {
     Info->TemplateArgsAsWritten = getTemplateArgsAsWritten();
     ExplicitInfo = Info;
   }
-  Info->ExternLoc = Loc;
+  Info->ExternKeywordLoc = Loc;
 }
 
 void VarTemplateSpecializationDecl::setTemplateKeywordLoc(SourceLocation Loc) {

@@ -2554,7 +2554,7 @@ ASTDeclReader::VisitClassTemplateSpecializationDeclImpl(
   // extern/template keyword locations for explicit instantiations
   if (Record.readBool()) {
     auto *ExplicitInfo = new (C) ExplicitInstantiationInfo;
-    ExplicitInfo->ExternLoc = readSourceLocation();
+    ExplicitInfo->ExternKeywordLoc = readSourceLocation();
     ExplicitInfo->TemplateKeywordLoc = readSourceLocation();
     D->ExplicitInfo = ExplicitInfo;
   }
@@ -2623,7 +2623,7 @@ ASTDeclReader::VisitVarTemplateSpecializationDeclImpl(
   // extern/template keyword locations for explicit instantiations
   if (Record.readBool()) {
     auto *ExplicitInfo = new (C) ExplicitInstantiationInfo;
-    ExplicitInfo->ExternLoc = readSourceLocation();
+    ExplicitInfo->ExternKeywordLoc = readSourceLocation();
     ExplicitInfo->TemplateKeywordLoc = readSourceLocation();
     D->ExplicitInfo = ExplicitInfo;
   }
