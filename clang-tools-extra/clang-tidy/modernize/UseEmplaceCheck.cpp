@@ -177,13 +177,13 @@ void UseEmplaceCheck::registerMatchers(MatchFinder *Finder) {
       hasDeclaration(cxxConstructorDecl(ofClass(hasAnyName(SmartPointers))));
 
   // Bitfields binds only to consts and emplace_back take it by universal ref.
-  auto BitFieldAsArgument = hasAnyArgument(
-      ignoringParenImpCasts(memberExpr(hasDeclaration(fieldDecl(isBitField())))));
+  auto BitFieldAsArgument = hasAnyArgument(ignoringParenImpCasts(
+      memberExpr(hasDeclaration(fieldDecl(isBitField())))));
 
   // Initializer list can't be passed to universal reference.
   auto InitializerListAsArgument = hasAnyArgument(
       ignoringParenImpCasts(allOf(cxxConstructExpr(isListInitialization()),
-                             unless(cxxTemporaryObjectExpr()))));
+                                  unless(cxxTemporaryObjectExpr()))));
 
   // We could have leak of resource.
   auto NewExprAsArgument = hasAnyArgument(ignoringParenImpCasts(cxxNewExpr()));

@@ -52,7 +52,9 @@ void StringLiteralWithEmbeddedNulCheck::registerMatchers(MatchFinder *Finder) {
       this);
 
   // Detect passing a suspicious string literal through an overloaded operator.
-  Finder->addMatcher(cxxOperatorCallExpr(hasAnyArgument(ignoringParenImpCasts(StrLitWithNul))), this);
+  Finder->addMatcher(
+      cxxOperatorCallExpr(hasAnyArgument(ignoringParenImpCasts(StrLitWithNul))),
+      this);
 }
 
 void StringLiteralWithEmbeddedNulCheck::check(
