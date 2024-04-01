@@ -1699,8 +1699,18 @@ static bool canMutatePriorConfig(const MachineInstr &PrevMI,
     if (AVL.isReg() && AVL.getReg() != RISCV::X0) {
       if (AVL.getReg().isPhysical())
         return false;
-      if (!PrevAVL.isReg() || PrevAVL.getReg() != AVL.getReg())
+      if (!PrevAVL.isReg())
         return false;
+      if (MRI.isSSA()) {
+        if (PrevAVL.getReg() != AVL.getReg())
+          return false;
+      } else {
+        auto *AVLDef = getReachingDefMI(AVL.getReg(), &MI, &MRI, LIS);
+        auto *PrevAVLDef =
+            getReachingDefMI(PrevAVL.getReg(), &PrevMI, &MRI, LIS);
+        if (!AVLDef->isIdenticalTo(*PrevAVLDef))
+          return false;
+      }
     }
   }
 
