@@ -2551,17 +2551,16 @@ ASTDeclReader::VisitClassTemplateSpecializationDeclImpl(
     }
   }
 
-  // Explicit info.
+  // extern/template keyword locations for explicit instantiations
   if (Record.readBool()) {
-    // FIXME: We don't need to allocate this if ExternLoc and TemplateKeywordLoc
-    // are invalid!
     auto *ExplicitInfo = new (C) ExplicitInstantiationInfo;
-    ExplicitInfo->TemplateArgsAsWritten =
-        Record.readASTTemplateArgumentListInfo();
     ExplicitInfo->ExternLoc = readSourceLocation();
     ExplicitInfo->TemplateKeywordLoc = readSourceLocation();
     D->ExplicitInfo = ExplicitInfo;
   }
+
+  if (Record.readBool())
+    D->setTemplateArgsAsWritten(Record.readASTTemplateArgumentListInfo());
 
   return Redecl;
 }
@@ -2621,17 +2620,16 @@ ASTDeclReader::VisitVarTemplateSpecializationDeclImpl(
     }
   }
 
-  // Explicit info.
+  // extern/template keyword locations for explicit instantiations
   if (Record.readBool()) {
-    // FIXME: We don't need to allocate this if ExternLoc and TemplateKeywordLoc
-    // are invalid!
     auto *ExplicitInfo = new (C) ExplicitInstantiationInfo;
-    ExplicitInfo->TemplateArgsAsWritten =
-        Record.readASTTemplateArgumentListInfo();
     ExplicitInfo->ExternLoc = readSourceLocation();
     ExplicitInfo->TemplateKeywordLoc = readSourceLocation();
     D->ExplicitInfo = ExplicitInfo;
   }
+
+  if (Record.readBool())
+    D->setTemplateArgsAsWritten(Record.readASTTemplateArgumentListInfo());
 
   SmallVector<TemplateArgument, 8> TemplArgs;
   Record.readTemplateArgumentList(TemplArgs, /*Canonicalize*/ true);
