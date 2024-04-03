@@ -1717,7 +1717,7 @@ def : ProcessorModel<"neoverse-n1", NeoverseN1Model,
 def : ProcessorModel<"neoverse-n2", NeoverseN2Model,
                      ProcessorFeatures.NeoverseN2, [TuneNeoverseN2]>;
 def : ProcessorModel<"neoverse-n3", NeoverseN2Model,
-                     ProcessorFeatures.NeoverseN2, [TuneNeoverseN3]>;
+                     ProcessorFeatures.NeoverseN3, [TuneNeoverseN3]>;
 def : ProcessorModel<"neoverse-512tvb", NeoverseV1Model,
                      ProcessorFeatures.Neoverse512TVB, [TuneNeoverse512TVB]>;
 def : ProcessorModel<"neoverse-v1", NeoverseV1Model,
@@ -1725,9 +1725,9 @@ def : ProcessorModel<"neoverse-v1", NeoverseV1Model,
 def : ProcessorModel<"neoverse-v2", NeoverseV2Model,
                      ProcessorFeatures.NeoverseV2, [TuneNeoverseV2]>;
 def : ProcessorModel<"neoverse-v3", NeoverseV2Model,
-                     ProcessorFeatures.NeoverseV2, [TuneNeoverseV3]>;
+                     ProcessorFeatures.NeoverseV3, [TuneNeoverseV3]>;
 def : ProcessorModel<"neoverse-v3ae", NeoverseV2Model,
-                     ProcessorFeatures.NeoverseV2, [TuneNeoverseV3AE]>;
+                     ProcessorFeatures.NeoverseV3AE, [TuneNeoverseV3AE]>;
 def : ProcessorModel<"exynos-m3", ExynosM3Model, ProcessorFeatures.ExynosM3,
                      [TuneExynosM3]>;
 def : ProcessorModel<"exynos-m4", ExynosM4Model, ProcessorFeatures.ExynosM4,
