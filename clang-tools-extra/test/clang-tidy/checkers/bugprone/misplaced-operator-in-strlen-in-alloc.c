@@ -59,19 +59,19 @@ void bad_realloc(char *old_name, char *name) {
 }
 
 void intentional1(char *name) {
-  char *new_name = (char *)malloc(strlen(name + 1) + 1);
+  char *new_name = (char *)malloc((strlen(name) + 1) + 1);
   // CHECK-MESSAGES-NOT: :[[@LINE-1]]:28: warning: addition operator is applied to the argument of strlen
   // We have + 1 outside as well so we assume this is intentional
 }
 
 void intentional2(char *name) {
-  char *new_name = (char *)malloc(strlen(name + 2));
+  char *new_name = (char *)malloc(strlen(name) + 2);
   // CHECK-MESSAGES-NOT: :[[@LINE-1]]:28: warning: addition operator is applied to the argument of strlen
   // Only give warning for + 1, not + 2
 }
 
 void intentional3(char *name) {
-  char *new_name = (char *)malloc(strlen((name + 1)));
+  char *new_name = (char *)malloc(strlen(name) + 1);
   // CHECK-MESSAGES-NOT: :[[@LINE-1]]:28: warning: addition operator is applied to the argument of strlen
   // If expression is in extra parentheses, consider it as intentional
 }

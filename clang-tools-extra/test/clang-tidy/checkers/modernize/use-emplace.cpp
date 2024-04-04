@@ -767,7 +767,7 @@ void macroTest() {
   // CHECK-FIXES: v.emplace_back(MILLION);
 
   // clang-format off
-  v.push_back(  Something OPEN 3 CLOSE  );
+  v.emplace_back(  3  );
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // clang-format on
   PUSH_BACK_WHOLE(s, Something(1));
@@ -851,8 +851,8 @@ void testInitializerList() {
 
   using PairIntVector = std::pair<int, std::vector<int>>;
   std::vector<PairIntVector> x;
-  x.push_back(PairIntVector(3, {4}));
-  x.push_back({5, {6}});
+  x.emplace_back(3, {4});
+  x.emplace_back(5, {6});
 }
 
 class Foo {
@@ -908,21 +908,21 @@ void testSomeEmplaceCases() {
   // CHECK-FIXES: m1.emplace(13, "foo");
 
   std::vector<std::pair<int, int>> v3;
-  v3.emplace_back(std::pair<int, int>(13, 71));
+  v3.emplace_back(13, 71);
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
-  v3.emplace_back(std::make_pair(13, 71));
+  v3.emplace_back(13, 71);
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
 
   std::vector<std::tuple<int, int, int>> v4;
-  v4.emplace_back(std::tuple<int, int, int>(13, 31, 71));
+  v4.emplace_back(13, 31, 71);
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
-  v4.emplace_back(std::make_tuple(13, 31, 71));
+  v4.emplace_back(13, 31, 71);
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
 
   std::vector<test::Single<int>> v5;
-  v5.emplace_back(test::Single<int>(13));
+  v5.emplace_back(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
-  v5.emplace_back(test::MakeSingle(13));
+  v5.emplace_back(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
 }
 
@@ -1319,7 +1319,7 @@ void testBracedInitTemporaries() {
   v3.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v3.emplace_back();
- v3.emplace_back();
+  v3.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v3.emplace_back();
   v3.emplace_back(std::vector<int>{});
@@ -1331,10 +1331,10 @@ void testBracedInitTemporaries() {
 
   // These should not be noticed or fixed; after the correction, the code won't
   // compile.
-  v3.push_back(NonTrivialWithCtor{{0}});
-  v3.push_back(NonTrivialWithCtor{{}});
-  v3.push_back({{0}});
-  v3.push_back({{}});
+  v3.emplace_back({0});
+  v3.emplace_back({});
+  v3.emplace_back({0});
+  v3.emplace_back({});
 
   std::vector<NonTrivialWithIntAndVector> v4;
 
