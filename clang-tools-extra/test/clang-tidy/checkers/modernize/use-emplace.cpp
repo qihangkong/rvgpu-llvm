@@ -368,32 +368,32 @@ Zoz getZoz(Something s) { return Zoz(s); }
 void test_Something() {
   std::vector<Something> v;
 
-  v.push_back(Something(1, 2));
+  v.emplace_back(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back instead of push_back [modernize-use-emplace]
   // CHECK-FIXES: v.emplace_back(1, 2);
 
-  v.push_back(Something{1, 2});
+  v.emplace_back(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(1, 2);
 
-  v.push_back(Something());
+  v.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back();
 
-  v.push_back(Something{});
+  v.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back();
 
   Something Different;
-  v.push_back(Something(Different.getInt(), 42));
+  v.emplace_back(Different.getInt(), 42);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(Different.getInt(), 42);
 
-  v.push_back(Different.getInt());
+  v.emplace_back(Different.getInt());
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(Different.getInt());
 
-  v.push_back(42);
+  v.emplace_back(42);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(42);
 
@@ -426,11 +426,11 @@ void callDependent() {
 
 void test2() {
   std::vector<Zoz> v;
-  v.push_back(Zoz(Something(21, 37)));
+  v.emplace_back(Something(21, 37));
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(Something(21, 37));
 
-  v.push_back(Zoz(Something(21, 37), 42));
+  v.emplace_back(Something(21, 37), 42);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(Something(21, 37), 42);
 
@@ -442,41 +442,41 @@ struct GetPair {
 };
 void testPair() {
   std::vector<std::pair<int, int>> v;
-  v.push_back(std::pair<int, int>(1, 2));
+  v.emplace_back(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(1, 2);
 
   GetPair g;
-  v.push_back(g.getPair());
+  v.emplace_back(g.getPair());
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(g.getPair());
 
   std::vector<std::pair<Something, Zoz>> v2;
-  v2.push_back(std::pair<Something, Zoz>(Something(42, 42), Zoz(Something(21, 37))));
+  v2.emplace_back(Something(42, 42), Zoz(Something(21, 37)));
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v2.emplace_back(Something(42, 42), Zoz(Something(21, 37)));
 }
 
 void testTuple() {
   std::vector<std::tuple<bool, char, int>> v;
-  v.push_back(std::tuple<bool, char, int>(false, 'x', 1));
+  v.emplace_back(false, 'x', 1);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(false, 'x', 1);
 
-  v.push_back(std::tuple<bool, char, int>{false, 'y', 2});
+  v.emplace_back(false, 'y', 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(false, 'y', 2);
 
-  v.push_back({true, 'z', 3});
+  v.emplace_back(true, 'z', 3);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(true, 'z', 3);
 
   std::vector<std::tuple<int, bool>> x;
-  x.push_back(std::make_pair(1, false));
+  x.emplace_back(1, false);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: x.emplace_back(1, false);
 
-  x.push_back(std::make_pair(2LL, 1));
+  x.emplace_back(2LL, 1);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: x.emplace_back(2LL, 1);
 }
@@ -504,9 +504,9 @@ void testSpaces() {
 
   // clang-format off
 
-  v.push_back(Something(1, //arg1
+  v.emplace_back(1, //arg1
                 2 // arg2
-               ) // Something
+                // Something
               );
   // CHECK-MESSAGES: :[[@LINE-4]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(1, //arg1
@@ -514,26 +514,24 @@ void testSpaces() {
   // CHECK-FIXES:                  // Something
   // CHECK-FIXES:                );
 
-  v.push_back(    Something   (1, 2)    );
+  v.emplace_back(1, 2   );
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(1, 2   );
 
-  v.push_back(    Something   {1, 2}    );
+  v.emplace_back(1, 2   );
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(1, 2   );
 
-  v.push_back(  Something {}    );
+  v.emplace_back(   );
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(   );
 
-  v.push_back(
-             Something(1, 2)    );
+  v.emplace_back(1, 2   );
   // CHECK-MESSAGES: :[[@LINE-2]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(1, 2   );
 
   std::vector<Base> v2;
-  v2.push_back(
-    Base(42, nullptr));
+  v2.emplace_back(42, nullptr);
   // CHECK-MESSAGES: :[[@LINE-2]]:6: warning: use emplace_back
   // CHECK-FIXES: v2.emplace_back(42, nullptr);
 
@@ -558,15 +556,15 @@ void testPointers() {
 
 void testMakePair() {
   std::vector<std::pair<int, int>> v;
-  v.push_back(std::make_pair(1, 2));
+ v.emplace_back(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(1, 2);
 
-  v.push_back(std::make_pair(42LL, 13));
+  v.emplace_back(42LL, 13);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(42LL, 13);
 
-  v.push_back(std::make_pair<char, char>(0, 3));
+  v.emplace_back(std::make_pair<char, char>(0, 3));
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(std::make_pair<char, char>(0, 3));
   //
@@ -579,7 +577,7 @@ void testMakePair() {
     D(...) {}
     operator char() const { return 0; }
   };
-  v.push_back(std::make_pair<D, int>(Something(), 2));
+  v.emplace_back(std::make_pair<D, int>(Something(), 2));
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(std::make_pair<D, int>(Something(), 2));
 
@@ -587,7 +585,7 @@ void testMakePair() {
     X(std::pair<int, int>) {}
   };
   std::vector<X> x;
-  x.push_back(std::make_pair(1, 2));
+  x.emplace_back(std::make_pair(1, 2));
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: x.emplace_back(std::make_pair(1, 2));
   // make_pair cannot be removed here, as X is not constructible with two ints.
@@ -596,7 +594,7 @@ void testMakePair() {
     Y(std::pair<int, int> &&) {}
   };
   std::vector<Y> y;
-  y.push_back(std::make_pair(2, 3));
+  y.emplace_back(std::make_pair(2, 3));
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: y.emplace_back(std::make_pair(2, 3));
   // make_pair cannot be removed here, as Y is not constructible with two ints.
@@ -604,15 +602,15 @@ void testMakePair() {
 
 void testMakeTuple() {
   std::vector<std::tuple<int, bool, char>> v;
-  v.push_back(std::make_tuple(1, true, 'v'));
+  v.emplace_back(1, true, 'v');
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(1, true, 'v');
 
-  v.push_back(std::make_tuple(2ULL, 1, 0));
+  v.emplace_back(2ULL, 1, 0);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(2ULL, 1, 0);
 
-  v.push_back(std::make_tuple<long long, int, int>(3LL, 1, 0));
+  v.emplace_back(std::make_tuple<long long, int, int>(3LL, 1, 0));
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(std::make_tuple<long long, int, int>(3LL, 1, 0));
   // make_tuple is not removed when there are explicit template
@@ -648,77 +646,77 @@ Single<typename std::remove_reference<T>::type> MakeSingle(T &&) {
 
 void testOtherTuples() {
   std::vector<test::Single<int>> v;
-  v.push_back(test::Single<int>(1));
+  v.emplace_back(1);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(1);
 
-  v.push_back({2});
+  v.emplace_back(2);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(2);
 
-  v.push_back(test::MakeSingle(3));
+  v.emplace_back(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(3);
 
-  v.push_back(test::MakeSingle<long long>(4));
+  v.emplace_back(test::MakeSingle<long long>(4));
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(test::MakeSingle<long long>(4));
   // We don't remove make functions with explicit template parameters.
 
-  v.push_back(test::MakeSingle(5LL));
+  v.emplace_back(5LL);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(5LL);
 
-  v.push_back(std::make_tuple(6));
+  v.emplace_back(6);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(6);
 
-  v.push_back(std::make_tuple(7LL));
+  v.emplace_back(7LL);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(7LL);
 }
 
 void testOtherContainers() {
   std::list<Something> l;
-  l.push_back(Something(42, 41));
+  l.emplace_back(42, 41);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: l.emplace_back(42, 41);
 
-  l.push_front(Something(42, 41));
+  l.emplace_front(42, 41);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_front
   // CHECK-FIXES: l.emplace_front(42, 41);
 
   std::deque<Something> d;
-  d.push_back(Something(42));
+  d.emplace_back(42);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: d.emplace_back(42);
 
-  d.push_front(Something(42));
+  d.emplace_front(42);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_front
   // CHECK-FIXES: d.emplace_front(42);
 
   llvm::LikeASmallVector<Something> ls;
-  ls.push_back(Something(42));
+  ls.emplace_back(42);
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: ls.emplace_back(42);
 
   std::stack<Something> s;
-  s.push(Something(42, 41));
+  s.emplace(42, 41);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace
   // CHECK-FIXES: s.emplace(42, 41);
 
   std::queue<Something> q;
-  q.push(Something(42, 41));
+  q.emplace(42, 41);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace
   // CHECK-FIXES: q.emplace(42, 41);
 
   std::priority_queue<Something> pq;
-  pq.push(Something(42, 41));
+  pq.emplace(42, 41);
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace
   // CHECK-FIXES: pq.emplace(42, 41);
 
   std::forward_list<Something> fl;
-  fl.push_front(Something(42, 41));
+  fl.emplace_front(42, 41);
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_front
   // CHECK-FIXES: fl.emplace_front(42, 41);
 }
@@ -764,7 +762,7 @@ void macroTest() {
   v.push_back(SOME_OBJ);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
 
-  v.push_back(Something(MILLION));
+ v.emplace_back(MILLION);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(MILLION);
 
@@ -809,11 +807,11 @@ void testBitfields() {
   v.push_back(Something(42, b.bitfield));
   v.push_back(Something(b.bitfield));
 
-  v.push_back(Something(42, b.notBitfield));
+  v.emplace_back(42, b.notBitfield);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(42, b.notBitfield);
   int var;
-  v.push_back(Something(42, var));
+  v.emplace_back(42, var);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(42, var);
 }
@@ -839,7 +837,7 @@ struct WithDtor {
 void testWithDtor() {
   std::vector<WithDtor> v;
 
-  v.push_back(WithDtor(42));
+  v.emplace_back(42);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back
   // CHECK-FIXES: v.emplace_back(42);
 }
@@ -873,39 +871,39 @@ void testSomeEmplaceCases() {
   std::vector<Foo> v2;
   std::unordered_map<int, char *> m1;
 
-  v1.emplace_back(std::make_pair("foo", "bar"));
+  v1.emplace_back("foo", "bar");
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v1.emplace_back("foo", "bar");
 
   char *foo = "bar";
-  v1.emplace_back(std::make_pair(foo, "bar"));
+  v1.emplace_back(foo, "bar");
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v1.emplace_back(foo, "bar");
 
-  v1.emplace(v1.begin(), std::make_pair("foo", "bar"));
+  v1.emplace(v1.begin(), "foo", "bar");
   // CHECK-MESSAGES: :[[@LINE-1]]:26: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: v1.emplace(v1.begin(), "foo", "bar");
 
-  v2.emplace_back(Foo());
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v2.emplace_back();
 
-  v2.emplace_back(Foo(13));
+  v2.emplace_back(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v2.emplace_back(13);
 
-  v2.emplace_back(Foo{13});
+  v2.emplace_back(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v2.emplace_back(13);
 
   int a = 31;
-  v2.emplace_back(Foo(13, a));
+  v2.emplace_back(13, a);
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v2.emplace_back(13, a);
 
   v2.emplace_back(std::make_pair(3, 3));
 
-  m1.emplace(std::make_pair(13, "foo"));
+  m1.emplace(13, "foo");
   // CHECK-MESSAGES: :[[@LINE-1]]:14: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: m1.emplace(13, "foo");
 
@@ -945,117 +943,117 @@ void testAllSTLEmplacyFunctions() {
   std::queue<Foo> queue;
   std::priority_queue<Foo> priority_queue;
 
-  vector.emplace_back(Foo(13));
+  vector.emplace_back(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:23: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: vector.emplace_back(13);
 
-  vector.emplace(vector.begin(), Foo(13));
+  vector.emplace(vector.begin(), 13);
   // CHECK-MESSAGES: :[[@LINE-1]]:34: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: vector.emplace(vector.begin(), 13);
 
-  deque.emplace(deque.begin(), Foo(13));
+  deque.emplace(deque.begin(), 13);
   // CHECK-MESSAGES: :[[@LINE-1]]:32: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: deque.emplace(deque.begin(), 13);
 
-  deque.emplace_front(Foo(13));
+  deque.emplace_front(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:23: warning: unnecessary temporary object created while calling emplace_front
   // CHECK-FIXES: deque.emplace_front(13);
 
-  deque.emplace_back(Foo(13));
+  deque.emplace_back(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:22: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: deque.emplace_back(13);
 
-  forward_list.emplace_after(forward_list.begin(), Foo(13));
+  forward_list.emplace_after(forward_list.begin(), 13);
   // CHECK-MESSAGES: :[[@LINE-1]]:52: warning: unnecessary temporary object created while calling emplace_after
   // CHECK-FIXES: forward_list.emplace_after(forward_list.begin(), 13);
 
-  forward_list.emplace_front(Foo(13));
+  forward_list.emplace_front(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:30: warning: unnecessary temporary object created while calling emplace_front
   // CHECK-FIXES: forward_list.emplace_front(13);
 
-  list.emplace(list.begin(), Foo(13));
+  list.emplace(list.begin(), 13);
   // CHECK-MESSAGES: :[[@LINE-1]]:30: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: list.emplace(list.begin(), 13);
 
-  list.emplace_back(Foo(13));
+  list.emplace_back(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:21: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: list.emplace_back(13);
 
-  list.emplace_front(Foo(13));
+  list.emplace_front(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:22: warning: unnecessary temporary object created while calling emplace_front
   // CHECK-FIXES: list.emplace_front(13);
 
-  set.emplace(Foo(13));
+  set.emplace(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:15: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: set.emplace(13);
 
-  set.emplace_hint(set.begin(), Foo(13));
+  set.emplace_hint(set.begin(), 13);
   // CHECK-MESSAGES: :[[@LINE-1]]:33: warning: unnecessary temporary object created while calling emplace_hint
   // CHECK-FIXES: set.emplace_hint(set.begin(), 13);
 
-  map.emplace(std::make_pair(13, Foo(13)));
+  map.emplace(13, Foo(13));
   // CHECK-MESSAGES: :[[@LINE-1]]:15: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: map.emplace(13, Foo(13));
 
-  map.emplace_hint(map.begin(), std::make_pair(13, Foo(13)));
+  map.emplace_hint(map.begin(), 13, Foo(13));
   // CHECK-MESSAGES: :[[@LINE-1]]:33: warning: unnecessary temporary object created while calling emplace_hint
   // CHECK-FIXES: map.emplace_hint(map.begin(), 13, Foo(13));
 
-  multiset.emplace(Foo(13));
+  multiset.emplace(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:20: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: multiset.emplace(13);
 
-  multiset.emplace_hint(multiset.begin(), Foo(13));
+  multiset.emplace_hint(multiset.begin(), 13);
   // CHECK-MESSAGES: :[[@LINE-1]]:43: warning: unnecessary temporary object created while calling emplace_hint
   // CHECK-FIXES: multiset.emplace_hint(multiset.begin(), 13);
 
-  multimap.emplace(std::make_pair(13, Foo(13)));
+  multimap.emplace(13, Foo(13));
   // CHECK-MESSAGES: :[[@LINE-1]]:20: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: multimap.emplace(13, Foo(13));
 
-  multimap.emplace_hint(multimap.begin(), std::make_pair(13, Foo(13)));
+ multimap.emplace_hint(multimap.begin(), 13, Foo(13));
   // CHECK-MESSAGES: :[[@LINE-1]]:43: warning: unnecessary temporary object created while calling emplace_hint
   // CHECK-FIXES: multimap.emplace_hint(multimap.begin(), 13, Foo(13));
 
-  unordered_set.emplace(Foo(13));
+  unordered_set.emplace(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:25: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: unordered_set.emplace(13);
 
-  unordered_set.emplace_hint(unordered_set.begin(), Foo(13));
+  unordered_set.emplace_hint(unordered_set.begin(), 13);
   // CHECK-MESSAGES: :[[@LINE-1]]:53: warning: unnecessary temporary object created while calling emplace_hint
   // CHECK-FIXES: unordered_set.emplace_hint(unordered_set.begin(), 13);
 
-  unordered_map.emplace(std::make_pair(13, Foo(13)));
+  unordered_map.emplace(13, Foo(13));
   // CHECK-MESSAGES: :[[@LINE-1]]:25: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: unordered_map.emplace(13, Foo(13));
 
-  unordered_map.emplace_hint(unordered_map.begin(), std::make_pair(13, Foo(13)));
+  unordered_map.emplace_hint(unordered_map.begin(), 13, Foo(13));
   // CHECK-MESSAGES: :[[@LINE-1]]:53: warning: unnecessary temporary object created while calling emplace_hint
   // CHECK-FIXES: unordered_map.emplace_hint(unordered_map.begin(), 13, Foo(13));
 
-  unordered_multiset.emplace(Foo(13));
+  unordered_multiset.emplace(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:30: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: unordered_multiset.emplace(13);
-  unordered_multiset.emplace_hint(unordered_multiset.begin(), Foo(13));
+  unordered_multiset.emplace_hint(unordered_multiset.begin(), 13);
   // CHECK-MESSAGES: :[[@LINE-1]]:63: warning: unnecessary temporary object created while calling emplace_hint
   // CHECK-FIXES: unordered_multiset.emplace_hint(unordered_multiset.begin(), 13);
 
-  unordered_multimap.emplace(std::make_pair(13, Foo(13)));
+  unordered_multimap.emplace(13, Foo(13));
   // CHECK-MESSAGES: :[[@LINE-1]]:30: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: unordered_multimap.emplace(13, Foo(13));
-  unordered_multimap.emplace_hint(unordered_multimap.begin(), std::make_pair(13, Foo(13)));
+  unordered_multimap.emplace_hint(unordered_multimap.begin(), 13, Foo(13));
   // CHECK-MESSAGES: :[[@LINE-1]]:63: warning: unnecessary temporary object created while calling emplace_hint
   // CHECK-FIXES: unordered_multimap.emplace_hint(unordered_multimap.begin(), 13, Foo(13));
 
-  stack.emplace(Foo(13));
+  stack.emplace(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:17: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: stack.emplace(13);
 
-  queue.emplace(Foo(13));
+  queue.emplace(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:17: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: queue.emplace(13);
 
-  priority_queue.emplace(Foo(13));
+  priority_queue.emplace(13);
   // CHECK-MESSAGES: :[[@LINE-1]]:26: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: priority_queue.emplace(13);
 }
@@ -1064,36 +1062,36 @@ void test_AliasEmplacyFunctions() {
   typedef std::list<Foo> L;
   using DQ = std::deque<Foo>;
   L l;
-  l.emplace_back(Foo(3));
+  l.emplace_back(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:18: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: l.emplace_back(3);
 
   DQ dq;
-  dq.emplace_back(Foo(3));
+  dq.emplace_back(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: dq.emplace_back(3);
 
   typedef std::stack<Foo> STACK;
   using PQ = std::priority_queue<Foo>;
   STACK stack;
-  stack.emplace(Foo(3));
+  stack.emplace(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:17: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: stack.emplace(3);
 
   PQ pq;
-  pq.emplace(Foo(3));
+  pq.emplace(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:14: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: pq.emplace(3);
 
   typedef std::forward_list<Foo> FL;
   using DQ2 = std::deque<Foo>;
   FL fl;
-  fl.emplace_front(Foo(3));
+  fl.emplace_front(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:20: warning: unnecessary temporary object created while calling emplace_front
   // CHECK-FIXES: fl.emplace_front(3);
 
   DQ2 dq2;
-  dq2.emplace_front(Foo(3));
+  dq2.emplace_front(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:21: warning: unnecessary temporary object created while calling emplace_front
   // CHECK-FIXES: dq2.emplace_front(3);
 }
@@ -1102,36 +1100,36 @@ void test_Alias() {
   typedef std::list<Foo> L;
   using DQ = std::deque<Foo>;
   L l;
-  l.push_back(Foo(3));
+  l.emplace_back(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:5: warning: use emplace_back instead of push_back [modernize-use-emplace]
   // CHECK-FIXES: l.emplace_back(3);
 
   DQ dq;
-  dq.push_back(Foo(3));
+  dq.emplace_back(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back instead of push_back [modernize-use-emplace]
   // CHECK-FIXES: dq.emplace_back(3);
 
   typedef std::stack<Foo> STACK;
   using PQ = std::priority_queue<Foo>;
   STACK stack;
-  stack.push(Foo(3));
+  stack.emplace(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:9: warning: use emplace instead of push [modernize-use-emplace]
   // CHECK-FIXES: stack.emplace(3);
 
   PQ pq;
-  pq.push(Foo(3));
+  pq.emplace(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace instead of push [modernize-use-emplace]
   // CHECK-FIXES: pq.emplace(3);
 
   typedef std::forward_list<Foo> FL;
   using DQ2 = std::deque<Foo>;
   FL fl;
-  fl.push_front(Foo(3));
+  fl.emplace_front(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_front instead of push_front [modernize-use-emplace]
   // CHECK-FIXES: fl.emplace_front(3);
 
   DQ2 dq2;
-  dq2.push_front(Foo(3));
+  dq2.emplace_front(3);
   // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_front instead of push_front [modernize-use-emplace]
   // CHECK-FIXES: dq2.emplace_front(3);
 }
@@ -1196,41 +1194,41 @@ struct NonTrivialWithCtor {
 void testBracedInitTemporaries() {
   std::vector<NonTrivialNoCtor> v1;
 
-  v1.push_back(NonTrivialNoCtor());
+  v1.emplace_back();  
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v1.emplace_back();
-  v1.push_back(NonTrivialNoCtor{});
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v1.emplace_back();
-  v1.push_back({});
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v1.emplace_back();
-  v1.push_back(NonTrivialNoCtor{InnerType{}});
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v1.emplace_back();
-  v1.push_back({InnerType{}});
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v1.emplace_back();
-  v1.push_back(NonTrivialNoCtor{InnerType()});
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v1.emplace_back();
-  v1.push_back({InnerType()});
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v1.emplace_back();
-  v1.push_back({{}});
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v1.emplace_back();
 
-  v1.emplace_back(NonTrivialNoCtor());
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v1.emplace_back();
-  v1.emplace_back(NonTrivialNoCtor{});
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v1.emplace_back();
-  v1.emplace_back(NonTrivialNoCtor{InnerType{}});
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v1.emplace_back();
-  v1.emplace_back(NonTrivialNoCtor{{}});
+  v1.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v1.emplace_back();
 
@@ -1244,41 +1242,41 @@ void testBracedInitTemporaries() {
 
   std::vector<NonTrivialWithVector> v2;
 
-  v2.push_back(NonTrivialWithVector());
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v2.emplace_back();
-  v2.push_back(NonTrivialWithVector{});
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v2.emplace_back();
-  v2.push_back({});
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v2.emplace_back();
-  v2.push_back(NonTrivialWithVector{std::vector<int>{}});
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v2.emplace_back();
-  v2.push_back({std::vector<int>{}});
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v2.emplace_back();
-  v2.push_back(NonTrivialWithVector{std::vector<int>()});
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v2.emplace_back();
-  v2.push_back({std::vector<int>()});
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v2.emplace_back();
-  v2.push_back({{}});
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v2.emplace_back();
 
-  v2.emplace_back(NonTrivialWithVector());
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v2.emplace_back();
-  v2.emplace_back(NonTrivialWithVector{});
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v2.emplace_back();
-  v2.emplace_back(NonTrivialWithVector{std::vector<int>{}});
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v2.emplace_back();
-  v2.emplace_back(NonTrivialWithVector{{}});
+  v2.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v2.emplace_back();
 
@@ -1293,41 +1291,41 @@ void testBracedInitTemporaries() {
 
   std::vector<NonTrivialWithCtor> v3;
 
-  v3.push_back(NonTrivialWithCtor());
+  v3.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v3.emplace_back();
-  v3.push_back(NonTrivialWithCtor{});
+  v3.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v3.emplace_back();
-  v3.push_back({});
+  v3.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v3.emplace_back();
-  v3.push_back(NonTrivialWithCtor{std::vector<int>()});
+  v3.emplace_back(std::vector<int>());
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v3.emplace_back(std::vector<int>());
-  v3.push_back(NonTrivialWithCtor{std::vector<int>{0}});
+  v3.emplace_back(std::vector<int>{0});
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v3.emplace_back(std::vector<int>{0});
-  v3.push_back(NonTrivialWithCtor{std::vector<int>{}});
+  v3.emplace_back(std::vector<int>{});
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v3.emplace_back(std::vector<int>{});
-  v3.push_back({std::vector<int>{0}});
+  v3.emplace_back(std::vector<int>{0});
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v3.emplace_back(std::vector<int>{0});
-  v3.push_back({std::vector<int>{}});
+  v3.emplace_back(std::vector<int>{});
   // CHECK-MESSAGES: :[[@LINE-1]]:6: warning: use emplace_back
   // CHECK-FIXES: v3.emplace_back(std::vector<int>{});
 
-  v3.emplace_back(NonTrivialWithCtor());
+  v3.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v3.emplace_back();
-  v3.emplace_back(NonTrivialWithCtor{});
+ v3.emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v3.emplace_back();
-  v3.emplace_back(NonTrivialWithCtor{std::vector<int>{}});
+  v3.emplace_back(std::vector<int>{});
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v3.emplace_back(std::vector<int>{});
-  v3.emplace_back(NonTrivialWithCtor{std::vector<int>{0}});
+  v3.emplace_back(std::vector<int>{0});
   // CHECK-MESSAGES: :[[@LINE-1]]:19: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: v3.emplace_back(std::vector<int>{0});
 
@@ -1353,83 +1351,83 @@ void testWithPointerTypes() {
   std::stack<Something> s;
   std::stack<Something>* sp;
 
-  lp->push_back(Something(1, 2));
+  lp->emplace_back(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_back instead of push_back [modernize-use-emplace]
   // CHECK-FIXES: lp->emplace_back(1, 2);
-  lp->push_front(Something(1, 2));
+  lp->emplace_front(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_front instead of push_front [modernize-use-emplace]
   // CHECK-FIXES: lp->emplace_front(1, 2);
-  sp->push(Something(1, 2));
+  sp->emplace(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace instead of push [modernize-use-emplace]
   // CHECK-FIXES: sp->emplace(1, 2);
 
-  lp->push_back(Something{1, 2});
+  lp->emplace_back(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_back instead of push_back [modernize-use-emplace]
   // CHECK-FIXES: lp->emplace_back(1, 2);
-  lp->push_front(Something{1, 2});
+  lp->emplace_front(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_front instead of push_front [modernize-use-emplace]
   // CHECK-FIXES: lp->emplace_front(1, 2);
-  sp->push(Something{1, 2});
+  sp->emplace(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace instead of push [modernize-use-emplace]
   // CHECK-FIXES: sp->emplace(1, 2);
 
-  lp->push_back(Something());
+  lp->emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_back instead of push_back [modernize-use-emplace]
   // CHECK-FIXES: lp->emplace_back();
-  lp->push_front(Something());
+  lp->emplace_front();
   // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_front instead of push_front [modernize-use-emplace]
   // CHECK-FIXES: lp->emplace_front();
-  sp->push(Something());
-  // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace instead of push [modernize-use-emplace]
-  // CHECK-FIXES: sp->emplace();
-
-  lp->push_back(Something{});
-  // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_back instead of push_back [modernize-use-emplace]
-  // CHECK-FIXES: lp->emplace_back();
-  lp->push_front(Something{});
-  // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_front instead of push_front [modernize-use-emplace]
-  // CHECK-FIXES: lp->emplace_front();
-  sp->push(Something{});
+  sp->emplace();
   // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace instead of push [modernize-use-emplace]
   // CHECK-FIXES: sp->emplace();
 
-  lp->emplace_back(Something(1, 2));
+  lp->emplace_back();
+  // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_back instead of push_back [modernize-use-emplace]
+  // CHECK-FIXES: lp->emplace_back();
+  lp->emplace_front();
+  // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace_front instead of push_front [modernize-use-emplace]
+  // CHECK-FIXES: lp->emplace_front();
+  sp->emplace();
+  // CHECK-MESSAGES: :[[@LINE-1]]:7: warning: use emplace instead of push [modernize-use-emplace]
+  // CHECK-FIXES: sp->emplace();
+
+  lp->emplace_back(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:20: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: lp->emplace_back(1, 2);
-  lp->emplace_front(Something(1, 2));
+  lp->emplace_front(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:21: warning: unnecessary temporary object created while calling emplace_front
   // CHECK-FIXES: lp->emplace_front(1, 2);
-  sp->emplace(Something(1, 2));
+  sp->emplace(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:15: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: sp->emplace(1, 2);
 
-  lp->emplace_back(Something{1, 2});
+  lp->emplace_back(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:20: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: lp->emplace_back(1, 2);
-  lp->emplace_front(Something{1, 2});
+  lp->emplace_front(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:21: warning: unnecessary temporary object created while calling emplace_front
   // CHECK-FIXES: lp->emplace_front(1, 2);
-  sp->emplace(Something{1, 2});
+  sp->emplace(1, 2);
   // CHECK-MESSAGES: :[[@LINE-1]]:15: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: sp->emplace(1, 2);
 
-  lp->emplace_back(Something());
+  lp->emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:20: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: lp->emplace_back();
-  lp->emplace_front(Something());
+  lp->emplace_front();
   // CHECK-MESSAGES: :[[@LINE-1]]:21: warning: unnecessary temporary object created while calling emplace_front
   // CHECK-FIXES: lp->emplace_front();
-  sp->emplace(Something());
+  sp->emplace();
   // CHECK-MESSAGES: :[[@LINE-1]]:15: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: sp->emplace();
 
-  lp->emplace_back(Something{});
+  lp->emplace_back();
   // CHECK-MESSAGES: :[[@LINE-1]]:20: warning: unnecessary temporary object created while calling emplace_back
   // CHECK-FIXES: lp->emplace_back();
-  lp->emplace_front(Something{});
+  lp->emplace_front();
   // CHECK-MESSAGES: :[[@LINE-1]]:21: warning: unnecessary temporary object created while calling emplace_front
   // CHECK-FIXES: lp->emplace_front();
-  sp->emplace(Something{});
+  sp->emplace();
   // CHECK-MESSAGES: :[[@LINE-1]]:15: warning: unnecessary temporary object created while calling emplace
   // CHECK-FIXES: sp->emplace();
 }

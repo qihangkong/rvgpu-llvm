@@ -618,7 +618,7 @@ void NotNullTerminatedResultCheck::registerMatchers(MatchFinder *Finder) {
   // Note: Sometimes the size of char is explicitly written out.
   auto SizeExpr = anyOf(SizeOfCharExpr, integerLiteral(equals(1)));
 
-  auto MallocLengthExpr = 
+  auto MallocLengthExpr =
       allOf(callee(functionDecl(
                 hasAnyName("::alloca", "::calloc", "malloc", "realloc"))),
             hasAnyArgument(ignoringParenImpCasts(
