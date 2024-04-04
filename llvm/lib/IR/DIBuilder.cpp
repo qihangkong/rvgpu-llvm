@@ -363,8 +363,8 @@ DIBuilder::createTemplateAlias(DIType *Ty, StringRef Name, DIFile *File,
                                DINode::DIFlags Flags, DINodeArray Annotations) {
   return DIDerivedType::get(VMContext, dwarf::DW_TAG_template_alias, Name, File,
                             LineNo, getNonCompileUnitScope(Context), Ty, 0,
-                            AlignInBits, 0, std::nullopt, Flags, TParams.get(),
-                            Annotations);
+                            AlignInBits, 0, std::nullopt, std::nullopt, Flags,
+                            TParams.get(), Annotations);
 }
 
 DIDerivedType *DIBuilder::createFriend(DIType *Ty, DIType *FriendTy) {
