@@ -778,7 +778,7 @@ void Parser::ParseObjCInterfaceDeclList(tok::ObjCKeywordKind contextKey,
       }
 
       bool addedToDeclSpec = false;
-      auto ObjCPropertyCallback = [&](ParsingFieldDeclarator &FD) {
+      auto ObjCPropertyCallback = [&](ParsingFieldDeclarator &FD, Decl *&Dcl) {
         if (FD.D.getIdentifier() == nullptr) {
           Diag(AtLoc, diag::err_objc_property_requires_field_name)
               << FD.D.getSourceRange();
@@ -816,6 +816,7 @@ void Parser::ParseObjCInterfaceDeclList(tok::ObjCKeywordKind contextKey,
             MethodImplKind);
 
         FD.complete(Property);
+        Dcl = Property;
       };
 
       // Parse all the comma separated declarators.
@@ -2024,7 +2025,7 @@ void Parser::ParseObjCClassInstanceVariables(ObjCContainerDecl *interfaceDecl,
       continue;
     }
 
-    auto ObjCIvarCallback = [&](ParsingFieldDeclarator &FD) {
+    auto ObjCIvarCallback = [&](ParsingFieldDeclarator &FD, Decl *&Dcl) {
       assert(getObjCDeclContext() == interfaceDecl &&
              "Ivar should have interfaceDecl as its decl context");
       // Install the declarator into the interface decl.
@@ -2035,6 +2036,7 @@ void Parser::ParseObjCClassInstanceVariables(ObjCContainerDecl *interfaceDecl,
       if (Field)
         AllIvarDecls.push_back(Field);
       FD.complete(Field);
+      Dcl = Field;
     };
 
     // Parse all the comma separated declarators.

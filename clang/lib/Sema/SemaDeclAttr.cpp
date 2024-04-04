@@ -8593,8 +8593,8 @@ static const RecordDecl *GetEnclosingNamedOrTopAnonRecord(const FieldDecl *FD) {
 }
 
 static bool
-CheckCountExpr(Sema &S, FieldDecl *FD, Expr *E,
-               llvm::SmallVectorImpl<TypeCoupledDeclRefInfo> &Decls) {
+CheckCountExprOnField(Sema &S, FieldDecl *FD, Expr *E,
+                     llvm::SmallVectorImpl<TypeCoupledDeclRefInfo> &Decls) {
   if (FD->getParent()->isUnion()) {
     S.Diag(FD->getBeginLoc(), diag::err_counted_by_attr_in_union)
         << FD->getSourceRange();
@@ -8610,7 +8610,8 @@ CheckCountExpr(Sema &S, FieldDecl *FD, Expr *E,
   LangOptions::StrictFlexArraysLevelKind StrictFlexArraysLevel =
       LangOptions::StrictFlexArraysLevelKind::IncompleteOnly;
 
-  if (!Decl::isFlexibleArrayMemberLike(S.getASTContext(), FD, FD->getType(),
+  if (FD->getType()->isArrayType() &&
+      !Decl::isFlexibleArrayMemberLike(S.getASTContext(), FD, FD->getType(),
                                        StrictFlexArraysLevel, true)) {
     // The "counted_by" attribute must be on a flexible array member.
     SourceRange SR = FD->getLocation();
@@ -8679,10 +8680,10 @@ static void handleCountedByAttrField(Sema &S, Decl *D, const ParsedAttr &AL) {
     return;
 
   llvm::SmallVector<TypeCoupledDeclRefInfo, 1> Decls;
-  if (CheckCountExpr(S, FD, CountExpr, Decls))
+  if (CheckCountExprOnField(S, FD, CountExpr, Decls))
     return;
 
-  QualType CAT = S.BuildCountAttributedArrayType(FD->getType(), CountExpr);
+  QualType CAT = S.BuildCountAttributedArrayOrPointerType(FD->getType(), CountExpr);
   FD->setType(CAT);
 }
 
