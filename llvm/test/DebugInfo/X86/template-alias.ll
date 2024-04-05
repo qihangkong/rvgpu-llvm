@@ -39,8 +39,7 @@
 ; GNU-TYPES: STATIC   TYPE     "A"
 ; PUB-TYPES: "A"
 
-
-target triple = "x86_64-unk-unk"
+target triple = "x86_64-unknown-unkown"
 
 %struct.X = type { i32 }
 

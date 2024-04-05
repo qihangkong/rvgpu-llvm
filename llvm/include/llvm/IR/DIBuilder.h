@@ -310,15 +310,16 @@ namespace llvm {
                                  DINode::DIFlags Flags = DINode::FlagZero,
                                  DINodeArray Annotations = nullptr);
 
-    /// Create debugging information entry for a typedef.
+    /// Create debugging information entry for a template alias.
     /// \param Ty          Original type.
-    /// \param Name        Typedef name.
+    /// \param Name        Alias name.
     /// \param File        File where this type is defined.
     /// \param LineNo      Line number.
-    /// \param Context     The surrounding context for the typedef.
+    /// \param Context     The surrounding context for the alias.
     /// \param TParams     The template arguments.
     /// \param AlignInBits Alignment. (optional)
-    /// \param Flags       Flags to describe inheritance attribute, e.g. private
+    /// \param Flags       Flags to describe inheritance attribute (optional),
+    ///                    e.g. private.
     /// \param Annotations Annotations. (optional)
     DIDerivedType *createTemplateAlias(DIType *Ty, StringRef Name, DIFile *File,
                                        unsigned LineNo, DIScope *Context,
