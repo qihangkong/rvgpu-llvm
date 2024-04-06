@@ -16,7 +16,7 @@ entry:
 
 declare void @llvm.va_start(ptr)
 
-attributes #0 = { "target-cpu"="cortex-r52" "target-features"="-fp64"  }
+attributes #0 = { "target-cpu"="cortex-r52" }
 
 ; Ensures that the machine scheduler does not move accessing the upper
 ; 32 bits of the double to before actually storing it to memory

@@ -96,7 +96,7 @@
 // CHECK-V8R-ALLOW-FP-INSTR: #define __ARM_FEATURE_CRC32 1
 // CHECK-V8R-ALLOW-FP-INSTR: #define __ARM_FEATURE_DIRECTED_ROUNDING 1
 // CHECK-V8R-ALLOW-FP-INSTR: #define __ARM_FEATURE_NUMERIC_MAXMIN 1
-// CHECK-V8R-ALLOW-FP-INSTR: #define __ARM_FP 0xe
+// CHECK-V8R-ALLOW-FP-INSTR: #define __ARM_FP 0x6
 
 // RUN: %clang -target armv7a-none-linux-gnu -x c -E -dM %s -o - | FileCheck -match-full-lines --check-prefix=CHECK-V7 %s
 // CHECK-V7: #define __ARMEL__ 1
