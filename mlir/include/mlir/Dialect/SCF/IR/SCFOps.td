@@ -931,6 +931,10 @@ def ReduceReturnOp :
   let hasVerifier = 1;
 }
 
+//===----------------------------------------------------------------------===//
+// ScopeOp
+//===----------------------------------------------------------------------===//
+
 def ScopeOp : SCF_Op<"scope",
     [AutomaticAllocationScope,
      RecursiveMemoryEffects,
