@@ -5705,6 +5705,22 @@ Instruction *InstCombinerImpl::foldICmpWithTrunc(ICmpInst &ICmp) {
   ICmpInst::Predicate Pred = ICmp.getPredicate();
   Value *Op0 = ICmp.getOperand(0), *Op1 = ICmp.getOperand(1);
 
+  // Match (icmp pred (trunc nuw/nsw X), C)
+  // Which we can convert to (icmp pred X, (sext/zext C))
+  // TODO: Maybe this makes sense as a general canonicalization?
+  if (match(Op1, m_ImmConstant())) {
+    if (auto *TI = dyn_cast<TruncInst>(Op0)) {
+      Value *ExtOp0 = TI->getOperand(0);
+      Value *ExtOp1 = nullptr;
+      if (!ICmp.isSigned() && TI->hasNoUnsignedWrap())
+        ExtOp1 = Builder.CreateZExt(Op1, ExtOp0->getType());
+      else if (!ICmp.isUnsigned() && TI->hasNoSignedWrap())
+        ExtOp1 = Builder.CreateSExt(Op1, ExtOp0->getType());
+      if (ExtOp1)
+        return new ICmpInst(Pred, ExtOp0, ExtOp1);
+    }
+  }
+
   // Try to canonicalize trunc + compare-to-constant into a mask + cmp.
   // The trunc masks high bits while the compare may effectively mask low bits.
   Value *X;
