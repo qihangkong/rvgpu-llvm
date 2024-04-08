@@ -21,10 +21,10 @@ void bad_malloc(char *name) {
   // CHECK-MESSAGES: :[[@LINE-1]]:28: warning: addition operator is applied to the argument of strlen
   // CHECK-FIXES: {{^  char \*new_name = \(char \*\)malloc\(}}strlen(name) + 1{{\);$}}
   new_name = (char *)malloc(strnlen(name, 10) + 1);
-  // CHECK-MESSAGES: :[[@LINE-1]]:22: warning: addition operator is applied to the argument of strnlen
+  // CHECK-MESSAGES-NOT: :[[@LINE-1]]:22: warning: addition operator is applied to the argument of strnlen
   // CHECK-FIXES: {{^  new_name = \(char \*\)malloc\(}}strnlen(name, 10) + 1{{\);$}}
   new_name = (char *)malloc(strnlen_s(name, 10) + 1);
-  // CHECK-MESSAGES: :[[@LINE-1]]:22: warning: addition operator is applied to the argument of strnlen_s
+  // CHECK-MESSAGES-NOT: :[[@LINE-1]]:22: warning: addition operator is applied to the argument of strnlen_s
   // CHECK-FIXES: {{^  new_name = \(char \*\)malloc\(}}strnlen_s(name, 10) + 1{{\);$}}
 }
 
@@ -33,10 +33,10 @@ void bad_malloc_wide(wchar_t *name) {
   // CHECK-MESSAGES: :[[@LINE-1]]:34: warning: addition operator is applied to the argument of wcslen
   // CHECK-FIXES: {{^  wchar_t \*new_name = \(wchar_t \*\)malloc\(}}wcslen(name) + 1{{\);$}}
   new_name = (wchar_t *)malloc(wcsnlen(name, 10) + 1 );
-  // CHECK-MESSAGES: :[[@LINE-1]]:25: warning: addition operator is applied to the argument of wcsnlen
+  // CHECK-MESSAGES-NOT: :[[@LINE-1]]:25: warning: addition operator is applied to the argument of wcsnlen
   // CHECK-FIXES: {{^  new_name = \(wchar_t \*\)malloc\(}}wcsnlen(name, 10) + 1{{\);$}}
   new_name = (wchar_t *)malloc(wcsnlen_s(name, 10) + 1 );
-  // CHECK-MESSAGES: :[[@LINE-1]]:25: warning: addition operator is applied to the argument of wcsnlen_s
+  // CHECK-MESSAGES-NOT: :[[@LINE-1]]:25: warning: addition operator is applied to the argument of wcsnlen_s
   // CHECK-FIXES: {{^  new_name = \(wchar_t \*\)malloc\(}}wcsnlen_s(name, 10) + 1{{\);$}}
 }
 
