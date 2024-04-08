@@ -52,6 +52,6 @@ define void @caller() !prof !21 {
 !21 = !{!"function_entry_count", i64 400}
 attributes #0 = { alwaysinline }
 ; CHECK: ![[ENTRY_COUNT]] = !{!"function_entry_count", i64 600}
-; CHECK: ![[COUNT_IND_CALLEE1]] = !{!"VP", i32 0, i64 200, i64 111, i64 100, i64 222, i64 60, i64 333, i64 40}
+; CHECK: ![[COUNT_IND_CALLEE1]] = !{!"VP", i32 0, i64 120, i64 111, i64 60, i64 222, i64 36, i64 333, i64 24}
 ; CHECK: ![[COUNT_IND_CALLEE]] = !{!"VP", i32 0, i64 84, i64 111, i64 48, i64 222, i64 24, i64 333, i64 12}
 ; CHECK: ![[COUNT_IND_CALLER]] = !{!"VP", i32 0, i64 56, i64 111, i64 32, i64 222, i64 16, i64 333, i64 8}

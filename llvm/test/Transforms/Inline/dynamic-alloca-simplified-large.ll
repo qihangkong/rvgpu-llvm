@@ -107,6 +107,8 @@ define void @caller3_alloca_not_in_entry(ptr %p1, i1 %b) {
 ; CHECK-NEXT:    [[COND:%.*]] = icmp eq i1 [[B]], true
 ; CHECK-NEXT:    br i1 [[COND]], label [[EXIT:%.*]], label [[SPLIT:%.*]]
 ; CHECK:       split:
+; CHECK-NEXT:    [[SAVEDSTACK:%.*]] = call ptr @llvm.stacksave.p0()
+; CHECK-NEXT:    call void @llvm.stackrestore.p0(ptr [[SAVEDSTACK]])
 ; CHECK-NEXT:    br label [[EXIT]]
 ; CHECK:       exit:
 ; CHECK-NEXT:    ret void
