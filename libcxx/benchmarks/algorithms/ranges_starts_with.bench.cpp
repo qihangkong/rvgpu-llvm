@@ -43,6 +43,7 @@ static void bm_starts_with_contiguous_iter(benchmark::State& state) {
     auto begin2 = contiguous_iterator(p.data());
     auto end2   = contiguous_iterator(p.data() + p.size());
 
+    // Using a custom predicate to make sure the memcmp optimization doesn't get invoked
     benchmark::DoNotOptimize(
         std::ranges::starts_with(begin1, end1, begin2, end2, [](const int a, const int b) { return a == b; }));
   }
