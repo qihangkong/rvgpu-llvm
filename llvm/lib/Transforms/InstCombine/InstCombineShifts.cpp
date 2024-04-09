@@ -1267,6 +1267,18 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
       match(Op1, m_SpecificIntAllowUndef(BitWidth - 1)))
     return new ZExtInst(Builder.CreateIsNotNeg(X, "isnotneg"), Ty);
 
+  // If both the add and the shift are nuw, then:
+  // ((X << Y) + Z) nuw >>u Z --> X + (Y nuw >>u Z) nuw
+  Value *Y;
+  if (match(Op0, m_OneUse(m_c_NUWAdd((m_NUWShl(m_Value(X), m_Specific(Op1))),
+                                     m_Value(Y))))) {
+    Value *NewLshr = Builder.CreateLShr(Y, Op1, "", I.isExact());
+    auto *newAdd = BinaryOperator::CreateNUWAdd(NewLshr, X);
+    if (auto *Op0Bin = cast<OverflowingBinaryOperator>(Op0))
+      newAdd->setHasNoSignedWrap(Op0Bin->hasNoSignedWrap());
+    return newAdd;
+  }
+
   if (match(Op1, m_APInt(C))) {
     unsigned ShAmtC = C->getZExtValue();
     auto *II = dyn_cast<IntrinsicInst>(Op0);
@@ -1283,7 +1295,6 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
       return new ZExtInst(Cmp, Ty);
     }
 
-    Value *X;
     const APInt *C1;
     if (match(Op0, m_Shl(m_Value(X), m_APInt(C1))) && C1->ult(BitWidth)) {
       if (C1->ult(ShAmtC)) {
@@ -1328,7 +1339,6 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
     // ((X << C) + Y) >>u C --> (X + (Y >>u C)) & (-1 >>u C)
     // TODO: Consolidate with the more general transform that starts from shl
     //       (the shifts are in the opposite order).
-    Value *Y;
     if (match(Op0,
               m_OneUse(m_c_Add(m_OneUse(m_Shl(m_Value(X), m_Specific(Op1))),
                                m_Value(Y))))) {
@@ -1450,8 +1460,23 @@ Instruction *InstCombinerImpl::visitLShr(BinaryOperator &I) {
           NewMul->setHasNoSignedWrap(true);
           return NewMul;
         }
+
+        // Special case: lshr nuw (mul (X, 3), 1) -> add nuw nsw (X, lshr(X, 1)
+        if (ShAmtC == 1 && MulC->getZExtValue() == 3) {
+          auto *NewAdd = BinaryOperator::CreateNUWAdd(
+              X,
+              Builder.CreateLShr(X, ConstantInt::get(Ty, 1), "", I.isExact()));
+          NewAdd->setHasNoSignedWrap(true);
+          return NewAdd;
+        }
       }
     }
+
+    // // lshr nsw (mul (X, 3), 1) -> add nsw (X, lshr(X, 1)
+    if (match(Op0, m_OneUse(m_NSWMul(m_Value(X), m_SpecificInt(3)))) &&
+        ShAmtC == 1)
+      return BinaryOperator::CreateNSWAdd(
+          X, Builder.CreateLShr(X, ConstantInt::get(Ty, 1), "", I.isExact()));
 
     // Try to narrow bswap.
     // In the case where the shift amount equals the bitwidth difference, the
@@ -1655,6 +1680,26 @@ Instruction *InstCombinerImpl::visitAShr(BinaryOperator &I) {
       Value *Y;
       if (match(Op0, m_OneUse(m_NSWSub(m_Value(X), m_Value(Y)))))
         return new SExtInst(Builder.CreateICmpSLT(X, Y), Ty);
+    }
+
+    // Special case: ashr nuw (mul (X, 3), 1) -> add nuw nsw (X, lshr(X, 1)
+    if (match(Op0, m_OneUse(m_NSWMul(m_Value(X), m_SpecificInt(3)))) &&
+        ShAmt == 1) {
+      Value *Shift;
+      if (auto *Op0Bin = cast<OverflowingBinaryOperator>(Op0)) {
+        if (Op0Bin->hasNoUnsignedWrap())
+          // We can use lshr if the mul is nuw and nsw
+          Shift =
+              Builder.CreateLShr(X, ConstantInt::get(Ty, 1), "", I.isExact());
+        else
+          Shift =
+              Builder.CreateAShr(X, ConstantInt::get(Ty, 1), "", I.isExact());
+
+        auto *NewAdd = BinaryOperator::CreateNSWAdd(X, Shift);
+        NewAdd->setHasNoUnsignedWrap(Op0Bin->hasNoUnsignedWrap());
+
+        return NewAdd;
+      }
     }
   }
 

@@ -362,9 +362,9 @@ define <3 x i14> @mul_splat_fold_vec(<3 x i14> %x) {
 
 define i32 @mul_times_3_div_2 (i32 %x) {
 ; CHECK-LABEL: @mul_times_3_div_2(
-; CHECK-NEXT:    [[TMP1:%.*]] = mul nuw nsw i32 [[X:%.*]], 3
-; CHECK-NEXT:    [[TMP2:%.*]] = lshr i32 [[TMP1]], 1
-; CHECK-NEXT:    ret i32 [[TMP2]]
+; CHECK-NEXT:    [[TMP2:%.*]] = lshr i32 [[TMP1:%.*]], 1
+; CHECK-NEXT:    [[TMP3:%.*]] = add nuw nsw i32 [[TMP2]], [[TMP1]]
+; CHECK-NEXT:    ret i32 [[TMP3]]
 ;
   %2 = mul nsw nuw i32 %x, 3
   %3 = lshr i32 %2, 1
@@ -373,21 +373,20 @@ define i32 @mul_times_3_div_2 (i32 %x) {
 
   define i32 @shl_add_lshr (i32 %x, i32 %c, i32 %y) {
 ; CHECK-LABEL: @shl_add_lshr(
-; CHECK-NEXT:    [[TMP1:%.*]] = shl nuw i32 [[X:%.*]], [[C:%.*]]
-; CHECK-NEXT:    [[TMP2:%.*]] = add nuw nsw i32 [[TMP1]], [[Y:%.*]]
-; CHECK-NEXT:    [[TMP3:%.*]] = lshr exact i32 [[TMP2]], [[C]]
-; CHECK-NEXT:    ret i32 [[TMP3]]
+; CHECK-NEXT:    [[TMP3:%.*]] = lshr exact i32 [[TMP2:%.*]], [[C:%.*]]
+; CHECK-NEXT:    [[TMP4:%.*]] = add nuw nsw i32 [[TMP3]], [[X:%.*]]
+; CHECK-NEXT:    ret i32 [[TMP4]]
 ;
   %2 = shl nuw i32 %x, %c
-  %3 = add nsw nuw i32 %2, %y
+  %3 = add nuw nsw i32 %2, %y
   %4 = lshr exact i32 %3, %c
   ret i32 %4
 }
 
   define i32 @ashr_mul_times_3_div_2 (i32 %0) {
 ; CHECK-LABEL: @ashr_mul_times_3_div_2(
-; CHECK-NEXT:    [[TMP2:%.*]] = mul nuw nsw i32 [[TMP0:%.*]], 3
-; CHECK-NEXT:    [[TMP3:%.*]] = ashr i32 [[TMP2]], 1
+; CHECK-NEXT:    [[TMP2:%.*]] = lshr i32 [[TMP0:%.*]], 1
+; CHECK-NEXT:    [[TMP3:%.*]] = add nuw nsw i32 [[TMP2]], [[TMP0]]
 ; CHECK-NEXT:    ret i32 [[TMP3]]
 ;
   %2 = mul nsw nuw i32 %0, 3
@@ -397,9 +396,9 @@ define i32 @mul_times_3_div_2 (i32 %x) {
 
 define i32 @ashr_mul_times_3_div_2_exact (i32 %0) {
 ; CHECK-LABEL: @ashr_mul_times_3_div_2_exact(
-; CHECK-NEXT:    [[TMP2:%.*]] = mul nsw i32 [[TMP0:%.*]], 3
-; CHECK-NEXT:    [[TMP3:%.*]] = ashr exact i32 [[TMP2]], 1
-; CHECK-NEXT:    ret i32 [[TMP3]]
+; CHECK-NEXT:    [[TMP3:%.*]] = ashr exact i32 [[TMP2:%.*]], 1
+; CHECK-NEXT:    [[TMP4:%.*]] = add nsw i32 [[TMP3]], [[TMP2]]
+; CHECK-NEXT:    ret i32 [[TMP4]]
 ;
   %2 = mul nsw i32 %0, 3
   %3 = ashr exact i32 %2, 1
