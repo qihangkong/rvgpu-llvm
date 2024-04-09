@@ -5230,11 +5230,24 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
 
   unsigned Opcode = MI->getOpcode();
   bool IsReplaceInstr = false;
+  int NewOpcode = -1;
+
+  auto SetNewOpcode = [&](int NewOpc) {
+    if (!IsReplaceInstr) {
+      NewOpcode = NewOpc;
+      IsReplaceInstr = true;
+    }
+  };
+
   switch (Opcode) {
   case PPC::OR:
+    SetNewOpcode(PPC::OR8);
+    [[fallthrough]];
+  case PPC::ISEL:
+    SetNewOpcode(PPC::ISEL8);
+    [[fallthrough]];
   case PPC::OR8:
   case PPC::PHI:
-  case PPC::ISEL:
     if (BinOpDepth < MAX_BINOP_DEPTH) {
       unsigned OperandEnd = 3, OperandStride = 1;
       if (Opcode == PPC::PHI) {
@@ -5248,9 +5261,7 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
         replaceInstrAfterElimExt32To64(SrcReg, MRI, BinOpDepth + 1, LV);
       }
 
-      if (Opcode == PPC::OR || Opcode == PPC::ISEL)
-        IsReplaceInstr = true;
-      else
+      if (!IsReplaceInstr)
         return;
     }
     break;
@@ -5272,37 +5283,60 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
   }
     return;
   case PPC::ORI:
+    SetNewOpcode(PPC::ORI8);
+    [[fallthrough]];
   case PPC::XORI:
+    SetNewOpcode(PPC::XORI8);
+    [[fallthrough]];
+  case PPC::ORIS:
+    SetNewOpcode(PPC::ORIS8);
+    [[fallthrough]];
+  case PPC::XORIS:
+    SetNewOpcode(PPC::XORIS8);
+    [[fallthrough]];
   case PPC::ORI8:
   case PPC::XORI8:
-  case PPC::ORIS:
-  case PPC::XORIS:
   case PPC::ORIS8:
   case PPC::XORIS8: {
     Register SrcReg = MI->getOperand(1).getReg();
     replaceInstrAfterElimExt32To64(SrcReg, MRI, BinOpDepth, LV);
 
-    if (Opcode == PPC::ORI || Opcode == PPC::XORI || Opcode == PPC::ORIS ||
-        Opcode == PPC::ORIS || Opcode == PPC::XORIS)
-      IsReplaceInstr = true;
-    else
+    if (!IsReplaceInstr)
       return;
     break;
   }
   case PPC::AND:
+    SetNewOpcode(PPC::AND8);
+    [[fallthrough]];
   case PPC::AND8: {
     if (BinOpDepth < MAX_BINOP_DEPTH) {
       Register SrcReg1 = MI->getOperand(1).getReg();
       replaceInstrAfterElimExt32To64(SrcReg1, MRI, BinOpDepth, LV);
       Register SrcReg2 = MI->getOperand(2).getReg();
       replaceInstrAfterElimExt32To64(SrcReg2, MRI, BinOpDepth, LV);
-      if (Opcode == PPC::AND)
-        IsReplaceInstr = true;
-      else
+      if (!IsReplaceInstr)
         return;
     }
     break;
   }
+  case PPC::RLWINM:
+    SetNewOpcode(PPC::RLWINM8);
+    break;
+  case PPC::RLWINM_rec:
+    SetNewOpcode(PPC::RLWINM8_rec);
+    break;
+  case PPC::RLWNM:
+    SetNewOpcode(PPC ::RLWNM8);
+    break;
+  case PPC::RLWNM_rec:
+    SetNewOpcode(PPC::RLWNM8_rec);
+    break;
+  case PPC::ANDC_rec:
+    SetNewOpcode(PPC::ANDC8_rec);
+    break;
+  case PPC::ANDIS_rec:
+    SetNewOpcode(PPC::ANDIS8_rec);
+    break;
   default:
     break;
   }
@@ -5317,18 +5351,11 @@ void PPCInstrInfo::replaceInstrAfterElimExt32To64(const Register &Reg,
     assert(RC != &PPC::G8RCRegClass && RC != &PPC::G8RC_and_G8RC_NOX0RegClass &&
            "Must be 32-bit Register!");
 
-    // Fix Me: Most of the pseudo-opcode of 64-bit instruction are equal to
-    // the pseudo-opcode of the 32-bit version of the same instruction plus
-    // one. However, there are some exceptions: PPC::ANDC_rec,
-    // PPC::ANDI_rec, PPC::ANDIS_rec.
-    unsigned NewOpcode = Opcode + 1;
+    if (!IsReplaceInstr)
+      NewOpcode = PPC::get64BitInstrFromSignedExt32BitInstr(Opcode);
 
-    if (Opcode == PPC::ANDC_rec)
-      NewOpcode = PPC::ANDC8_rec;
-    if (Opcode == PPC::ANDI_rec)
-      NewOpcode = PPC::ANDI8_rec;
-    if (Opcode == PPC::ANDIS_rec)
-      NewOpcode = PPC::ANDIS8_rec;
+    assert(NewOpcode != -1 &&
+           "Must have a 64-bit opcode to map the 32-bit opcode!");
 
     const TargetRegisterInfo *TRI = MRI->getTargetRegisterInfo();
     const MCInstrDesc &MCID = TII->get(NewOpcode);
