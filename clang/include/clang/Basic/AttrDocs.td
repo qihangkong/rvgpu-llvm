@@ -8071,6 +8071,7 @@ definition when building with ``-fsanitize=signed-integer-overflow``
   }
 
   int main() { foo(); }
+}
 
 In the following example, we use ``__attribute__((wraps))`` on a variable to
 disable overflow instrumentation for arithmetic expressions it appears in. We
@@ -8093,6 +8094,7 @@ sanitizers (like ``-fsanitize=unsigned-integer-overflow``).
     // now, handle non-overflow case
     // ...
   }
+}
 
 The above example demonstrates some of the power and elegance this attribute
 provides. We can use code patterns we are already familiar with (like ``if (x +
