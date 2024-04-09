@@ -3347,8 +3347,7 @@ defm relaxed_template_template_args : BoolFOption<"relaxed-template-template-arg
   NegFlag<SetFalse>>;
 defm sized_deallocation : BoolFOption<"sized-deallocation",
   LangOpts<"SizedDeallocation">, Default<cpp14.KeyPath>,
-  PosFlag<SetTrue, [], [ClangOption],
-          "Enable C++14 sized global deallocation functions">,
+  PosFlag<SetTrue, [], [], "Enable C++14 sized global deallocation functions">,
   NegFlag<SetFalse>, BothFlags<[], [ClangOption, CC1Option]>>;
 defm aligned_allocation : BoolFOption<"aligned-allocation",
   LangOpts<"AlignedAllocation">, Default<cpp17.KeyPath>,
