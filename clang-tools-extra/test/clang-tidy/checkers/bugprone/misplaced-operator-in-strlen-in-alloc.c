@@ -32,10 +32,10 @@ void bad_malloc_wide(wchar_t *name) {
   wchar_t *new_name = (wchar_t *)malloc(wcslen(name) + 1);
   // CHECK-MESSAGES: :[[@LINE-1]]:34: warning: addition operator is applied to the argument of wcslen
   // CHECK-FIXES: {{^  wchar_t \*new_name = \(wchar_t \*\)malloc\(}}wcslen(name) + 1{{\);$}}
-  new_name = (wchar_t *)malloc(wcsnlen(name, 10) + 1 );
+  new_name = (wchar_t *)malloc(wcsnlen(name, 10) + 1);
   // CHECK-MESSAGES-NOT: :[[@LINE-1]]:25: warning: addition operator is applied to the argument of wcsnlen
   // CHECK-FIXES: {{^  new_name = \(wchar_t \*\)malloc\(}}wcsnlen(name, 10) + 1{{\);$}}
-  new_name = (wchar_t *)malloc(wcsnlen_s(name, 10) + 1 );
+  new_name = (wchar_t *)malloc(wcsnlen_s(name, 10) + 1);
   // CHECK-MESSAGES-NOT: :[[@LINE-1]]:25: warning: addition operator is applied to the argument of wcsnlen_s
   // CHECK-FIXES: {{^  new_name = \(wchar_t \*\)malloc\(}}wcsnlen_s(name, 10) + 1{{\);$}}
 }
