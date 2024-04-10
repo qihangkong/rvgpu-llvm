@@ -4379,7 +4379,8 @@ void CodeGenFunction::EmitNonNullArgCheck(RValue RV, QualType ArgType,
     NNAttr = getNonNullAttr(AC.getDecl(), PVD, ArgType, ArgNo);
 
   bool CanCheckNullability = false;
-  if (SanOpts.has(SanitizerKind::NullabilityArg) && !NNAttr && PVD) {
+  if (SanOpts.has(SanitizerKind::NullabilityArg) && !NNAttr && PVD &&
+      !PVD->getType()->isRecordType()) {
     auto Nullability = PVD->getType()->getNullability();
     CanCheckNullability = Nullability &&
                           *Nullability == NullabilityKind::NonNull &&
@@ -5589,6 +5590,12 @@ RValue CodeGenFunction::EmitCall(const CGFunctionInfo &CallInfo,
                              Callee.getAbstractInfo(), Attrs, CallingConv,
                              /*AttrOnCallSite=*/true,
                              /*IsThunk=*/false);
+
+  if (CallingConv == llvm::CallingConv::X86_VectorCall &&
+      getTarget().getTriple().isWindowsArm64EC()) {
+    CGM.Error(Loc, "__vectorcall calling convention is not currently "
+                   "supported");
+  }
 
   if (const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(CurFuncDecl)) {
     if (FD->hasAttr<StrictFPAttr>())
