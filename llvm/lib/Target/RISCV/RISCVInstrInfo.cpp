@@ -1655,10 +1655,6 @@ bool RISCVInstrInfo::isVectorAssociativeAndCommutative(const MachineInstr &Inst,
   OPCODE_LMUL_MASK_CASE(PseudoVADD_VV):
   OPCODE_LMUL_CASE(PseudoVMUL_VV):
   OPCODE_LMUL_MASK_CASE(PseudoVMUL_VV):
-  OPCODE_LMUL_CASE(PseudoVMULH_VV):
-  OPCODE_LMUL_MASK_CASE(PseudoVMULH_VV):
-  OPCODE_LMUL_CASE(PseudoVMULHU_VV):
-  OPCODE_LMUL_MASK_CASE(PseudoVMULHU_VV):
     return true;
   }
   // clang-format on
@@ -1733,7 +1729,7 @@ bool RISCVInstrInfo::areRVVInstsReassociable(const MachineInstr &MI1,
   return true;
 }
 
-// Most of our RVV pseudo has passthru operand, so the real operands
+// Most of our RVV pseudos have passthru operand, so the real operands
 // start from index = 2.
 bool RISCVInstrInfo::hasReassociableVectorSibling(const MachineInstr &Inst,
                                                   bool &Commuted) const {
@@ -1785,7 +1781,7 @@ void RISCVInstrInfo::getReassociateOperandIdx(
   TargetInstrInfo::getReassociateOperandIdx(Root, Pattern, OperandIndices);
   if (isVectorAssociativeAndCommutative(Root) ||
       isVectorAssociativeAndCommutative(Root, /*Invert=*/true)) {
-    // Skip the passthrough operand, so add all indices by one.
+    // Skip the passthrough operand, so increment all indices by one.
     for (unsigned I = 0; I < 5; ++I)
       ++OperandIndices[I];
   }
