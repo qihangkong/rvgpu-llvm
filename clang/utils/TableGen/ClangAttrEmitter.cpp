@@ -1822,26 +1822,104 @@ void WriteSemanticSpellingSwitch(const std::string &VarName,
   OS << "  }\n";
 }
 
+enum class LateAttrParseKind {
+  LateAttrParsingNever = 0,
+  LateAttrParsingAlways = 1,
+  LateAttrParsingExperimentalOnly = 2
+};
+
+static LateAttrParseKind getLateAttrParseKind(const Record *Attr) {
+  // This function basically does
+  // `Attr->getValueAsDef("LateParsed")->getValueAsInt("Mode")` but does
+  // a bunch of sanity checking in an asserts build to ensure that
+  // `LateAttrParseMode` in `Attr.td` is in sync with the `LateAttrParseKind`
+  // enum in this source file.
+
+  const char *LateParsedStr = "LateParsed";
+  auto *LAPK = Attr->getValueAsDef(LateParsedStr);
+
+  // Typecheck the `LateParsed` field.
+  SmallVector<Record *, 1> SuperClasses;
+  LAPK->getDirectSuperClasses(SuperClasses);
+  if (SuperClasses.size() != 1) {
+    PrintFatalError(Attr, "Field `" + llvm::Twine(LateParsedStr) +
+                              "`should only have one super class");
+  }
+  const char *LateAttrParseKindStr = "LateAttrParseKind";
+  if (SuperClasses[0]->getName().compare(LateAttrParseKindStr) != 0) {
+    PrintFatalError(Attr, "Field `" + llvm::Twine(LateParsedStr) +
+                              "`should only have type `" +
+                              llvm::Twine(LateAttrParseKindStr) +
+                              "` but found type `" +
+                              SuperClasses[0]->getName() + "`");
+  }
+
+  // Get Kind and verify the enum name matches the name in `Attr.td`.
+  const char *KindFieldStr = "Kind";
+  unsigned Kind = LAPK->getValueAsInt(KindFieldStr);
+  switch (LateAttrParseKind(Kind)) {
+#define CASE(X)                                                                \
+  case LateAttrParseKind::X:                                                   \
+    if (LAPK->getName().compare(#X) != 0) {                                    \
+      PrintFatalError(Attr,                                                    \
+                      "Field `" + llvm::Twine(LateParsedStr) + "` set to `" +  \
+                          LAPK->getName() +                                    \
+                          "` but this converts to `LateAttrParseKind::" +      \
+                          llvm::Twine(#X) + "`");                              \
+    }                                                                          \
+    return LateAttrParseKind::X;
+
+    CASE(LateAttrParsingNever)
+    CASE(LateAttrParsingAlways)
+    CASE(LateAttrParsingExperimentalOnly)
+#undef CASE
+  }
+
+  // The Kind value is completely invalid
+  auto KindValueStr = llvm::utostr(Kind);
+  PrintFatalError(Attr, "Field `" + llvm::Twine(LateParsedStr) + "` set to `" +
+                            LAPK->getName() + "` has unexpected `" +
+                            llvm::Twine(KindFieldStr) + "` value of " +
+                            KindValueStr);
+}
+
 // Emits the LateParsed property for attributes.
-static void emitClangAttrLateParsedList(RecordKeeper &Records, raw_ostream &OS) {
-  OS << "#if defined(CLANG_ATTR_LATE_PARSED_LIST)\n";
-  std::vector<Record*> Attrs = Records.getAllDerivedDefinitions("Attr");
+static void emitClangAttrLateParsedListImpl(RecordKeeper &Records,
+                                            raw_ostream &OS,
+                                            LateAttrParseKind LateParseMode) {
+  std::vector<Record *> Attrs = Records.getAllDerivedDefinitions("Attr");
 
   for (const auto *Attr : Attrs) {
-    bool LateParsed = Attr->getValueAsBit("LateParsed");
+    auto LateParsed = getLateAttrParseKind(Attr);
 
-    if (LateParsed) {
-      std::vector<FlattenedSpelling> Spellings = GetFlattenedSpellings(*Attr);
+    if (LateParsed != LateParseMode)
+      continue;
 
-      // FIXME: Handle non-GNU attributes
-      for (const auto &I : Spellings) {
-        if (I.variety() != "GNU")
-          continue;
-        OS << ".Case(\"" << I.name() << "\", " << LateParsed << ")\n";
-      }
+    std::vector<FlattenedSpelling> Spellings = GetFlattenedSpellings(*Attr);
+
+    // FIXME: Handle non-GNU attributes
+    for (const auto &I : Spellings) {
+      if (I.variety() != "GNU")
+        continue;
+      OS << ".Case(\"" << I.name() << "\", 1)\n";
     }
   }
+}
+
+static void emitClangAttrLateParsedList(RecordKeeper &Records,
+                                        raw_ostream &OS) {
+  OS << "#if defined(CLANG_ATTR_LATE_PARSED_LIST)\n";
+  emitClangAttrLateParsedListImpl(Records, OS,
+                                  LateAttrParseKind::LateAttrParsingAlways);
   OS << "#endif // CLANG_ATTR_LATE_PARSED_LIST\n\n";
+}
+
+static void emitClangAttrLateParsedExperimentalList(RecordKeeper &Records,
+                                                    raw_ostream &OS) {
+  OS << "#if defined(CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_LIST)\n";
+  emitClangAttrLateParsedListImpl(
+      Records, OS, LateAttrParseKind::LateAttrParsingExperimentalOnly);
+  OS << "#endif // CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_LIST\n\n";
 }
 
 static bool hasGNUorCXX11Spelling(const Record &Attribute) {
@@ -2101,9 +2179,20 @@ bool PragmaClangAttributeSupport::isAttributedSupported(
     return SpecifiedResult;
 
   // Opt-out rules:
-  // An attribute requires delayed parsing (LateParsed is on)
-  if (Attribute.getValueAsBit("LateParsed"))
+
+  // An attribute requires delayed parsing (LateParsed is on).
+  switch (getLateAttrParseKind(&Attribute)) {
+  case LateAttrParseKind::LateAttrParsingNever:
+    break;
+  case LateAttrParseKind::LateAttrParsingAlways:
     return false;
+  case LateAttrParseKind::LateAttrParsingExperimentalOnly:
+    // FIXME: This is only late parsed when
+    // `-fexperimental-late-parse-attributes` is on. If that option is off
+    // then we shouldn't return here.
+    return false;
+  }
+
   // An attribute has no GNU/CXX11 spelling
   if (!hasGNUorCXX11Spelling(Attribute))
     return false;
@@ -2885,8 +2974,23 @@ static void emitAttributes(RecordKeeper &Records, raw_ostream &OS,
         return;
       }
       OS << "\n  : " << SuperName << "(Ctx, CommonInfo, ";
-      OS << "attr::" << R.getName() << ", "
-         << (R.getValueAsBit("LateParsed") ? "true" : "false");
+      OS << "attr::" << R.getName() << ", ";
+
+      // Handle different late parsing modes.
+      switch (getLateAttrParseKind(&R)) {
+      case LateAttrParseKind::LateAttrParsingNever:
+        OS << '0';
+        break;
+      case LateAttrParseKind::LateAttrParsingAlways:
+        OS << '1';
+        break;
+      case LateAttrParseKind::LateAttrParsingExperimentalOnly:
+        // Emit code that determines if Late Parsing is enabled based on
+        // the LangOpts.
+        OS << "Ctx.getLangOpts().ExperimentalLateParseAttributes";
+        break;
+      }
+
       if (Inheritable) {
         OS << ", "
            << (R.getValueAsBit("InheritEvenIfAlreadyPresent") ? "true"
@@ -4874,6 +4978,7 @@ void EmitClangAttrParserStringSwitches(RecordKeeper &Records, raw_ostream &OS) {
   emitClangAttrAcceptsExprPack(Records, OS);
   emitClangAttrTypeArgList(Records, OS);
   emitClangAttrLateParsedList(Records, OS);
+  emitClangAttrLateParsedExperimentalList(Records, OS);
 }
 
 void EmitClangAttrSubjectMatchRulesParserStringSwitches(RecordKeeper &Records,

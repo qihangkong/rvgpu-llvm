@@ -91,11 +91,24 @@ static StringRef normalizeAttrName(StringRef Name) {
 
 /// isAttributeLateParsed - Return true if the attribute has arguments that
 /// require late parsing.
-static bool isAttributeLateParsed(const IdentifierInfo &II) {
-#define CLANG_ATTR_LATE_PARSED_LIST
-    return llvm::StringSwitch<bool>(normalizeAttrName(II.getName()))
+bool Parser::isAttributeLateParsed(const IdentifierInfo &II) {
+  // Some attributes might only be late parsed when in the experimental
+  // language mode.
+  if (getLangOpts().ExperimentalLateParseAttributes) {
+#define CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_LIST
+    bool IsExperimentalLateParseAttr =
+        llvm::StringSwitch<bool>(normalizeAttrName(II.getName()))
 #include "clang/Parse/AttrParserStringSwitches.inc"
-        .Default(false);
+            .Default(false);
+#undef CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_LIST
+    if (IsExperimentalLateParseAttr)
+      return true;
+  }
+
+#define CLANG_ATTR_LATE_PARSED_LIST
+  return llvm::StringSwitch<bool>(normalizeAttrName(II.getName()))
+#include "clang/Parse/AttrParserStringSwitches.inc"
+      .Default(false);
 #undef CLANG_ATTR_LATE_PARSED_LIST
 }
 
