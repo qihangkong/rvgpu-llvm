@@ -1099,6 +1099,25 @@ static bool upgradeIntrinsicFunction1(Function *F, Function *&NewFn,
         return true;
       }
 
+      ID = StringSwitch<Intrinsic::ID>(Name)
+               .StartsWith("splice.", Intrinsic::vector_splice)
+               .StartsWith("reverse.", Intrinsic::vector_reverse)
+               .StartsWith("interleave2.", Intrinsic::vector_interleave2)
+               .StartsWith("deinterleave2.", Intrinsic::vector_deinterleave2)
+               .Default(Intrinsic::not_intrinsic);
+      if (ID != Intrinsic::not_intrinsic) {
+        const auto *FT = F->getFunctionType();
+        rename(F);
+        if (ID == Intrinsic::vector_interleave2)
+          NewFn = Intrinsic::getDeclaration(F->getParent(), ID,
+                                            FT->getReturnType());
+        else {
+          NewFn = Intrinsic::getDeclaration(F->getParent(), ID,
+                                            FT->getParamType(0));
+        }
+        return true;
+      }
+
       if (Name.consume_front("reduce.")) {
         SmallVector<StringRef, 2> Groups;
         static const Regex R("^([a-z]+)\\.[a-z][0-9]+");
