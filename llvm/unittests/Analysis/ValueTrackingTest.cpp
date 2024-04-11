@@ -1273,12 +1273,14 @@ TEST_F(ValueTrackingTest, getUnderlyingObjectCastsAliases) {
 
 TEST_F(ValueTrackingTest, getUnderlyingObjectIntrinsics) {
   parseAssembly(R"IR(
+    @tlsvar = thread_local global i32 0
     define void @test(ptr %arg) {
       ; intrinsic with Return<> arg attribute
       %A = call ptr @llvm.objc.retain(ptr %arg)
       %A2 = call ptr @llvm.ssa.copy(ptr %arg)
       ; special cased intrinsics
       %A3 = call ptr @llvm.launder.invariant.group(ptr %arg)
+      %A4 = call ptr @llvm.threadlocal.address(ptr @tlsvar)
       ret void
     }
 )IR");
@@ -1286,6 +1288,20 @@ TEST_F(ValueTrackingTest, getUnderlyingObjectIntrinsics) {
   EXPECT_EQ(getUnderlyingObject(A), arg);
   EXPECT_EQ(getUnderlyingObject(A2), arg);
   EXPECT_EQ(getUnderlyingObject(A3), arg);
+  Value *tlsvar = M->getNamedGlobal("tlsvar");
+  EXPECT_EQ(getUnderlyingObject(A4), tlsvar);
+}
+
+TEST_F(ValueTrackingTest, getUnderlyingObjectNoSkipTLS) {
+  parseAssembly(R"IR(
+    @tlsvar = thread_local global i32 0
+    define void @test() presplitcoroutine {
+      %A = call ptr @llvm.threadlocal.address(ptr @tlsvar)
+      ret void
+    }
+)IR");
+  // Should not skip `threadlocal.address` when functions can switch thread ids.
+  EXPECT_EQ(getUnderlyingObject(A), A);
 }
 
 TEST_F(ValueTrackingTest, getUnderlyingObjectPtrInt) {
