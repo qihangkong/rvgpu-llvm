@@ -193,7 +193,7 @@ define <2 x i8> @shl_add_commute_vec(<2 x i8> %x, <2 x i8> %py) {
 
 define i8 @shl_add2(i8 %x, i8 %y) {
 ; CHECK-LABEL: @shl_add2(
-; CHECK-NEXT:    [[TMP1:%.*]] = lshr i8 [[Y:%.*]], 2
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr exact i8 [[Y:%.*]], 2
 ; CHECK-NEXT:    [[TMP2:%.*]] = add i8 [[TMP1]], [[X:%.*]]
 ; CHECK-NEXT:    [[R:%.*]] = and i8 [[TMP2]], 63
 ; CHECK-NEXT:    ret i8 [[R]]
@@ -250,7 +250,7 @@ define i8 @double_lshr_exact2(i8 %x) {
 define <2 x i8> @shl_add_commute_vec2(<2 x i8> %x, <2 x i8> %py) {
 ; CHECK-LABEL: @shl_add_commute_vec2(
 ; CHECK-NEXT:    [[Y:%.*]] = mul <2 x i8> [[PY:%.*]], [[PY]]
-; CHECK-NEXT:    [[TMP1:%.*]] = lshr <2 x i8> [[Y]], <i8 3, i8 3>
+; CHECK-NEXT:    [[TMP1:%.*]] = lshr exact <2 x i8> [[Y]], <i8 3, i8 3>
 ; CHECK-NEXT:    [[TMP2:%.*]] = add <2 x i8> [[TMP1]], [[X:%.*]]
 ; CHECK-NEXT:    [[R:%.*]] = and <2 x i8> [[TMP2]], <i8 31, i8 31>
 ; CHECK-NEXT:    ret <2 x i8> [[R]]
