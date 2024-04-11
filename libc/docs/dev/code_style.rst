@@ -186,3 +186,32 @@ We expect contributions to be free of warnings from the `minimum supported
 compiler versions`__ (and newer).
 
 .. __: https://libc.llvm.org/compiler_support.html#minimum-supported-versions
+
+Policy on Assembly sources
+===========================
+
+Coding in high level languages such as C++ provides benefits relative to low
+level languages like Assembly, such as:
+
+* Improved safety
+* Instrumentation
+
+  * Code coverage
+  * Profile collection
+* Sanitization
+* Debug info
+
+While it's not impossible to have Assembly code that correctly provides all of
+the above, we do not wish to maintain such Assembly sources in llvm-libc.
+
+That said, there a few functions provided by llvm-libc that are more difficult
+to implement or maintain in C++ than Assembly. We do use inline or out-of-line
+Assembly in an intentionally minimal set of places; typically places where the
+stack or individual register state must be manipulated very carefully for
+correctness.
+
+Contributions adding Assembly for performance are not welcome. Contributors
+should strive to stick with C++ for as long as it remains reasonable to do so.
+llvm-libc maintainers reserve the right to reject Assembly contributions that
+they feel could be better maintained if rewritten in C++, and to revisit this
+policy in the future.
