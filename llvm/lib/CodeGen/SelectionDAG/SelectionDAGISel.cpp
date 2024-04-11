@@ -510,8 +510,6 @@ void SelectionDAGISel::initializeAnalysisResults(
   if (isAssignmentTrackingEnabled(*Fn.getParent()))
     FnVarLocs = &FAM.getResult<DebugAssignmentTrackingAnalysis>(Fn);
 
-  ISEL_DUMP(dbgs() << "\n\n\n=== " << FuncName << "\n");
-
   auto *UA = FAM.getCachedResult<UniformityInfoAnalysis>(Fn);
   CurDAG->init(*MF, *ORE, MFAM, LibInfo, UA, PSI, BFI, FnVarLocs);
   SwiftError->setFunction(*MF);
@@ -563,8 +561,6 @@ void SelectionDAGISel::initializeAnalysisResults(MachineFunctionPass &MFP) {
   FunctionVarLocs const *FnVarLocs = nullptr;
   if (isAssignmentTrackingEnabled(*Fn.getParent()))
     FnVarLocs = MFP.getAnalysis<AssignmentTrackingAnalysis>().getResults();
-
-  ISEL_DUMP(dbgs() << "\n\n\n=== " << FuncName << "\n");
 
   UniformityInfo *UA = nullptr;
   if (auto *UAPass = MFP.getAnalysisIfAvailable<UniformityInfoWrapperPass>())
