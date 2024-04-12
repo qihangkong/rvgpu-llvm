@@ -2367,6 +2367,10 @@ def int_hwasan_check_memaccess :
 def int_hwasan_check_memaccess_shortgranules :
   Intrinsic<[], [llvm_ptr_ty, llvm_ptr_ty, llvm_i32_ty],
             [ImmArg<ArgIndex<2>>]>;
+def int_hwasan_check_memaccess_fixedshadow_shortgranules :
+  Intrinsic<[], [llvm_ptr_ty, llvm_i32_ty, llvm_i64_ty],
+            [ImmArg<ArgIndex<1>>, ImmArg<ArgIndex<2>>]>;
+
 
 // Xray intrinsics
 //===----------------------------------------------------------------------===//
@@ -2665,5 +2669,6 @@ include "llvm/IR/IntrinsicsSPIRV.td"
 include "llvm/IR/IntrinsicsVE.td"
 include "llvm/IR/IntrinsicsDirectX.td"
 include "llvm/IR/IntrinsicsLoongArch.td"
+
 
 #endif // TEST_INTRINSICS_SUPPRESS_DEFS

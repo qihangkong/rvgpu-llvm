@@ -117,6 +117,7 @@ public:
   void LowerPATCHABLE_EVENT_CALL(const MachineInstr &MI, bool Typed);
 
   typedef std::tuple<unsigned, bool, uint32_t> HwasanMemaccessTuple;
+  unsigned long long HwasanFixedShadowBase = (unsigned long long)-1;
   std::map<HwasanMemaccessTuple, MCSymbol *> HwasanMemaccessSymbols;
   void LowerKCFI_CHECK(const MachineInstr &MI);
   void LowerHWASAN_CHECK_MEMACCESS(const MachineInstr &MI);
@@ -551,8 +552,17 @@ void AArch64AsmPrinter::LowerKCFI_CHECK(const MachineInstr &MI) {
 void AArch64AsmPrinter::LowerHWASAN_CHECK_MEMACCESS(const MachineInstr &MI) {
   Register Reg = MI.getOperand(0).getReg();
   bool IsShort =
-      MI.getOpcode() == AArch64::HWASAN_CHECK_MEMACCESS_SHORTGRANULES;
+      ((MI.getOpcode() == AArch64::HWASAN_CHECK_MEMACCESS_SHORTGRANULES) ||
+       (MI.getOpcode() == AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES));
   uint32_t AccessInfo = MI.getOperand(1).getImm();
+
+  if (MI.getOpcode() == AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES) {
+      if (HwasanFixedShadowBase != (unsigned long long)-1)
+        assert(HwasanFixedShadowBase == (unsigned long long) MI.getOperand(2).getImm());
+
+      HwasanFixedShadowBase = MI.getOperand(2).getImm();
+  }
+
   MCSymbol *&Sym =
       HwasanMemaccessSymbols[HwasanMemaccessTuple(Reg, IsShort, AccessInfo)];
   if (!Sym) {
@@ -625,14 +635,34 @@ void AArch64AsmPrinter::emitHwasanMemaccessSymbols(Module &M) {
                                      .addImm(4)
                                      .addImm(55),
                                  *STI);
-    OutStreamer->emitInstruction(
-        MCInstBuilder(AArch64::LDRBBroX)
-            .addReg(AArch64::W16)
-            .addReg(IsShort ? AArch64::X20 : AArch64::X9)
-            .addReg(AArch64::X16)
-            .addImm(0)
-            .addImm(0),
-        *STI);
+
+    if (HwasanFixedShadowBase != (unsigned long long)-1) {
+      assert(IsShort);
+      OutStreamer->emitInstruction(
+          MCInstBuilder(AArch64::MOVZXi)
+              .addReg(AArch64::X17)
+              .addImm(HwasanFixedShadowBase >> 32)
+              .addImm(32),
+          *STI);
+      OutStreamer->emitInstruction(
+          MCInstBuilder(AArch64::LDRBBroX)
+              .addReg(AArch64::W16)
+              .addReg(AArch64::X17)
+              .addReg(AArch64::X16)
+              .addImm(0)
+              .addImm(0),
+          *STI);
+    } else {
+      OutStreamer->emitInstruction(
+          MCInstBuilder(AArch64::LDRBBroX)
+              .addReg(AArch64::W16)
+              .addReg(IsShort ? AArch64::X20 : AArch64::X9)
+              .addReg(AArch64::X16)
+              .addImm(0)
+              .addImm(0),
+          *STI);
+    }
+
     OutStreamer->emitInstruction(
         MCInstBuilder(AArch64::SUBSXrs)
             .addReg(AArch64::XZR)
@@ -1765,6 +1795,7 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
 
   case AArch64::HWASAN_CHECK_MEMACCESS:
   case AArch64::HWASAN_CHECK_MEMACCESS_SHORTGRANULES:
+  case AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES:
     LowerHWASAN_CHECK_MEMACCESS(*MI);
     return;
 

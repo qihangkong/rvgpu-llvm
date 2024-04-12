@@ -929,11 +929,29 @@ void HWAddressSanitizer::instrumentMemAccessOutline(Value *Ptr, bool IsWrite,
 
   IRBuilder<> IRB(InsertBefore);
   Module *M = IRB.GetInsertBlock()->getParent()->getParent();
-  IRB.CreateCall(Intrinsic::getDeclaration(
-                     M, UseShortGranules
-                            ? Intrinsic::hwasan_check_memaccess_shortgranules
-                            : Intrinsic::hwasan_check_memaccess),
-                 {ShadowBase, Ptr, ConstantInt::get(Int32Ty, AccessInfo)});
+
+  // Aarch64 makes it difficult to embed large constants (such as the shadow
+  // offset) in the code. Our intrinsic supports a 16-bit constant (to be left
+  // shifted by 32 bits) - this is not an onerous constraint, since
+  // 1) kShadowBaseAlignment == 32 2) an offset of 4TB (1024 << 32) is
+  // representable, and ought to be good enough for anybody.
+  bool useFixedShadowIntrinsic = true;
+  if (TargetTriple.isAArch64() && ClMappingOffset.getNumOccurrences() > 0 && UseShortGranules) {
+    uint16_t offset_shifted = Mapping.Offset >> 32;
+    if ((uint64_t)offset_shifted << 32 != Mapping.Offset)
+        useFixedShadowIntrinsic = false;
+  } else
+    useFixedShadowIntrinsic = false;
+
+  if (useFixedShadowIntrinsic)
+    IRB.CreateCall(Intrinsic::getDeclaration(
+                       M, Intrinsic::hwasan_check_memaccess_fixedshadow_shortgranules),
+                   {Ptr, ConstantInt::get(Int32Ty, AccessInfo), ConstantInt::get(Int64Ty, Mapping.Offset)});
+  else
+    IRB.CreateCall(Intrinsic::getDeclaration(
+                       M, UseShortGranules ? Intrinsic::hwasan_check_memaccess_shortgranules
+                                           : Intrinsic::hwasan_check_memaccess),
+                   {ShadowBase, Ptr, ConstantInt::get(Int32Ty, AccessInfo)});
 }
 
 void HWAddressSanitizer::instrumentMemAccessInline(Value *Ptr, bool IsWrite,
