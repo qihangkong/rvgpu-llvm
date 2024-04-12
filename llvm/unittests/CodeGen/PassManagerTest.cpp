@@ -175,11 +175,11 @@ TEST_F(PassManagerTest, Basic) {
 
   MachineModuleInfo MMI(LLVMTM);
 
+  MachineFunctionAnalysisManager MFAM;
   LoopAnalysisManager LAM;
   FunctionAnalysisManager FAM;
   CGSCCAnalysisManager CGAM;
   ModuleAnalysisManager MAM;
-  MachineFunctionAnalysisManager MFAM;
   PassBuilder PB(TM.get());
   PB.registerModuleAnalyses(MAM);
   PB.registerCGSCCAnalyses(CGAM);

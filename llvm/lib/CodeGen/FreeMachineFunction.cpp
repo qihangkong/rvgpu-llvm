@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/CodeGen/FreeMachineFunction.h"
+#include "llvm/CodeGen/FunctionToMachineFunctionAnalysis.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 
@@ -15,8 +16,7 @@ using namespace llvm;
 PreservedAnalyses
 FreeMachineFunctionPass::run(MachineFunction &MF,
                              MachineFunctionAnalysisManager &MFAM) {
-  auto &MMI = MF.getMMI();
-  MFAM.invalidate(MF, PreservedAnalyses::none());
-  MMI.deleteMachineFunctionFor(MF.getFunction()); // MF is dangling now.
-  return PreservedAnalyses::none();
+  PreservedAnalyses PA = PreservedAnalyses::none();
+  PA.abandon<FunctionToMachineFunctionAnalysis>();
+  return PA;
 }

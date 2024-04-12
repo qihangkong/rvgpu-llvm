@@ -16,6 +16,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/AsmParser/SlotMapping.h"
+#include "llvm/CodeGen/FunctionToMachineFunctionAnalysis.h"
 #include "llvm/CodeGen/MIRParser/MIParser.h"
 #include "llvm/CodeGen/MIRYamlMapping.h"
 #include "llvm/CodeGen/MachineConstantPool.h"
@@ -97,13 +98,15 @@ public:
   /// Create an empty function with the given name.
   Function *createDummyFunction(StringRef Name, Module &M);
 
-  bool parseMachineFunctions(Module &M, MachineModuleInfo &MMI);
+  bool parseMachineFunctions(Module &M, MachineModuleInfo &MMI,
+                             ModuleAnalysisManager *FAM = nullptr);
 
   /// Parse the machine function in the current YAML document.
   ///
   ///
   /// Return true if an error occurred.
-  bool parseMachineFunction(Module &M, MachineModuleInfo &MMI);
+  bool parseMachineFunction(Module &M, MachineModuleInfo &MMI,
+                            ModuleAnalysisManager *FAM);
 
   /// Initialize the machine function to the state that's described in the MIR
   /// file.
@@ -275,13 +278,14 @@ MIRParserImpl::parseIRModule(DataLayoutCallbackTy DataLayoutCallback) {
   return M;
 }
 
-bool MIRParserImpl::parseMachineFunctions(Module &M, MachineModuleInfo &MMI) {
+bool MIRParserImpl::parseMachineFunctions(Module &M, MachineModuleInfo &MMI,
+                                          ModuleAnalysisManager *MAM) {
   if (NoMIRDocuments)
     return false;
 
   // Parse the machine functions.
   do {
-    if (parseMachineFunction(M, MMI))
+    if (parseMachineFunction(M, MMI, MAM))
       return true;
     In.nextDocument();
   } while (In.setCurrentDocument());
@@ -303,7 +307,8 @@ Function *MIRParserImpl::createDummyFunction(StringRef Name, Module &M) {
   return F;
 }
 
-bool MIRParserImpl::parseMachineFunction(Module &M, MachineModuleInfo &MMI) {
+bool MIRParserImpl::parseMachineFunction(Module &M, MachineModuleInfo &MMI,
+                                         ModuleAnalysisManager *MAM) {
   // Parse the yaml.
   yaml::MachineFunction YamlMF;
   yaml::EmptyContext Ctx;
@@ -327,14 +332,29 @@ bool MIRParserImpl::parseMachineFunction(Module &M, MachineModuleInfo &MMI) {
                    "' isn't defined in the provided LLVM IR");
     }
   }
-  if (MMI.getMachineFunction(*F) != nullptr)
-    return error(Twine("redefinition of machine function '") + FunctionName +
-                 "'");
 
-  // Create the MachineFunction.
-  MachineFunction &MF = MMI.getOrCreateMachineFunction(*F);
-  if (initializeMachineFunction(YamlMF, MF))
-    return true;
+  if (!MAM) {
+    if (MMI.getMachineFunction(*F) != nullptr)
+      return error(Twine("redefinition of machine function '") + FunctionName +
+                   "'");
+
+    // Create the MachineFunction.
+    MachineFunction &MF = MMI.getOrCreateMachineFunction(*F);
+    if (initializeMachineFunction(YamlMF, MF))
+      return true;
+  } else {
+    auto &FAM =
+        MAM->getResult<FunctionAnalysisManagerModuleProxy>(M).getManager();
+    if (FAM.getCachedResult<FunctionToMachineFunctionAnalysis>(*F))
+      return error(Twine("redefinition of machine function '") + FunctionName +
+                   "'");
+
+    // Create the MachineFunction.
+    MachineFunction &MF =
+        FAM.getResult<FunctionToMachineFunctionAnalysis>(*F).getMF();
+    if (initializeMachineFunction(YamlMF, MF))
+      return true;
+  }
 
   return false;
 }
@@ -1099,6 +1119,11 @@ MIRParser::parseIRModule(DataLayoutCallbackTy DataLayoutCallback) {
 
 bool MIRParser::parseMachineFunctions(Module &M, MachineModuleInfo &MMI) {
   return Impl->parseMachineFunctions(M, MMI);
+}
+
+bool MIRParser::parseMachineFunctions(Module &M, ModuleAnalysisManager &MAM) {
+  auto &MMI = MAM.getResult<MachineModuleAnalysis>(M).getMMI();
+  return Impl->parseMachineFunctions(M, MMI, &MAM);
 }
 
 std::unique_ptr<MIRParser> llvm::createMIRParserFromFile(
