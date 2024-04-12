@@ -936,21 +936,25 @@ void HWAddressSanitizer::instrumentMemAccessOutline(Value *Ptr, bool IsWrite,
   // 1) kShadowBaseAlignment == 32 2) an offset of 4TB (1024 << 32) is
   // representable, and ought to be good enough for anybody.
   bool useFixedShadowIntrinsic = true;
-  if (TargetTriple.isAArch64() && ClMappingOffset.getNumOccurrences() > 0 && UseShortGranules) {
+  if (TargetTriple.isAArch64() && ClMappingOffset.getNumOccurrences() > 0 &&
+      UseShortGranules) {
     uint16_t offset_shifted = Mapping.Offset >> 32;
     if ((uint64_t)offset_shifted << 32 != Mapping.Offset)
-        useFixedShadowIntrinsic = false;
+      useFixedShadowIntrinsic = false;
   } else
     useFixedShadowIntrinsic = false;
 
   if (useFixedShadowIntrinsic)
-    IRB.CreateCall(Intrinsic::getDeclaration(
-                       M, Intrinsic::hwasan_check_memaccess_fixedshadow_shortgranules),
-                   {Ptr, ConstantInt::get(Int32Ty, AccessInfo), ConstantInt::get(Int64Ty, Mapping.Offset)});
+    IRB.CreateCall(
+        Intrinsic::getDeclaration(
+            M, Intrinsic::hwasan_check_memaccess_fixedshadow_shortgranules),
+        {Ptr, ConstantInt::get(Int32Ty, AccessInfo),
+         ConstantInt::get(Int64Ty, Mapping.Offset)});
   else
     IRB.CreateCall(Intrinsic::getDeclaration(
-                       M, UseShortGranules ? Intrinsic::hwasan_check_memaccess_shortgranules
-                                           : Intrinsic::hwasan_check_memaccess),
+                       M, UseShortGranules
+                              ? Intrinsic::hwasan_check_memaccess_shortgranules
+                              : Intrinsic::hwasan_check_memaccess),
                    {ShadowBase, Ptr, ConstantInt::get(Int32Ty, AccessInfo)});
 }
 

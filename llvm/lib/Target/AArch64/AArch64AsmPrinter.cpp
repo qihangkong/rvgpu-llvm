@@ -553,14 +553,17 @@ void AArch64AsmPrinter::LowerHWASAN_CHECK_MEMACCESS(const MachineInstr &MI) {
   Register Reg = MI.getOperand(0).getReg();
   bool IsShort =
       ((MI.getOpcode() == AArch64::HWASAN_CHECK_MEMACCESS_SHORTGRANULES) ||
-       (MI.getOpcode() == AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES));
+       (MI.getOpcode() ==
+        AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES));
   uint32_t AccessInfo = MI.getOperand(1).getImm();
 
-  if (MI.getOpcode() == AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES) {
-      if (HwasanFixedShadowBase != (unsigned long long)-1)
-        assert(HwasanFixedShadowBase == (unsigned long long) MI.getOperand(2).getImm());
+  if (MI.getOpcode() ==
+      AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES) {
+    if (HwasanFixedShadowBase != (unsigned long long)-1)
+      assert(HwasanFixedShadowBase ==
+             (unsigned long long)MI.getOperand(2).getImm());
 
-      HwasanFixedShadowBase = MI.getOperand(2).getImm();
+    HwasanFixedShadowBase = MI.getOperand(2).getImm();
   }
 
   MCSymbol *&Sym =
@@ -638,20 +641,18 @@ void AArch64AsmPrinter::emitHwasanMemaccessSymbols(Module &M) {
 
     if (HwasanFixedShadowBase != (unsigned long long)-1) {
       assert(IsShort);
-      OutStreamer->emitInstruction(
-          MCInstBuilder(AArch64::MOVZXi)
-              .addReg(AArch64::X17)
-              .addImm(HwasanFixedShadowBase >> 32)
-              .addImm(32),
-          *STI);
-      OutStreamer->emitInstruction(
-          MCInstBuilder(AArch64::LDRBBroX)
-              .addReg(AArch64::W16)
-              .addReg(AArch64::X17)
-              .addReg(AArch64::X16)
-              .addImm(0)
-              .addImm(0),
-          *STI);
+      OutStreamer->emitInstruction(MCInstBuilder(AArch64::MOVZXi)
+                                       .addReg(AArch64::X17)
+                                       .addImm(HwasanFixedShadowBase >> 32)
+                                       .addImm(32),
+                                   *STI);
+      OutStreamer->emitInstruction(MCInstBuilder(AArch64::LDRBBroX)
+                                       .addReg(AArch64::W16)
+                                       .addReg(AArch64::X17)
+                                       .addReg(AArch64::X16)
+                                       .addImm(0)
+                                       .addImm(0),
+                                   *STI);
     } else {
       OutStreamer->emitInstruction(
           MCInstBuilder(AArch64::LDRBBroX)

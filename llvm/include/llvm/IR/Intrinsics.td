@@ -2670,5 +2670,4 @@ include "llvm/IR/IntrinsicsVE.td"
 include "llvm/IR/IntrinsicsDirectX.td"
 include "llvm/IR/IntrinsicsLoongArch.td"
 
-
 #endif // TEST_INTRINSICS_SUPPRESS_DEFS
