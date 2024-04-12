@@ -554,18 +554,11 @@ void AArch64AsmPrinter::LowerHWASAN_CHECK_MEMACCESS(const MachineInstr &MI) {
   Register Reg = MI.getOperand(0).getReg();
   bool IsShort =
       ((MI.getOpcode() == AArch64::HWASAN_CHECK_MEMACCESS_SHORTGRANULES) ||
-       (MI.getOpcode() ==
-        AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES));
+       (MI.getOpcode() == AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW));
   uint32_t AccessInfo = MI.getOperand(1).getImm();
 
-  if (MI.getOpcode() ==
-      AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES) {
-    if (HwasanFixedShadowBase.has_value())
-      assert(HwasanFixedShadowBase.value() ==
-             (unsigned long long)MI.getOperand(2).getImm());
-
-    HwasanFixedShadowBase = MI.getOperand(2).getImm();
-  }
+  if (MI.getOpcode() == AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW)
+    HwasanFixedShadowBase = getFixedShadowBase();
 
   MCSymbol *&Sym =
       HwasanMemaccessSymbols[HwasanMemaccessTuple(Reg, IsShort, AccessInfo)];
@@ -641,10 +634,6 @@ void AArch64AsmPrinter::emitHwasanMemaccessSymbols(Module &M) {
                                  *STI);
 
     if (HwasanFixedShadowBase.has_value()) {
-      // Only very old versions of Android (API level 29, before the pandemic)
-      // do not support short granules. We therefore did not bother
-      // implementing the fixed shadow base optimization for it.
-      assert(IsShort);
       OutStreamer->emitInstruction(
           MCInstBuilder(AArch64::MOVZXi)
               .addReg(AArch64::X17)
@@ -1801,7 +1790,7 @@ void AArch64AsmPrinter::emitInstruction(const MachineInstr *MI) {
 
   case AArch64::HWASAN_CHECK_MEMACCESS:
   case AArch64::HWASAN_CHECK_MEMACCESS_SHORTGRANULES:
-  case AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES:
+  case AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW:
     LowerHWASAN_CHECK_MEMACCESS(*MI);
     return;
 

@@ -447,6 +447,14 @@ private:
 
 } // end anonymous namespace
 
+namespace llvm {
+std::optional<unsigned long long> getFixedShadowBase(void) {
+  if (ClMappingOffset.getNumOccurrences() > 0)
+    return ClMappingOffset;
+  return std::nullopt;
+}
+} // namespace llvm
+
 PreservedAnalyses HWAddressSanitizerPass::run(Module &M,
                                               ModuleAnalysisManager &MAM) {
   const StackSafetyGlobalInfo *SSI = nullptr;
@@ -933,8 +941,9 @@ void HWAddressSanitizer::instrumentMemAccessOutline(Value *Ptr, bool IsWrite,
   // Aarch64 makes it difficult to embed large constants (such as the shadow
   // offset) in the code. Our intrinsic supports a 16-bit constant (to be left
   // shifted by 32 bits) - this is not an onerous constraint, since
-  // 1) kShadowBaseAlignment == 32 2) an offset of 4TB (1024 << 32) is
-  // representable, and ought to be good enough for anybody.
+  // 1) kShadowBaseAlignment == 32
+  // 2) an offset of 4TB (1024 << 32) is representable, and ought to be good
+  //    enough for anybody.
   bool useFixedShadowIntrinsic = false;
   if (TargetTriple.isAArch64() && ClMappingOffset.getNumOccurrences() > 0 &&
       UseShortGranules) {
@@ -945,9 +954,8 @@ void HWAddressSanitizer::instrumentMemAccessOutline(Value *Ptr, bool IsWrite,
   if (useFixedShadowIntrinsic)
     IRB.CreateCall(
         Intrinsic::getDeclaration(
-            M, Intrinsic::hwasan_check_memaccess_fixedshadow_shortgranules),
-        {Ptr, ConstantInt::get(Int32Ty, AccessInfo),
-         ConstantInt::get(Int64Ty, Mapping.Offset)});
+            M, Intrinsic::hwasan_check_memaccess_fixedshadow),
+        {Ptr, ConstantInt::get(Int32Ty, AccessInfo)});
   else
     IRB.CreateCall(Intrinsic::getDeclaration(
                        M, UseShortGranules
