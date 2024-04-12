@@ -935,14 +935,12 @@ void HWAddressSanitizer::instrumentMemAccessOutline(Value *Ptr, bool IsWrite,
   // shifted by 32 bits) - this is not an onerous constraint, since
   // 1) kShadowBaseAlignment == 32 2) an offset of 4TB (1024 << 32) is
   // representable, and ought to be good enough for anybody.
-  bool useFixedShadowIntrinsic = true;
+  bool useFixedShadowIntrinsic = false;
   if (TargetTriple.isAArch64() && ClMappingOffset.getNumOccurrences() > 0 &&
       UseShortGranules) {
     uint16_t offset_shifted = Mapping.Offset >> 32;
-    if ((uint64_t)offset_shifted << 32 != Mapping.Offset)
-      useFixedShadowIntrinsic = false;
-  } else
-    useFixedShadowIntrinsic = false;
+    useFixedShadowIntrinsic = (uint64_t)offset_shifted << 32 == Mapping.Offset;
+  }
 
   if (useFixedShadowIntrinsic)
     IRB.CreateCall(

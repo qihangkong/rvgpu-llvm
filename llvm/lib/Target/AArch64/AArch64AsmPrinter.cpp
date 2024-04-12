@@ -64,6 +64,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <optional>
 
 using namespace llvm;
 
@@ -117,7 +118,7 @@ public:
   void LowerPATCHABLE_EVENT_CALL(const MachineInstr &MI, bool Typed);
 
   typedef std::tuple<unsigned, bool, uint32_t> HwasanMemaccessTuple;
-  unsigned long long HwasanFixedShadowBase = (unsigned long long)-1;
+  std::optional<unsigned long long> HwasanFixedShadowBase = std::nullopt;
   std::map<HwasanMemaccessTuple, MCSymbol *> HwasanMemaccessSymbols;
   void LowerKCFI_CHECK(const MachineInstr &MI);
   void LowerHWASAN_CHECK_MEMACCESS(const MachineInstr &MI);
@@ -559,8 +560,8 @@ void AArch64AsmPrinter::LowerHWASAN_CHECK_MEMACCESS(const MachineInstr &MI) {
 
   if (MI.getOpcode() ==
       AArch64::HWASAN_CHECK_MEMACCESS_FIXEDSHADOW_SHORTGRANULES) {
-    if (HwasanFixedShadowBase != (unsigned long long)-1)
-      assert(HwasanFixedShadowBase ==
+    if (HwasanFixedShadowBase.has_value())
+      assert(HwasanFixedShadowBase.value() ==
              (unsigned long long)MI.getOperand(2).getImm());
 
     HwasanFixedShadowBase = MI.getOperand(2).getImm();
@@ -639,13 +640,17 @@ void AArch64AsmPrinter::emitHwasanMemaccessSymbols(Module &M) {
                                      .addImm(55),
                                  *STI);
 
-    if (HwasanFixedShadowBase != (unsigned long long)-1) {
+    if (HwasanFixedShadowBase.has_value()) {
+      // Only very old versions of Android (API level 29, before the pandemic)
+      // do not support short granules. We therefore did not bother
+      // implementing the fixed shadow base optimization for it.
       assert(IsShort);
-      OutStreamer->emitInstruction(MCInstBuilder(AArch64::MOVZXi)
-                                       .addReg(AArch64::X17)
-                                       .addImm(HwasanFixedShadowBase >> 32)
-                                       .addImm(32),
-                                   *STI);
+      OutStreamer->emitInstruction(
+          MCInstBuilder(AArch64::MOVZXi)
+              .addReg(AArch64::X17)
+              .addImm(HwasanFixedShadowBase.value() >> 32)
+              .addImm(32),
+          *STI);
       OutStreamer->emitInstruction(MCInstBuilder(AArch64::LDRBBroX)
                                        .addReg(AArch64::W16)
                                        .addReg(AArch64::X17)
