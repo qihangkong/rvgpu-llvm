@@ -330,14 +330,6 @@ typedef basic_stringstream<wchar_t> wstringstream;
 _LIBCPP_PUSH_MACROS
 #include <__undef_macros>
 
-// TODO(LLVM-19): Remove this once we drop support for Clang 16,
-// which had this bug: https://github.com/llvm/llvm-project/issues/40363
-#ifdef _WIN32
-#  define _LIBCPP_HIDE_FROM_ABI_SSTREAM _LIBCPP_ALWAYS_INLINE
-#else
-#  define _LIBCPP_HIDE_FROM_ABI_SSTREAM _LIBCPP_HIDE_FROM_ABI
-#endif
-
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 // Class template basic_stringbuf [stringbuf]
