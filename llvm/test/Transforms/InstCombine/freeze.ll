@@ -1107,7 +1107,7 @@ define i32 @freeze_ctpop(i32 %x) {
 ; CHECK-LABEL: @freeze_ctpop(
 ; CHECK-NEXT:    [[Y:%.*]] = lshr i32 2047, [[X:%.*]]
 ; CHECK-NEXT:    [[Y_FR:%.*]] = freeze i32 [[Y]]
-; CHECK-NEXT:    [[CTPOP:%.*]] = call i32 @llvm.ctpop.i32(i32 [[Y_FR]]), !range [[RNG3:![0-9]+]]
+; CHECK-NEXT:    [[CTPOP:%.*]] = call range(i32 0, 33) i32 @llvm.ctpop.i32(i32 [[Y_FR]])
 ; CHECK-NEXT:    ret i32 [[CTPOP]]
 ;
   %y = lshr i32 2047, %x
@@ -1170,5 +1170,4 @@ define i32 @propagate_drop_flags_trunc(i64 %arg) {
 ; CHECK: [[META0]] = !{}
 ; CHECK: [[META1]] = !{i64 4}
 ; CHECK: [[RNG2]] = !{i32 0, i32 100}
-; CHECK: [[RNG3]] = !{i32 0, i32 33}
 ;.
