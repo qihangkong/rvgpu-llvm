@@ -2959,6 +2959,10 @@ private:
                                   SourceLocation AttrNameLoc,
                                   SourceLocation *EndLoc);
 
+  /// isAttributeLateParsed - Return true if the attribute has arguments that
+  /// require late parsing.
+  bool isAttributeLateParsed(const IdentifierInfo &II);
+
   IdentifierInfo *TryParseCXX11AttributeIdentifier(
       SourceLocation &Loc,
       Sema::AttributeCompletion Completion = Sema::AttributeCompletion::None,
