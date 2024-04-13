@@ -3052,7 +3052,9 @@ ExprResult Sema::ActOnOpenMPIdExpression(Scope *CurScope,
                                          const DeclarationNameInfo &Id,
                                          OpenMPDirectiveKind Kind) {
   LookupResult Lookup(*this, Id, LookupOrdinaryName);
-  LookupParsedName(Lookup, CurScope, &ScopeSpec, true);
+  LookupParsedName(Lookup, CurScope, &ScopeSpec,
+                   /*ObjectType=*/QualType(),
+                   /*AllowBuiltinCreation=*/true);
 
   if (Lookup.isAmbiguous())
     return ExprError();
@@ -7378,7 +7380,7 @@ void Sema::ActOnStartOfFunctionDefinitionInOpenMPDeclareVariantScope(
   const IdentifierInfo *BaseII = D.getIdentifier();
   LookupResult Lookup(*this, DeclarationName(BaseII), D.getIdentifierLoc(),
                       LookupOrdinaryName);
-  LookupParsedName(Lookup, S, &D.getCXXScopeSpec());
+  LookupParsedName(Lookup, S, &D.getCXXScopeSpec(), /*ObjectType=*/QualType());
 
   TypeSourceInfo *TInfo = GetTypeForDeclarator(D);
   QualType FType = TInfo->getType();
@@ -19237,7 +19239,8 @@ buildDeclareReductionRef(Sema &SemaRef, SourceLocation Loc, SourceRange Range,
   if (S) {
     LookupResult Lookup(SemaRef, ReductionId, Sema::LookupOMPReductionName);
     Lookup.suppressDiagnostics();
-    while (S && SemaRef.LookupParsedName(Lookup, S, &ReductionIdScopeSpec)) {
+    while (S && SemaRef.LookupParsedName(Lookup, S, &ReductionIdScopeSpec,
+                                         /*ObjectType=*/QualType())) {
       NamedDecl *D = Lookup.getRepresentativeDecl();
       do {
         S = S->getParent();
@@ -22090,7 +22093,8 @@ static ExprResult buildUserDefinedMapperRef(Sema &SemaRef, Scope *S,
   LookupResult Lookup(SemaRef, MapperId, Sema::LookupOMPMapperName);
   Lookup.suppressDiagnostics();
   if (S) {
-    while (S && SemaRef.LookupParsedName(Lookup, S, &MapperIdScopeSpec)) {
+    while (S && SemaRef.LookupParsedName(Lookup, S, &MapperIdScopeSpec,
+                                         /*ObjectType=*/QualType())) {
       NamedDecl *D = Lookup.getRepresentativeDecl();
       while (S && !S->isDeclScope(D))
         S = S->getParent();
@@ -23397,7 +23401,9 @@ NamedDecl *Sema::lookupOpenMPDeclareTargetName(Scope *CurScope,
                                                CXXScopeSpec &ScopeSpec,
                                                const DeclarationNameInfo &Id) {
   LookupResult Lookup(*this, Id, LookupOrdinaryName);
-  LookupParsedName(Lookup, CurScope, &ScopeSpec, true);
+  LookupParsedName(Lookup, CurScope, &ScopeSpec,
+                   /*ObjectType=*/QualType(),
+                   /*AllowBuiltinCreation=*/true);
 
   if (Lookup.isAmbiguous())
     return nullptr;
