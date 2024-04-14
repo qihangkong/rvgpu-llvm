@@ -24,53 +24,40 @@ static const StringRef CompareMessage = "do not use 'compare' to test equality "
                                         "of strings; use the string equality "
                                         "operator instead";
 
-static const std::vector<StringRef> StringClasses = {
-    "::std::basic_string", "::std::basic_string_view"};
+static const StringRef DefaultStringLikeClasses = "::std::basic_string;"
+                                                  "::std::basic_string_view";
 
 StringCompareCheck::StringCompareCheck(StringRef Name,
                                        ClangTidyContext *Context)
     : ClangTidyCheck(Name, Context),
-      StringLikeClasses(
-          optutils::parseStringList(Options.get("StringLikeClasses", ""))) {}
+      StringLikeClasses(optutils::parseStringList(
+          Options.get("StringLikeClasses", DefaultStringLikeClasses))) {}
 
 void StringCompareCheck::registerMatchers(MatchFinder *Finder) {
-  const auto RegisterForClasses = [&, this](const auto &StringClassMatcher) {
-    const auto StrCompare = cxxMemberCallExpr(
-        callee(cxxMethodDecl(hasName("compare"), ofClass(StringClassMatcher))),
-        hasArgument(0, expr().bind("str2")), argumentCountIs(1),
-        callee(memberExpr().bind("str1")));
-
-    // First and second case: cast str.compare(str) to boolean.
-    Finder->addMatcher(
-        traverse(TK_AsIs,
-                 implicitCastExpr(hasImplicitDestinationType(booleanType()),
-                                  has(StrCompare))
-                     .bind("match1")),
-        this);
-
-    // Third and fourth case: str.compare(str) == 0
-    // and str.compare(str) !=  0.
-    Finder->addMatcher(
-        binaryOperator(hasAnyOperatorName("==", "!="),
-                       hasOperands(StrCompare.bind("compare"),
-                                   integerLiteral(equals(0)).bind("zero")))
-            .bind("match2"),
-        this);
-  };
   if (StringLikeClasses.empty()) {
-    RegisterForClasses(
-        classTemplateSpecializationDecl(hasAnyName(StringClasses)));
-  } else {
-    // StringLikeClasses may or may not be templates, so we need to match both
-    // template and non-template classes.
-    std::vector<StringRef> PossiblyTemplateClasses = StringClasses;
-    PossiblyTemplateClasses.insert(PossiblyTemplateClasses.end(),
-                                   StringLikeClasses.begin(),
-                                   StringLikeClasses.end());
-    RegisterForClasses(anyOf(
-        classTemplateSpecializationDecl(hasAnyName(PossiblyTemplateClasses)),
-        cxxRecordDecl(hasAnyName(StringLikeClasses))));
+    return;
   }
+  const auto StrCompare = cxxMemberCallExpr(
+      callee(cxxMethodDecl(hasName("compare"), ofClass(cxxRecordDecl(hasAnyName(
+                                                   StringLikeClasses))))),
+      hasArgument(0, expr().bind("str2")), argumentCountIs(1),
+      callee(memberExpr().bind("str1")));
+
+  // First and second case: cast str.compare(str) to boolean.
+  Finder->addMatcher(
+      traverse(TK_AsIs,
+               implicitCastExpr(hasImplicitDestinationType(booleanType()),
+                                has(StrCompare))
+                   .bind("match1")),
+      this);
+
+  // Third and fourth case: str.compare(str) == 0 and str.compare(str) != 0.
+  Finder->addMatcher(
+      binaryOperator(hasAnyOperatorName("==", "!="),
+                     hasOperands(StrCompare.bind("compare"),
+                                 integerLiteral(equals(0)).bind("zero")))
+          .bind("match2"),
+      this);
 }
 
 void StringCompareCheck::check(const MatchFinder::MatchResult &Result) {

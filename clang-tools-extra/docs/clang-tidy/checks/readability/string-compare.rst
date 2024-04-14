@@ -60,9 +60,10 @@ Options
 
 .. option:: StringLikeClasses
 
-   A string containing comma-separated names of string-like classes.
-   Default value is an empty string. If a class from this list has a
-   ``compare`` method similar to ``std::string``, it will be checked
+   A string containing semicolon-separated names of string-like classes.
+   By default contains only ``::std::basic_string``
+   and ``::std::basic_string_view``. If a class from this list has
+   a ``compare`` method similar to that of ``std::string``, it will be checked
    in the same way.
 
 Example

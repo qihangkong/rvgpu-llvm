@@ -17,15 +17,12 @@ struct CustomStringTemplateBase {
 struct CustomString1 : CustomStringNonTemplateBase {};
 struct CustomString2 : CustomStringTemplateBase<char> {};
 
-void StdClassesAreStillDetected() {
+void CustomStringClasses() {
   std::string_view sv1("a");
   std::string_view sv2("b");
-  if (sv1.compare(sv2)) {
+  if (sv1.compare(sv2)) {  // No warning - if a std class is not listed in StringLikeClasses, it won't be checked.
   }
-  // CHECK-MESSAGES: [[@LINE-2]]:7: warning: do not use 'compare' to test equality of strings; use the string equality operator instead [readability-string-compare]
-}
 
-void CustomStringClasses() {
   CustomString1 custom1;
   if (custom1.compare(custom1)) {
   }
