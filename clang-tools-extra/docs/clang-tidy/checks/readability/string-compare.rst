@@ -60,8 +60,10 @@ Options
 
 .. option:: StringLikeClasses
 
-   A string containing comma-separated names of string-like classes. Default is an empty string.
-   If a class from this list has a ``compare`` method similar to ``std::string``, it will be checked in the same way.
+   A string containing comma-separated names of string-like classes.
+   Default value is an empty string. If a class from this list has a
+   ``compare`` method similar to ``std::string``, it will be checked
+   in the same way.
 
 Example
 ^^^^^^^
@@ -80,4 +82,5 @@ Example
   if (str1.compare(str2)) {
   }
 
-If `StringLikeClasses` contains ``CustomString``, the check will suggest replacing ``compare`` with equality operator.
+If `StringLikeClasses` contains ``CustomString``, the check will suggest
+replacing ``compare`` with equality operator.
