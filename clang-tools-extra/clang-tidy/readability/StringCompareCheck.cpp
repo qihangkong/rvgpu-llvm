@@ -33,6 +33,11 @@ StringCompareCheck::StringCompareCheck(StringRef Name,
       StringLikeClasses(optutils::parseStringList(
           Options.get("StringLikeClasses", DefaultStringLikeClasses))) {}
 
+void StringCompareCheck::storeOptions(ClangTidyOptions::OptionMap &Opts) {
+  Options.store(Opts, "StringLikeClasses",
+                utils::options::serializeStringList(StringLikeClasses));
+}
+
 void StringCompareCheck::registerMatchers(MatchFinder *Finder) {
   if (StringLikeClasses.empty()) {
     return;
