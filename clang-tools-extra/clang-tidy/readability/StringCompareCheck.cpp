@@ -34,7 +34,7 @@ StringCompareCheck::StringCompareCheck(StringRef Name,
 
 void StringCompareCheck::storeOptions(ClangTidyOptions::OptionMap &Opts) {
   Options.store(Opts, "StringLikeClasses",
-                utils::options::serializeStringList(StringLikeClasses));
+                optutils::serializeStringList(StringLikeClasses));
 }
 
 void StringCompareCheck::registerMatchers(MatchFinder *Finder) {
