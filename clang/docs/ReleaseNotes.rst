@@ -540,6 +540,10 @@ Bug Fixes to C++ Support
   object parameter.
   Fixes (#GH70604), (#GH79754), (#GH84163), (#GH84425), (#GH86054), (#GH86398), and (#GH86399).
 
+- Emit an error when the same identifier appears with both internal and
+  external linkage in a translation unit Fixes:
+  (`#54215 <https://github.com/llvm/llvm-project/issues/54215>`_)
+
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - Clang now properly preserves ``FoundDecls`` within a ``ConceptReference``. (#GH82628)
