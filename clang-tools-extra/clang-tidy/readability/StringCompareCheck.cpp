@@ -13,7 +13,6 @@
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Tooling/FixIt.h"
 #include "llvm/ADT/StringRef.h"
-#include <vector>
 
 using namespace clang::ast_matchers;
 namespace optutils = clang::tidy::utils::options;
