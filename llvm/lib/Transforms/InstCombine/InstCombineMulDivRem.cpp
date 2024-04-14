@@ -321,13 +321,20 @@ Instruction *InstCombinerImpl::visitMul(BinaryOperator &I) {
   // abs(X) * abs(X) -> X * X
   // nabs(X) * nabs(X) -> X * X
   if (Op0 == Op1) {
-    Value *X, *Y;
-    SelectPatternFlavor SPF = matchSelectPattern(Op0, X, Y).Flavor;
-    if (SPF == SPF_ABS || SPF == SPF_NABS)
-      return BinaryOperator::CreateMul(X, X);
+    Value *X;
+    if (match(Op0, m_Neg(m_Intrinsic<Intrinsic::abs>(m_Value(X))))) {
+      if (I.hasNoUnsignedWrap()) {
+        Instruction *NewMul = BinaryOperator::CreateNUWMul(X, X);
+        NewMul->setHasNoSignedWrap(true);
+        return NewMul;
+      }
+      return I.hasNoSignedWrap() ? BinaryOperator::CreateNSWMul(X, X)
+                                 : BinaryOperator::CreateMul(X, X);
+    }
 
     if (match(Op0, m_Intrinsic<Intrinsic::abs>(m_Value(X))))
-      return BinaryOperator::CreateMul(X, X);
+      return I.hasNoSignedWrap() ? BinaryOperator::CreateNSWMul(X, X)
+                                 : BinaryOperator::CreateMul(X, X);
   }
 
   {
