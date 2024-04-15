@@ -710,7 +710,7 @@ private:
   /// Mapping from global submodule IDs to the module file in which the
   /// submodule resides along with the offset that should be added to the
   /// global submodule ID to produce a local ID.
-  mutable GlobalSubmoduleMapType GlobalSubmoduleMap;
+  GlobalSubmoduleMapType GlobalSubmoduleMap;
 
   /// A set of hidden declarations.
   using HiddenNames = SmallVector<Decl *, 2>;
@@ -955,12 +955,6 @@ private:
   ///
   /// Sema tracks these to emit deferred diags.
   llvm::SmallSetVector<serialization::DeclID, 4> DeclsToCheckForDeferredDiags;
-
-  /// The module files imported by different module files. Indirectly imported
-  /// module files are included too. The information comes from
-  /// ReadModuleOffsetMap(ModuleFile&).
-  mutable llvm::DenseMap<ModuleFile *, llvm::SmallVector<ModuleFile *>>
-      ImportedModuleFiles;
 
 private:
   struct ImportedSubmodule {
@@ -2239,15 +2233,15 @@ public:
   }
 
   /// Read a source location from raw form.
-  SourceLocation ReadRawSourceLocation(ModuleFile &MF, RawLocEncoding Raw,
+  SourceLocation ReadSourceLocation(ModuleFile &MF, RawLocEncoding Raw,
                                        LocSeq *Seq = nullptr) const {
     if (!MF.ModuleOffsetMap.empty())
       ReadModuleOffsetMap(MF);
 
     auto [Loc, ModuleFileIndex] = ReadUntranslatedSourceLocation(Raw, Seq);
-    ModuleFile *ModuleFileHomingLoc =
-        ModuleFileIndex ? ImportedModuleFiles[&MF][ModuleFileIndex - 1] : &MF;
-    return TranslateSourceLocation(*ModuleFileHomingLoc, Loc);
+    ModuleFile *OwningModuleFile =
+        ModuleFileIndex ? MF.DependentModules[ModuleFileIndex - 1] : &MF;
+    return TranslateSourceLocation(*OwningModuleFile, Loc);
   }
 
   /// Translate a source location from another module file's source
@@ -2268,7 +2262,7 @@ public:
   SourceLocation ReadSourceLocation(ModuleFile &ModuleFile,
                                     const RecordDataImpl &Record, unsigned &Idx,
                                     LocSeq *Seq = nullptr) {
-    return ReadRawSourceLocation(ModuleFile, Record[Idx++], Seq);
+    return ReadSourceLocation(ModuleFile, Record[Idx++], Seq);
   }
 
   /// Read a FileID.

@@ -1636,7 +1636,7 @@ bool ASTReader::ReadSLocEntry(int ID) {
     if (!File)
       return true;
 
-    SourceLocation IncludeLoc = ReadRawSourceLocation(*F, Record[1]);
+    SourceLocation IncludeLoc = ReadSourceLocation(*F, Record[1]);
     if (IncludeLoc.isInvalid() && F->Kind != MK_MainFile) {
       // This is the module's main file.
       IncludeLoc = getImportLocation(F);
@@ -1678,7 +1678,7 @@ bool ASTReader::ReadSLocEntry(int ID) {
     unsigned Offset = Record[0];
     SrcMgr::CharacteristicKind
       FileCharacter = (SrcMgr::CharacteristicKind)Record[2];
-    SourceLocation IncludeLoc = ReadRawSourceLocation(*F, Record[1]);
+    SourceLocation IncludeLoc = ReadSourceLocation(*F, Record[1]);
     if (IncludeLoc.isInvalid() && F->isModule()) {
       IncludeLoc = getImportLocation(F);
     }
@@ -1698,9 +1698,9 @@ bool ASTReader::ReadSLocEntry(int ID) {
 
   case SM_SLOC_EXPANSION_ENTRY: {
     LocSeq::State Seq;
-    SourceLocation SpellingLoc = ReadRawSourceLocation(*F, Record[1], Seq);
-    SourceLocation ExpansionBegin = ReadRawSourceLocation(*F, Record[2], Seq);
-    SourceLocation ExpansionEnd = ReadRawSourceLocation(*F, Record[3], Seq);
+    SourceLocation SpellingLoc = ReadSourceLocation(*F, Record[1], Seq);
+    SourceLocation ExpansionBegin = ReadSourceLocation(*F, Record[2], Seq);
+    SourceLocation ExpansionEnd = ReadSourceLocation(*F, Record[3], Seq);
     SourceMgr.createExpansionLoc(SpellingLoc, ExpansionBegin, ExpansionEnd,
                                  Record[5], Record[4], ID,
                                  BaseOffset + Record[0]);
@@ -3949,7 +3949,7 @@ llvm::Error ASTReader::ReadASTBlock(ModuleFile &F,
       if (Record.size() != 1)
         return llvm::createStringError(std::errc::illegal_byte_sequence,
                                        "invalid pragma optimize record");
-      OptimizeOffPragmaLocation = ReadRawSourceLocation(F, Record[0]);
+      OptimizeOffPragmaLocation = ReadSourceLocation(F, Record[0]);
       break;
 
     case MSSTRUCT_PRAGMA_OPTIONS:
@@ -3965,7 +3965,7 @@ llvm::Error ASTReader::ReadASTBlock(ModuleFile &F,
             std::errc::illegal_byte_sequence,
             "invalid pragma pointers to members record");
       PragmaMSPointersToMembersState = Record[0];
-      PointersToMembersPragmaLocation = ReadRawSourceLocation(F, Record[1]);
+      PointersToMembersPragmaLocation = ReadSourceLocation(F, Record[1]);
       break;
 
     case UNUSED_LOCAL_TYPEDEF_NAME_CANDIDATES:
@@ -3986,7 +3986,7 @@ llvm::Error ASTReader::ReadASTBlock(ModuleFile &F,
         return llvm::createStringError(std::errc::illegal_byte_sequence,
                                        "invalid pragma pack record");
       PragmaAlignPackCurrentValue = ReadAlignPackInfo(Record[0]);
-      PragmaAlignPackCurrentLocation = ReadRawSourceLocation(F, Record[1]);
+      PragmaAlignPackCurrentLocation = ReadSourceLocation(F, Record[1]);
       unsigned NumStackEntries = Record[2];
       unsigned Idx = 3;
       // Reset the stack when importing a new module.
@@ -3994,8 +3994,8 @@ llvm::Error ASTReader::ReadASTBlock(ModuleFile &F,
       for (unsigned I = 0; I < NumStackEntries; ++I) {
         PragmaAlignPackStackEntry Entry;
         Entry.Value = ReadAlignPackInfo(Record[Idx++]);
-        Entry.Location = ReadRawSourceLocation(F, Record[Idx++]);
-        Entry.PushLocation = ReadRawSourceLocation(F, Record[Idx++]);
+        Entry.Location = ReadSourceLocation(F, Record[Idx++]);
+        Entry.PushLocation = ReadSourceLocation(F, Record[Idx++]);
         PragmaAlignPackStrings.push_back(ReadString(Record, Idx));
         Entry.SlotLabel = PragmaAlignPackStrings.back();
         PragmaAlignPackStack.push_back(Entry);
@@ -4008,7 +4008,7 @@ llvm::Error ASTReader::ReadASTBlock(ModuleFile &F,
         return llvm::createStringError(std::errc::illegal_byte_sequence,
                                        "invalid pragma float control record");
       FpPragmaCurrentValue = FPOptionsOverride::getFromOpaqueInt(Record[0]);
-      FpPragmaCurrentLocation = ReadRawSourceLocation(F, Record[1]);
+      FpPragmaCurrentLocation = ReadSourceLocation(F, Record[1]);
       unsigned NumStackEntries = Record[2];
       unsigned Idx = 3;
       // Reset the stack when importing a new module.
@@ -4016,8 +4016,8 @@ llvm::Error ASTReader::ReadASTBlock(ModuleFile &F,
       for (unsigned I = 0; I < NumStackEntries; ++I) {
         FpPragmaStackEntry Entry;
         Entry.Value = FPOptionsOverride::getFromOpaqueInt(Record[Idx++]);
-        Entry.Location = ReadRawSourceLocation(F, Record[Idx++]);
-        Entry.PushLocation = ReadRawSourceLocation(F, Record[Idx++]);
+        Entry.Location = ReadSourceLocation(F, Record[Idx++]);
+        Entry.PushLocation = ReadSourceLocation(F, Record[Idx++]);
         FpPragmaStrings.push_back(ReadString(Record, Idx));
         Entry.SlotLabel = FpPragmaStrings.back();
         FpPragmaStack.push_back(Entry);
@@ -4050,7 +4050,7 @@ void ASTReader::ReadModuleOffsetMap(ModuleFile &F) const {
   RemapBuilder DeclRemap(F.DeclRemap);
   RemapBuilder TypeRemap(F.TypeRemap);
 
-  auto &ImportedModuleVector = ImportedModuleFiles[&F];
+  auto &ImportedModuleVector = F.DependentModules;
   assert(ImportedModuleVector.empty());
 
   while (Data < DataEnd) {
@@ -4069,7 +4069,7 @@ void ASTReader::ReadModuleOffsetMap(ModuleFile &F) const {
                           : ModuleMgr.lookupByFileName(Name));
     if (!OM) {
       std::string Msg =
-          "SourceLocation remap refers to unknown module, cannot find ";
+          "cannot find module ";
       Msg.append(std::string(Name));
       Error(Msg);
       return;
@@ -5760,7 +5760,7 @@ llvm::Error ASTReader::ReadSubmoduleBlock(ModuleFile &F,
       SubmoduleID GlobalID = getGlobalSubmoduleID(F, Record[Idx++]);
       SubmoduleID Parent = getGlobalSubmoduleID(F, Record[Idx++]);
       Module::ModuleKind Kind = (Module::ModuleKind)Record[Idx++];
-      SourceLocation DefinitionLoc = ReadRawSourceLocation(F, Record[Idx++]);
+      SourceLocation DefinitionLoc = ReadSourceLocation(F, Record[Idx++]);
       bool IsFramework = Record[Idx++];
       bool IsExplicit = Record[Idx++];
       bool IsSystem = Record[Idx++];
@@ -6235,8 +6235,8 @@ SourceRange ASTReader::ReadSkippedRange(unsigned GlobalIndex) {
   unsigned LocalIndex = GlobalIndex - M->BasePreprocessedSkippedRangeID;
   assert(LocalIndex < M->NumPreprocessedSkippedRanges);
   PPSkippedRange RawRange = M->PreprocessedSkippedRangeOffsets[LocalIndex];
-  SourceRange Range(ReadRawSourceLocation(*M, RawRange.getBegin()),
-                    ReadRawSourceLocation(*M, RawRange.getEnd()));
+  SourceRange Range(ReadSourceLocation(*M, RawRange.getBegin()),
+                    ReadSourceLocation(*M, RawRange.getEnd()));
   assert(Range.isValid());
   return Range;
 }
@@ -6272,8 +6272,8 @@ PreprocessedEntity *ASTReader::ReadPreprocessedEntity(unsigned Index) {
     return nullptr;
 
   // Read the record.
-  SourceRange Range(ReadRawSourceLocation(M, PPOffs.getBegin()),
-                    ReadRawSourceLocation(M, PPOffs.getEnd()));
+  SourceRange Range(ReadSourceLocation(M, PPOffs.getBegin()),
+                    ReadSourceLocation(M, PPOffs.getEnd()));
   PreprocessingRecord &PPRec = *PP.getPreprocessingRecord();
   StringRef Blob;
   RecordData Record;
@@ -6385,7 +6385,7 @@ struct PPEntityComp {
   }
 
   SourceLocation getLoc(const PPEntityOffset &PPE) const {
-    return Reader.ReadRawSourceLocation(M, PPE.getBegin());
+    return Reader.ReadSourceLocation(M, PPE.getBegin());
   }
 };
 
@@ -6429,7 +6429,7 @@ PreprocessedEntityID ASTReader::findPreprocessedEntity(SourceLocation Loc,
       PPI = First;
       std::advance(PPI, Half);
       if (SourceMgr.isBeforeInTranslationUnit(
-              ReadRawSourceLocation(M, PPI->getEnd()), Loc)) {
+              ReadSourceLocation(M, PPI->getEnd()), Loc)) {
         First = PPI;
         ++First;
         Count = Count - Half - 1;
@@ -6470,7 +6470,7 @@ std::optional<bool> ASTReader::isPreprocessedEntityInFileID(unsigned Index,
   unsigned LocalIndex = PPInfo.second;
   const PPEntityOffset &PPOffs = M.PreprocessedEntityOffsets[LocalIndex];
 
-  SourceLocation Loc = ReadRawSourceLocation(M, PPOffs.getBegin());
+  SourceLocation Loc = ReadSourceLocation(M, PPOffs.getBegin());
   if (Loc.isInvalid())
     return false;
 
@@ -6634,7 +6634,7 @@ void ASTReader::ReadPragmaDiagnosticMappings(DiagnosticsEngine &Diag) {
     // Read the final state.
     assert(Idx < Record.size() &&
            "Invalid data, missing final pragma diagnostic state");
-    SourceLocation CurStateLoc = ReadRawSourceLocation(F, Record[Idx++]);
+    SourceLocation CurStateLoc = ReadSourceLocation(F, Record[Idx++]);
     auto *CurState = ReadDiagState(*FirstState, false);
 
     if (!F.isModule()) {

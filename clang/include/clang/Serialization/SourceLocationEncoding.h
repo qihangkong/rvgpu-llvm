@@ -32,6 +32,7 @@
 
 #include <climits>
 #include "clang/Basic/SourceLocation.h"
+#include "llvm/Support/MathExtras.h"
 
 #ifndef LLVM_CLANG_SERIALIZATION_SOURCELOCATIONENCODING_H
 #define LLVM_CLANG_SERIALIZATION_SOURCELOCATIONENCODING_H
@@ -177,7 +178,8 @@ SourceLocationEncoding::encode(SourceLocation Loc, UIntTy BaseOffset,
   RawLocEncoding Encoded = encodeRaw(Loc.getRawEncoding());
   assert(Encoded < ((RawLocEncoding)1 << 32));
 
-  assert(BaseModuleFileIndex < ((RawLocEncoding)1 << 32));
+  // 16 bits should be sufficient to store the module file index.
+  assert(BaseModuleFileIndex < (1 << 16));
   Encoded |= (RawLocEncoding)BaseModuleFileIndex << 32;
   return Encoded;
 }
@@ -191,7 +193,7 @@ SourceLocationEncoding::decode(RawLocEncoding Encoded,
              : SourceLocation::getFromRawEncoding(decodeRaw(Encoded)),
             ModuleFileIndex};
 
-  Encoded &= ((RawLocEncoding)1 << 33) - 1;
+  Encoded &= llvm::maskTrailingOnes<RawLocEncoding>(32);
   SourceLocation Loc = SourceLocation::getFromRawEncoding(decodeRaw(Encoded));
 
   return {Loc, ModuleFileIndex};
