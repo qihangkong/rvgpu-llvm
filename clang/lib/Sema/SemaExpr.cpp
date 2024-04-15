@@ -8301,7 +8301,7 @@ bool Sema::isValidRVVBitcast(QualType srcTy, QualType destTy) {
   assert(srcTy->isVectorType() || destTy->isVectorType());
 
   auto ValidScalableConversion = [](QualType FirstType, QualType SecondType) {
-    if (!FirstType->isRVVSizelessBuiltinType())
+    if (!FirstType->isRVVType())
       return false;
 
     const auto *VecTy = SecondType->getAs<VectorType>();
@@ -10260,8 +10260,8 @@ Sema::CheckAssignmentConstraints(QualType LHSType, ExprResult &RHS,
       }
 
     // Allow assignments between fixed-length and sizeless RVV vectors.
-    if ((LHSType->isRVVSizelessBuiltinType() && RHSType->isVectorType()) ||
-        (LHSType->isVectorType() && RHSType->isRVVSizelessBuiltinType())) {
+    if ((LHSType->isRVVType() && RHSType->isVectorType()) ||
+        (LHSType->isVectorType() && RHSType->isRVVType())) {
       if (Context.areCompatibleRVVTypes(LHSType, RHSType) ||
           Context.areLaxCompatibleRVVTypes(LHSType, RHSType)) {
         Kind = CK_BitCast;
@@ -11209,7 +11209,7 @@ QualType Sema::CheckVectorOperands(ExprResult &LHS, ExprResult &RHS,
         SecondVecType->getVectorKind() == VectorKind::Generic) {
       if (FirstType->isSVESizelessBuiltinType())
         return true;
-      if (FirstType->isRVVSizelessBuiltinType()) {
+      if (FirstType->isRVVType()) {
         SVEorRVV = 1;
         return true;
       }
