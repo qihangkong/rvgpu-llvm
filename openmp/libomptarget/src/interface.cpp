@@ -456,7 +456,7 @@ EXTERN void __tgt_set_info_flag(uint32_t NewInfoLevel) {
   assert(PM && "Runtime not initialized");
   std::atomic<uint32_t> &InfoLevel = getInfoLevelInternal();
   InfoLevel.store(NewInfoLevel);
-  for (auto &R : PM->pluginAdaptors())
+  for (auto &R : PM->plugins())
     R.set_info_flag(NewInfoLevel);
 }
 
