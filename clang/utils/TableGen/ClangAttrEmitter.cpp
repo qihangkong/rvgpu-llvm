@@ -1886,9 +1886,8 @@ static void emitClangAttrLateParsedListImpl(RecordKeeper &Records,
   std::vector<Record *> Attrs = Records.getAllDerivedDefinitions("Attr");
 
   for (const auto *Attr : Attrs) {
-    auto LateParsed = getLateAttrParseKind(Attr);
-
-    if (LateParsed != LateParseMode)
+    if (LateAttrParseKind LateParsed = getLateAttrParseKind(Attr);
+        LateParsed != LateParseMode)
       continue;
 
     std::vector<FlattenedSpelling> Spellings = GetFlattenedSpellings(*Attr);
