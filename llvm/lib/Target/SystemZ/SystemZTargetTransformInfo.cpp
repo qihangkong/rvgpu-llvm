@@ -18,6 +18,7 @@
 #include "llvm/CodeGen/BasicTTIImpl.h"
 #include "llvm/CodeGen/CostTable.h"
 #include "llvm/CodeGen/TargetLowering.h"
+#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/Support/Debug.h"
@@ -1323,25 +1324,43 @@ SystemZTTIImpl::getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
 }
 
 bool SystemZTTIImpl::shouldExpandReduction(const IntrinsicInst *II) const {
-  // Always expand on Subtargets without vector instructions
+  // Always expand on Subtargets without vector instructions.
   if (!ST->hasVector())
     return true;
 
-  // Always expand for operands that do not fill one vector reg
-  auto *Type = cast<FixedVectorType>(II->getOperand(0)->getType());
-  unsigned NumElts = Type->getNumElements();
-  unsigned ScalarSize = Type->getScalarSizeInBits();
+  // Find the type of the vector operand of the intrinsic
+  // This assumes that each vector reduction intrinsic only
+  // has one vector operand.
+  FixedVectorType *VType = 0x0;
+  for (unsigned I = 0; I < II->getNumOperands(); ++I) {
+    auto *T = II->getOperand(I)->getType();
+    if (T->isVectorTy()) {
+      VType = cast<FixedVectorType>(T);
+      break;
+    }
+  }
+
+  // If we did not find a vector operand, do not continue.
+  if (VType == 0x0)
+    return true;
+
+  // If the vector operand is not a full vector, the reduction
+  // should be expanded.
+  unsigned NumElts = VType->getNumElements();
+  unsigned ScalarSize = VType->getScalarSizeInBits();
   unsigned MaxElts = SystemZ::VectorBits / ScalarSize;
   if (NumElts < MaxElts)
     return true;
 
-  // Otherwise
+  // Handling of full vector operands depends on the
+  // individual intrinsic.
   switch (II->getIntrinsicID()) {
-  // Do not expand vector.reduce.add
-  case Intrinsic::vector_reduce_add:
-    // Except for i64, since the performance benefit is dubious there
-    return ScalarSize >= 64;
   default:
     return true;
+  // Do not expand vector.reduce.add...
+  case Intrinsic::vector_reduce_add:
+    // ...unless the scalar size is i64 or larger, since the
+    // performance benefit is dubious there
+    return ScalarSize >= 64;
   }
 }
