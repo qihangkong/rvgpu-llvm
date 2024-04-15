@@ -5431,8 +5431,7 @@ bool CGDebugInfo::HasReconstitutableArgs(
   });
 }
 
-std::string CGDebugInfo::GetName(const Decl *D, bool Qualified,
-                                 const Type *Ty) const {
+std::string CGDebugInfo::GetName(const Decl *D, bool Qualified) const {
   std::string Name;
   llvm::raw_string_ostream OS(Name);
   const NamedDecl *ND = dyn_cast<NamedDecl>(D);
