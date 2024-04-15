@@ -235,6 +235,34 @@ subroutine lastprivate()
     !$omp end sections
 end subroutine
 
+!CHECK-LABEL: func @_QPlastprivate2
+!CHECK: %[[X:.*]] = fir.alloca i32 {bindc_name = "x", uniq_name = "_QFlastprivate2Ex"}
+!CHECK: %[[X_DECL:.*]]:2 = hlfir.declare %[[X]] {uniq_name = "_QFlastprivate2Ex"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+!CHECK: %[[Y:.*]] = fir.alloca i32 {bindc_name = "y", uniq_name = "_QFlastprivate2Ey"}
+!CHECK: %[[Y_DECL:.*]]:2 = hlfir.declare %[[Y]] {uniq_name = "_QFlastprivate2Ey"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+!CHECK: %[[PRIVATE_X:.*]] = fir.alloca i32 {bindc_name = "x", pinned, uniq_name = "_QFlastprivate2Ex"}
+!CHECK: %[[PRIVATE_X_DECL:.*]]:2 = hlfir.declare %[[PRIVATE_X]] {uniq_name = "_QFlastprivate2Ex"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+!CHECK: %[[PRIVATE_Y:.*]] = fir.alloca i32 {bindc_name = "y", pinned, uniq_name = "_QFlastprivate2Ey"}
+!CHECK: %[[PRIVATE_Y_DECL:.*]]:2 = hlfir.declare %[[PRIVATE_Y]] {uniq_name = "_QFlastprivate2Ey"} : (!fir.ref<i32>) -> (!fir.ref<i32>, !fir.ref<i32>)
+!CHECK: omp.sections {
+!CHECK:   omp.section {
+!CHECK:     %[[TEMP:.*]] = fir.load %[[PRIVATE_X_DECL]]#0 : !fir.ref<i32>
+!CHECK:     hlfir.assign %[[TEMP]] to %[[X_DECL]]#0 temporary_lhs : i32, !fir.ref<i32>
+!CHECK:     %[[TEMP2:.*]] = fir.load %[[PRIVATE_Y_DECL]]#0 : !fir.ref<i32>
+!CHECK:     hlfir.assign %[[TEMP2]] to %[[Y_DECL]]#0 temporary_lhs : i32, !fir.ref<i32>
+!CHECK:     omp.terminator
+!CHECK:   }
+!CHECK:   omp.terminator
+!CHECK: }
+subroutine lastprivate2()
+    integer :: x, y
+
+    !$omp sections lastprivate(x) lastprivate(y)
+        !$omp section
+          x = y + 1
+    !$omp end sections
+end subroutine
+
 !CHECK-LABEL: func @_QPunstructured_sections_privatization
 subroutine unstructured_sections_privatization()
 !CHECK: %[[X:.*]] = fir.alloca f32 {bindc_name = "x", uniq_name = "_QFunstructured_sections_privatizationEx"}

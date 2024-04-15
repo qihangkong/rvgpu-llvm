@@ -2510,8 +2510,9 @@ genOMP(Fortran::lower::AbstractConverter &converter,
 
   // SECTIONS construct.
   mlir::omp::SectionsOp sectionsOp =
-    genSectionsOp(converter, semaCtx, eval, currentLocation, clauseOps);
+      genSectionsOp(converter, semaCtx, eval, currentLocation, clauseOps);
 
+  // Generate nested SECTION operations recursively.
   const auto &sectionBlocks =
       std::get<Fortran::parser::OmpSectionBlocks>(sectionsConstruct.t);
   auto &firOpBuilder = converter.getFirOpBuilder();
@@ -2526,25 +2527,25 @@ genOMP(Fortran::lower::AbstractConverter &converter,
 
   // For `omp.sections`, lastprivatized variables occur in
   // lexically final `omp.section` operation.
-  std::optional<Clause> lastPrivateClause;
-  for (const Fortran::parser::OmpClause &clause : beginClauseList.v) {
-    if (std::holds_alternative<Fortran::parser::OmpClause::Lastprivate>(
-            clause.u)) {
-      lastPrivateClause = makeClause(clause, semaCtx);
-      break;
-    }
-  }
-  if (lastSectionOp && lastPrivateClause) {
-    clause::Lastprivate &lastPrivate =
-        std::get<clause::Lastprivate>(lastPrivateClause.value().u);
-    const auto &objList = std::get<1>(lastPrivate.t);
-    firOpBuilder.setInsertionPoint(
-        lastSectionOp.getRegion().back().getTerminator());
-    mlir::OpBuilder::InsertPoint lastPrivIP =
-        converter.getFirOpBuilder().saveInsertionPoint();
-    for (const Object &obj : objList) {
-      Fortran::semantics::Symbol *sym = obj.id();
-      converter.copyHostAssociateVar(*sym, &lastPrivIP);
+  bool hasLastPrivate = false;
+  if (lastSectionOp) {
+    for (const Fortran::parser::OmpClause &clause : beginClauseList.v) {
+      if (std::holds_alternative<Fortran::parser::OmpClause::Lastprivate>(
+              clause.u)) {
+        hasLastPrivate = true;
+        Clause lastPrivateClause = makeClause(clause, semaCtx);
+        clause::Lastprivate &lastPrivate =
+            std::get<clause::Lastprivate>(lastPrivateClause.u);
+        const auto &objList = std::get<1>(lastPrivate.t);
+        firOpBuilder.setInsertionPoint(
+            lastSectionOp.getRegion().back().getTerminator());
+        mlir::OpBuilder::InsertPoint lastPrivIP =
+            converter.getFirOpBuilder().saveInsertionPoint();
+        for (const Object &obj : objList) {
+          Fortran::semantics::Symbol *sym = obj.id();
+          converter.copyHostAssociateVar(*sym, &lastPrivIP);
+        }
+      }
     }
   }
 
@@ -2554,7 +2555,7 @@ genOMP(Fortran::lower::AbstractConverter &converter,
   // Emit implicit barrier to synchronize threads and avoid data
   // races on post-update of lastprivate variables when `nowait`
   // clause is present.
-  if (clauseOps.nowaitAttr && lastPrivateClause)
+  if (clauseOps.nowaitAttr && hasLastPrivate)
     firOpBuilder.create<mlir::omp::BarrierOp>(converter.getCurrentLocation());
   symTable.popScope();
 }
