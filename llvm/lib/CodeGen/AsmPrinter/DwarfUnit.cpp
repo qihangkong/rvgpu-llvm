@@ -806,7 +806,7 @@ void DwarfUnit::constructTypeDIE(DIE &Buffer, const DIDerivedType *DTy) {
 
   // Add template alias template parameters.
   if (Tag == dwarf::DW_TAG_template_alias)
-    addTemplateParams(Buffer, cast<MDTuple>(DTy->getExtraData()));
+    addTemplateParams(Buffer, DTy->getTemplateParams());
 
   if (auto PtrAuthData = DTy->getPtrAuthData()) {
     addUInt(Buffer, dwarf::DW_AT_LLVM_ptrauth_key, dwarf::DW_FORM_data1,

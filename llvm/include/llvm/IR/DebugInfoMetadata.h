@@ -1101,6 +1101,11 @@ public:
   Metadata *getExtraData() const { return getRawExtraData(); }
   Metadata *getRawExtraData() const { return getOperand(4); }
 
+  /// Get the template parameters from a template alias.
+  DITemplateParameterArray getTemplateParams() const {
+    return cast_or_null<MDTuple>(getExtraData());
+  }
+
   /// Get annotations associated with this derived type.
   DINodeArray getAnnotations() const {
     return cast_or_null<MDTuple>(getRawAnnotations());
