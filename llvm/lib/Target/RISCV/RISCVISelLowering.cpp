@@ -796,6 +796,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
 
       setOperationAction(ISD::EXPERIMENTAL_VP_SPLICE, VT, Custom);
       setOperationAction(ISD::EXPERIMENTAL_VP_REVERSE, VT, Custom);
+      setOperationAction(ISD::EXPERIMENTAL_VP_POPCOUNT, VT, Custom);
 
       setOperationPromotedToType(
           ISD::VECTOR_SPLICE, VT,
@@ -1176,6 +1177,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
 
           setOperationAction(ISD::EXPERIMENTAL_VP_SPLICE, VT, Custom);
           setOperationAction(ISD::EXPERIMENTAL_VP_REVERSE, VT, Custom);
+          setOperationAction(ISD::EXPERIMENTAL_VP_POPCOUNT, VT, Custom);
           continue;
         }
 
@@ -7019,6 +7021,8 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
     return lowerVPSpliceExperimental(Op, DAG);
   case ISD::EXPERIMENTAL_VP_REVERSE:
     return lowerVPReverseExperimental(Op, DAG);
+  case ISD::EXPERIMENTAL_VP_POPCOUNT:
+    return lowerVPPopcountExperimental(Op, DAG);
   }
 }
 
@@ -20941,6 +20945,26 @@ bool RISCVTargetLowering::lowerInterleaveIntrinsicToStore(IntrinsicInst *II,
                                   SI->getPointerOperand(), VL});
 
   return true;
+}
+
+SDValue
+RISCVTargetLowering::lowerVPPopcountExperimental(SDValue N,
+                                                 SelectionDAG &DAG) const {
+  SDValue Op = N.getOperand(0);
+  SDValue Mask = N.getOperand(1);
+  MVT VT = Op.getSimpleValueType();
+  SDLoc DL(N);
+  MVT XLenVT = Subtarget.getXLenVT();
+
+  MVT ContainerVT = VT;
+  if (VT.isFixedLengthVector()) {
+    ContainerVT = getContainerForFixedLengthVector(VT);
+    Op = convertToScalableVector(ContainerVT, Op, DAG, Subtarget);
+    Mask = convertToScalableVector(ContainerVT, Mask, DAG, Subtarget);
+  }
+
+  return DAG.getNode(RISCVISD::VCPOP_VL, DL, XLenVT, Op, Mask,
+                     N->getOperand(2));
 }
 
 MachineInstr *
