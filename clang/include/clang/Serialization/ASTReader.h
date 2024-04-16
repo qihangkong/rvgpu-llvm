@@ -2240,7 +2240,10 @@ public:
 
     auto [Loc, ModuleFileIndex] = ReadUntranslatedSourceLocation(Raw, Seq);
     ModuleFile *OwningModuleFile =
-        ModuleFileIndex ? MF.DependentModules[ModuleFileIndex - 1] : &MF;
+        ModuleFileIndex == 0 ? &MF : MF.DependentModules[ModuleFileIndex - 1];
+
+    assert(!SourceMgr.isLoadedSourceLocation(Loc) && "Run out source location space");
+
     return TranslateSourceLocation(*OwningModuleFile, Loc);
   }
 
@@ -2251,9 +2254,11 @@ public:
     if (Loc.isInvalid())
       return Loc;
 
-    // It implies that the Loc is already translated.
-    if (SourceMgr.isLoadedSourceLocation(Loc))
-      return Loc;
+    // FIXME: TranslateSourceLocation is not re-enterable. It is problematic
+    // to call TranslateSourceLocation on a translated source location.
+    // We either need a method to know whether or not a source location is translated
+    // or refactor the code to make it clear that TranslateSourceLocation won't
+    // be called with translated source location.
 
     return Loc.getLocWithOffset(ModuleFile.SLocEntryBaseOffset - 2);
   }

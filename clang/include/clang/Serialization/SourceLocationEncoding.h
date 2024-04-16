@@ -176,7 +176,6 @@ SourceLocationEncoding::encode(SourceLocation Loc, UIntTy BaseOffset,
   assert(Loc.getOffset() >= BaseOffset);
   Loc = Loc.getLocWithOffset(-BaseOffset);
   RawLocEncoding Encoded = encodeRaw(Loc.getRawEncoding());
-  assert(Encoded < ((RawLocEncoding)1 << 32));
 
   // 16 bits should be sufficient to store the module file index.
   assert(BaseModuleFileIndex < (1 << 16));
