@@ -1331,7 +1331,7 @@ bool SystemZTTIImpl::shouldExpandReduction(const IntrinsicInst *II) const {
   // Find the type of the vector operand of the intrinsic
   // This assumes that each vector reduction intrinsic only
   // has one vector operand.
-  FixedVectorType *VType = 0x0;
+  FixedVectorType *VType = nullptr;
   for (unsigned I = 0; I < II->getNumOperands(); ++I) {
     auto *T = II->getOperand(I)->getType();
     if (T->isVectorTy()) {
@@ -1341,7 +1341,7 @@ bool SystemZTTIImpl::shouldExpandReduction(const IntrinsicInst *II) const {
   }
 
   // If we did not find a vector operand, do not continue.
-  if (VType == 0x0)
+  if (VType == nullptr)
     return true;
 
   // If the vector operand is not a full vector, the reduction
