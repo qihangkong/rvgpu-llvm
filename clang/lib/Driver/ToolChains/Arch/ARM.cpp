@@ -915,8 +915,14 @@ fp16_fml_fallthrough:
   }
 
   // llvm does not support reserving registers in general. There is support
-  // for reserving r9 on ARM though (defined as a platform-specific register
+  // for reserving r4,r5 and r9 on ARM though (defined as a platform-specific register
   // in ARM EABI).
+  if (Args.hasArg(options::OPT_ffixed_r4))
+    Features.push_back("+reserve-r4");
+
+  if (Args.hasArg(options::OPT_ffixed_r5))
+    Features.push_back("+reserve-r5");
+
   if (Args.hasArg(options::OPT_ffixed_r9))
     Features.push_back("+reserve-r9");
 
