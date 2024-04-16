@@ -95,12 +95,12 @@ bool Parser::isAttributeLateParsed(const IdentifierInfo &II) {
   // Some attributes might only be late parsed when in the experimental
   // language mode.
   if (getLangOpts().ExperimentalLateParseAttributes) {
-#define CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_LIST
+#define CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_EXT_LIST
     bool IsExperimentalLateParseAttr =
         llvm::StringSwitch<bool>(normalizeAttrName(II.getName()))
 #include "clang/Parse/AttrParserStringSwitches.inc"
             .Default(false);
-#undef CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_LIST
+#undef CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_EXT_LIST
     if (IsExperimentalLateParseAttr)
       return true;
   }

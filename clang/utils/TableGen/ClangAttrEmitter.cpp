@@ -1822,7 +1822,7 @@ void WriteSemanticSpellingSwitch(const std::string &VarName,
   OS << "  }\n";
 }
 
-enum class LateAttrParseKind { Never = 0, Always = 1, ExperimentalOnly = 2 };
+enum class LateAttrParseKind { Never = 0, Standard = 1, ExperimentalExt = 2 };
 
 static LateAttrParseKind getLateAttrParseKind(const Record *Attr) {
   // This function basically does
@@ -1866,8 +1866,8 @@ static LateAttrParseKind getLateAttrParseKind(const Record *Attr) {
     return LateAttrParseKind::X;
 
     CASE(Never)
-    CASE(Always)
-    CASE(ExperimentalOnly)
+    CASE(Standard)
+    CASE(ExperimentalExt)
 #undef CASE
   }
 
@@ -1904,16 +1904,16 @@ static void emitClangAttrLateParsedListImpl(RecordKeeper &Records,
 static void emitClangAttrLateParsedList(RecordKeeper &Records,
                                         raw_ostream &OS) {
   OS << "#if defined(CLANG_ATTR_LATE_PARSED_LIST)\n";
-  emitClangAttrLateParsedListImpl(Records, OS, LateAttrParseKind::Always);
+  emitClangAttrLateParsedListImpl(Records, OS, LateAttrParseKind::Standard);
   OS << "#endif // CLANG_ATTR_LATE_PARSED_LIST\n\n";
 }
 
 static void emitClangAttrLateParsedExperimentalList(RecordKeeper &Records,
                                                     raw_ostream &OS) {
-  OS << "#if defined(CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_LIST)\n";
+  OS << "#if defined(CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_EXT_LIST)\n";
   emitClangAttrLateParsedListImpl(Records, OS,
-                                  LateAttrParseKind::ExperimentalOnly);
-  OS << "#endif // CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_LIST\n\n";
+                                  LateAttrParseKind::ExperimentalExt);
+  OS << "#endif // CLANG_ATTR_LATE_PARSED_EXPERIMENTAL_EXT_LIST\n\n";
 }
 
 static bool hasGNUorCXX11Spelling(const Record &Attribute) {
@@ -2178,9 +2178,9 @@ bool PragmaClangAttributeSupport::isAttributedSupported(
   switch (getLateAttrParseKind(&Attribute)) {
   case LateAttrParseKind::Never:
     break;
-  case LateAttrParseKind::Always:
+  case LateAttrParseKind::Standard:
     return false;
-  case LateAttrParseKind::ExperimentalOnly:
+  case LateAttrParseKind::ExperimentalExt:
     // This is only late parsed when `LangOpts.ExperimentalLateParseAttributes`
     // is true. Unfortunately `LangOpts` is not available in this method so
     // just opt this attribute out.
@@ -2976,10 +2976,10 @@ static void emitAttributes(RecordKeeper &Records, raw_ostream &OS,
       case LateAttrParseKind::Never:
         OS << "false";
         break;
-      case LateAttrParseKind::Always:
+      case LateAttrParseKind::Standard:
         OS << "true";
         break;
-      case LateAttrParseKind::ExperimentalOnly:
+      case LateAttrParseKind::ExperimentalExt:
         // Emit code that determines if late parsing is enabled based on
         // the LangOpts when the attribute's constructor gets called.
         OS << "Ctx.getLangOpts().ExperimentalLateParseAttributes";
