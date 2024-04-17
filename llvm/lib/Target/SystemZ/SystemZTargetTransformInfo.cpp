@@ -1323,23 +1323,12 @@ SystemZTTIImpl::getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
   return BaseT::getIntrinsicInstrCost(ICA, CostKind);
 }
 
-// Find the type of the first vector operand of the intrinsic.
-// Returns nullptr in case no vector operand was found.
-FixedVectorType *getFirstOperandVectorType(const IntrinsicInst *II) {
-  for (unsigned I = 0; I < II->getNumOperands(); ++I) {
-    auto *T = II->getOperand(I)->getType();
-    if (T->isVectorTy()) {
-      return cast<FixedVectorType>(T);
-    }
-  }
-  return nullptr;
-}
-
-// determine if the given vector type represents a full
-// machine vector register.
-bool isVectorFull(FixedVectorType *VType) {
-  unsigned MaxElts = SystemZ::VectorBits / VType->getScalarSizeInBits();
-  return VType->getNumElements() >= MaxElts;
+// Find the type of the vector operand indicated by index.
+// Asserts that the operand indicated is actually a vector.
+FixedVectorType *getOperandVectorType(const IntrinsicInst *II, unsigned Index) {
+  auto *T = II->getOperand(Index)->getType();
+  assert (T->isVectorTy());
+  return cast<FixedVectorType>(T);
 }
 
 bool SystemZTTIImpl::shouldExpandReduction(const IntrinsicInst *II) const {
@@ -1353,10 +1342,11 @@ bool SystemZTTIImpl::shouldExpandReduction(const IntrinsicInst *II) const {
     return true;
   // Do not expand vector.reduce.add...
   case Intrinsic::vector_reduce_add:
-    auto *VType = getFirstOperandVectorType(II);
+    auto *VType = getOperandVectorType(II, 0);
     // ...unless the scalar size is i64 or larger,
     // or the operand vector is not full, since the
     // performance benefit is dubious in those cases
-    return (VType->getScalarSizeInBits() >= 64) || not isVectorFull(VType);
+    return (VType->getScalarSizeInBits() >= 64) ||
+           VType->getPrimitiveSizeInBits() < SystemZ::VectorBits;
   }
 }
