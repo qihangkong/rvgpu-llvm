@@ -2983,6 +2983,17 @@ bool CombinerHelper::matchHoistLogicOpWithSameOpcodeHands(
   MachineInstr *RightHandInst = getDefIgnoringCopies(RHSReg, MRI);
   if (!LeftHandInst || !RightHandInst)
     return false;
+
+  // Look through freeze()s.
+  bool LeftHandFreeze = LeftHandInst->getOpcode() == TargetOpcode::G_FREEZE;
+  bool RightHandFreeze = RightHandInst->getOpcode() == TargetOpcode::G_FREEZE;
+  if (LeftHandFreeze)
+    LeftHandInst =
+        getDefIgnoringCopies(LeftHandInst->getOperand(1).getReg(), MRI);
+  if (RightHandFreeze)
+    RightHandInst =
+        getDefIgnoringCopies(RightHandInst->getOperand(1).getReg(), MRI);
+
   unsigned HandOpcode = LeftHandInst->getOpcode();
   if (HandOpcode != RightHandInst->getOpcode())
     return false;
@@ -3006,8 +3017,10 @@ bool CombinerHelper::matchHoistLogicOpWithSameOpcodeHands(
     return false;
   case TargetOpcode::G_ANYEXT:
   case TargetOpcode::G_SEXT:
-  case TargetOpcode::G_ZEXT: {
+  case TargetOpcode::G_ZEXT:
+  case TargetOpcode::G_TRUNC: {
     // Match: logic (ext X), (ext Y) --> ext (logic X, Y)
+    // Match: logic (trunc X), (trunc Y) -> trunc (logic X, Y)
     break;
   }
   case TargetOpcode::G_AND:
@@ -3032,8 +3045,18 @@ bool CombinerHelper::matchHoistLogicOpWithSameOpcodeHands(
   auto NewLogicDst = MRI.createGenericVirtualRegister(XTy);
   OperandBuildSteps LogicBuildSteps = {
       [=](MachineInstrBuilder &MIB) { MIB.addDef(NewLogicDst); },
-      [=](MachineInstrBuilder &MIB) { MIB.addReg(X); },
-      [=](MachineInstrBuilder &MIB) { MIB.addReg(Y); }};
+      [=](MachineInstrBuilder &MIB) mutable {
+        // freeze (hand (x, ...)) -> freeze(x)
+        if (LeftHandFreeze)
+          X = Builder.buildFreeze(XTy, X).getReg(0);
+        MIB.addReg(X);
+      },
+      [=](MachineInstrBuilder &MIB) mutable {
+        // freeze (hand (y, ...)) -> freeze(y)
+        if (RightHandFreeze)
+          Y = Builder.buildFreeze(YTy, Y).getReg(0);
+        MIB.addReg(Y);
+      }};
   InstructionBuildSteps LogicSteps(LogicOpcode, LogicBuildSteps);
 
   // Steps to build hand (logic x, y), ...z
@@ -6982,68 +7005,8 @@ bool CombinerHelper::tryFoldLogicOfFCmps(GLogicalBinOp *Logic,
   return false;
 }
 
-bool CombinerHelper::tryFoldAndOfTruncs(GLogicalBinOp *Logical,
-                                        BuildFnTy &MatchInfo) {
-  assert(Logical->getOpcode() == TargetOpcode::G_AND &&
-         "Expected to be called with G_AND!");
-  Register Dst = Logical->getOperand(0).getReg();
-  Register V1 = Logical->getOperand(1).getReg();
-  Register V2 = Logical->getOperand(2).getReg();
-
-  MachineInstr *V1MI = MRI.getUniqueVRegDef(V1);
-  MachineInstr *V2MI = MRI.getUniqueVRegDef(V2);
-  if (!V1MI || !V2MI)
-    return false;
-
-  bool V1Freeze = V1MI->getOpcode() == TargetOpcode::G_FREEZE;
-  bool V2Freeze = V2MI->getOpcode() == TargetOpcode::G_FREEZE;
-  if (V1Freeze)
-    V1 = V1MI->getOperand(1).getReg();
-  if (V2Freeze)
-    V2 = V2MI->getOperand(1).getReg();
-
-  Register V1Src, V2Src;
-  if (!mi_match(V1, MRI, m_GTrunc(m_Reg(V1Src))) ||
-      !mi_match(V2, MRI, m_GTrunc(m_Reg(V2Src))))
-    return false;
-  if (!MRI.hasOneNonDBGUse(V1) || !MRI.hasOneNonDBGUse(V2))
-    return false;
-
-  LLT V1Ty = MRI.getType(V1);
-  LLT V2Ty = MRI.getType(V2);
-  LLT V1SrcTy = MRI.getType(V1Src);
-  LLT V2SrcTy = MRI.getType(V2Src);
-
-  if (!isLegalOrBeforeLegalizer({TargetOpcode::G_AND, {V1SrcTy, V2SrcTy}}))
-    return false;
-
-  if (V1Ty != V2Ty || V1SrcTy != V2SrcTy)
-    return false;
-
-  MatchInfo = [=](MachineIRBuilder &B) {
-    Register Op0 = V1Src;
-    Register Op1 = V2Src;
-
-    if (V1Freeze)
-      Op0 = B.buildFreeze(V1SrcTy, V1Src).getReg(0);
-    if (V2Freeze)
-      Op1 = B.buildFreeze(V1SrcTy, V2Src).getReg(0);
-
-    auto And = B.buildAnd(V1SrcTy, Op0, Op1);
-    B.buildTrunc(Dst, And);
-
-    MRI.getUniqueVRegDef(V1)->eraseFromParent();
-    MRI.getUniqueVRegDef(V2)->eraseFromParent();
-  };
-
-  return true;
-}
-
 bool CombinerHelper::matchAnd(MachineInstr &MI, BuildFnTy &MatchInfo) {
   GAnd *And = cast<GAnd>(&MI);
-
-  if (tryFoldAndOfTruncs(And, MatchInfo))
-    return true;
 
   if (tryFoldAndOrOrICmpsUsingRanges(And, MatchInfo))
     return true;

@@ -130,8 +130,8 @@ body:             |
     ; CHECK-NEXT: {{  $}}
     ; CHECK-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $w0
     ; CHECK-NEXT: [[COPY1:%[0-9]+]]:_(s32) = COPY $w1
+    ; CHECK-NEXT: [[AND:%[0-9]+]]:_(s32) = G_AND %8, [[COPY1]]
     ; CHECK-NEXT: [[FREEZE:%[0-9]+]]:_(s32) = G_FREEZE [[COPY]]
-    ; CHECK-NEXT: [[AND:%[0-9]+]]:_(s32) = G_AND [[FREEZE]], [[COPY1]]
     ; CHECK-NEXT: $w0 = COPY [[AND]](s32)
     %0:_(s32) = COPY $w0
     %1:_(s32) = COPY $w1
@@ -152,9 +152,9 @@ body:             |
     ; CHECK-NEXT: {{  $}}
     ; CHECK-NEXT: [[COPY:%[0-9]+]]:_(s32) = COPY $w0
     ; CHECK-NEXT: [[COPY1:%[0-9]+]]:_(s32) = COPY $w1
+    ; CHECK-NEXT: [[AND:%[0-9]+]]:_(s32) = G_AND %9, %10
     ; CHECK-NEXT: [[FREEZE:%[0-9]+]]:_(s32) = G_FREEZE [[COPY]]
     ; CHECK-NEXT: [[FREEZE1:%[0-9]+]]:_(s32) = G_FREEZE [[COPY1]]
-    ; CHECK-NEXT: [[AND:%[0-9]+]]:_(s32) = G_AND [[FREEZE]], [[FREEZE1]]
     ; CHECK-NEXT: $w0 = COPY [[AND]](s32)
     %0:_(s32) = COPY $w0
     %1:_(s32) = COPY $w1

@@ -963,9 +963,6 @@ private:
 
   // Simplify (cmp cc0 x, y) (&& or ||) (cmp cc1 x, y) -> cmp cc2 x, y.
   bool tryFoldLogicOfFCmps(GLogicalBinOp *Logic, BuildFnTy &MatchInfo);
-
-  // Simplify (trunc v1) && (trunc v2) -> trunc (v1 && v2)
-  bool tryFoldAndOfTruncs(GLogicalBinOp *Logical, BuildFnTy &MatchInfo);
 };
 } // namespace llvm
 
