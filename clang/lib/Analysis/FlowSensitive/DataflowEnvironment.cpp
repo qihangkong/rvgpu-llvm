@@ -23,6 +23,7 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <cassert>
 #include <utility>
@@ -79,7 +80,6 @@ static bool equateUnknownValues(Value::Kind K) {
   switch (K) {
   case Value::Kind::Integer:
   case Value::Kind::Pointer:
-  case Value::Kind::Record:
     return true;
   default:
     return false;
@@ -144,25 +144,7 @@ static Value *joinDistinctValues(QualType Type, Value &Val1,
     return &A.makeBoolValue(JoinedVal);
   }
 
-  Value *JoinedVal = nullptr;
-  if (auto *RecordVal1 = dyn_cast<RecordValue>(&Val1)) {
-    auto *RecordVal2 = cast<RecordValue>(&Val2);
-
-    if (&RecordVal1->getLoc() == &RecordVal2->getLoc())
-      // `RecordVal1` and `RecordVal2` may have different properties associated
-      // with them. Create a new `RecordValue` with the same location but
-      // without any properties so that we soundly approximate both values. If a
-      // particular analysis needs to join properties, it should do so in
-      // `DataflowAnalysis::join()`.
-      JoinedVal = &JoinedEnv.create<RecordValue>(RecordVal1->getLoc());
-    else
-      // If the locations for the two records are different, need to create a
-      // completely new value.
-      JoinedVal = JoinedEnv.createValue(Type);
-  } else {
-    JoinedVal = JoinedEnv.createValue(Type);
-  }
-
+  Value *JoinedVal = JoinedEnv.createValue(Type);
   if (JoinedVal)
     Model.join(Type, Val1, Env1, Val2, Env2, *JoinedVal, JoinedEnv);
 
@@ -627,7 +609,6 @@ void Environment::initialize() {
       auto &ThisLoc =
           cast<RecordStorageLocation>(createStorageLocation(ThisPointeeType));
       setThisPointeeStorageLocation(ThisLoc);
-      refreshRecordValue(ThisLoc, *this);
       // Initialize fields of `*this` with values, but only if we're not
       // analyzing a constructor; after all, it's the constructor's job to do
       // this (and we want to be able to test that).
@@ -794,10 +775,6 @@ void Environment::popCall(const CXXConstructExpr *Call,
   // See also comment in `popCall(const CallExpr *, const Environment &)` above.
   this->LocToVal = std::move(CalleeEnv.LocToVal);
   this->FlowConditionToken = std::move(CalleeEnv.FlowConditionToken);
-
-  if (Value *Val = CalleeEnv.getValue(*CalleeEnv.ThisPointeeLoc)) {
-    setValue(*Call, *Val);
-  }
 }
 
 bool Environment::equivalentTo(const Environment &Other,
@@ -1021,24 +998,23 @@ void Environment::initializeFieldsWithValues(RecordStorageLocation &Loc,
 }
 
 void Environment::setValue(const StorageLocation &Loc, Value &Val) {
-  assert(!isa<RecordValue>(&Val) || &cast<RecordValue>(&Val)->getLoc() == &Loc);
-
+  // Records should not be associated with values.
+  assert(!isa<RecordStorageLocation>(Loc));
   LocToVal[&Loc] = &Val;
 }
 
 void Environment::setValue(const Expr &E, Value &Val) {
   const Expr &CanonE = ignoreCFGOmittedNodes(E);
 
-  if (auto *RecordVal = dyn_cast<RecordValue>(&Val)) {
-    assert(&RecordVal->getLoc() == &getResultObjectLocation(CanonE));
-    (void)RecordVal;
-  }
-
   assert(CanonE.isPRValue());
+  // Records should not be associated with values.
+  assert(!CanonE.getType()->isRecordType());
   ExprToVal[&CanonE] = &Val;
 }
 
 Value *Environment::getValue(const StorageLocation &Loc) const {
+  // Records should not be associated with values.
+  assert(!isa<RecordStorageLocation>(Loc));
   return LocToVal.lookup(&Loc);
 }
 
@@ -1050,6 +1026,9 @@ Value *Environment::getValue(const ValueDecl &D) const {
 }
 
 Value *Environment::getValue(const Expr &E) const {
+  // Records should not be associated with values.
+  assert(!E.getType()->isRecordType());
+
   if (E.isPRValue()) {
     auto It = ExprToVal.find(&ignoreCFGOmittedNodes(E));
     return It == ExprToVal.end() ? nullptr : It->second;
@@ -1078,6 +1057,7 @@ Value *Environment::createValueUnlessSelfReferential(
     int &CreatedValuesCount) {
   assert(!Type.isNull());
   assert(!Type->isReferenceType());
+  assert(!Type->isRecordType());
 
   // Allow unlimited fields at depth 1; only cap at deeper nesting levels.
   if ((Depth > 1 && CreatedValuesCount > MaxCompositeValueSize) ||
@@ -1106,15 +1086,6 @@ Value *Environment::createValueUnlessSelfReferential(
     return &arena().create<PointerValue>(PointeeLoc);
   }
 
-  if (Type->isRecordType()) {
-    CreatedValuesCount++;
-    auto &Loc = cast<RecordStorageLocation>(createStorageLocation(Type));
-    initializeFieldsWithValues(Loc, Loc.getType(), Visited, Depth,
-                               CreatedValuesCount);
-
-    return &refreshRecordValue(Loc, *this);
-  }
-
   return nullptr;
 }
 
@@ -1124,20 +1095,23 @@ Environment::createLocAndMaybeValue(QualType Ty,
                                     int Depth, int &CreatedValuesCount) {
   if (!Visited.insert(Ty.getCanonicalType()).second)
     return createStorageLocation(Ty.getNonReferenceType());
-  Value *Val = createValueUnlessSelfReferential(
-      Ty.getNonReferenceType(), Visited, Depth, CreatedValuesCount);
-  Visited.erase(Ty.getCanonicalType());
+  auto EraseVisited = llvm::make_scope_exit(
+      [&Visited, Ty] { Visited.erase(Ty.getCanonicalType()); });
 
   Ty = Ty.getNonReferenceType();
 
-  if (Val == nullptr)
-    return createStorageLocation(Ty);
-
-  if (Ty->isRecordType())
-    return cast<RecordValue>(Val)->getLoc();
+  if (Ty->isRecordType()) {
+    auto &Loc = cast<RecordStorageLocation>(createStorageLocation(Ty));
+    initializeFieldsWithValues(Loc, Ty, Visited, Depth, CreatedValuesCount);
+    return Loc;
+  }
 
   StorageLocation &Loc = createStorageLocation(Ty);
-  setValue(Loc, *Val);
+
+  if (Value *Val = createValueUnlessSelfReferential(Ty, Visited, Depth,
+                                                    CreatedValuesCount))
+    setValue(Loc, *Val);
+
   return Loc;
 }
 
@@ -1149,10 +1123,11 @@ void Environment::initializeFieldsWithValues(RecordStorageLocation &Loc,
   auto initField = [&](QualType FieldType, StorageLocation &FieldLoc) {
     if (FieldType->isRecordType()) {
       auto &FieldRecordLoc = cast<RecordStorageLocation>(FieldLoc);
-      setValue(FieldRecordLoc, create<RecordValue>(FieldRecordLoc));
       initializeFieldsWithValues(FieldRecordLoc, FieldRecordLoc.getType(),
                                  Visited, Depth + 1, CreatedValuesCount);
     } else {
+      if (getValue(FieldLoc) != nullptr)
+        return;
       if (!Visited.insert(FieldType.getCanonicalType()).second)
         return;
       if (Value *Val = createValueUnlessSelfReferential(
@@ -1210,7 +1185,6 @@ StorageLocation &Environment::createObjectInternal(const ValueDecl *D,
     auto &RecordLoc = cast<RecordStorageLocation>(Loc);
     if (!InitExpr)
       initializeFieldsWithValues(RecordLoc);
-    refreshRecordValue(RecordLoc, *this);
   } else {
     Value *Val = nullptr;
     if (InitExpr)
@@ -1405,26 +1379,6 @@ RecordInitListHelper::RecordInitListHelper(const InitListExpr *InitList) {
     Expr *Init = Inits[InitIdx++];
     FieldInits.emplace_back(Field, Init);
   }
-}
-
-RecordValue &refreshRecordValue(RecordStorageLocation &Loc, Environment &Env) {
-  auto &NewVal = Env.create<RecordValue>(Loc);
-  Env.setValue(Loc, NewVal);
-  return NewVal;
-}
-
-RecordValue &refreshRecordValue(const Expr &Expr, Environment &Env) {
-  assert(Expr.getType()->isRecordType());
-
-  if (Expr.isPRValue())
-    refreshRecordValue(Env.getResultObjectLocation(Expr), Env);
-
-  if (auto *Loc = Env.get<RecordStorageLocation>(Expr))
-    refreshRecordValue(*Loc, Env);
-
-  auto &NewVal = *cast<RecordValue>(Env.createValue(Expr.getType()));
-  Env.setStorageLocation(Expr, NewVal.getLoc());
-  return NewVal;
 }
 
 } // namespace dataflow
