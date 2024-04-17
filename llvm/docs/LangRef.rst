@@ -18788,9 +18788,10 @@ Overview:
 The '``llvm.vector.reverse.*``' intrinsics reverse a vector.
 The intrinsic takes a single vector and returns a vector of matching type but
 with the original lane order reversed. These intrinsics work for both fixed
-and scalable vectors. While this intrinsic is marked as experimental the
-recommended way to express reverse operations for fixed-width vectors is still
-to use a shufflevector, as that may allow for more optimization opportunities.
+and scalable vectors. While this intrinsic supports all vector types
+the recommended way to express this operation for fixed-width vectors is
+still to use a shufflevector, as that may allow for more optimization
+opportunities.
 
 Arguments:
 """"""""""
@@ -18931,7 +18932,7 @@ immediate, it extracts ``-imm`` trailing elements from the first vector, and
 the remaining elements from ``%vec2``.
 
 These intrinsics work for both fixed and scalable vectors. While this intrinsic
-is marked as experimental, the recommended way to express this operation for
+supports all vector types the recommended way to express this operation for
 fixed-width vectors is still to use a shufflevector, as that may allow for more
 optimization opportunities.
 
