@@ -1323,44 +1323,40 @@ SystemZTTIImpl::getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
   return BaseT::getIntrinsicInstrCost(ICA, CostKind);
 }
 
+// Find the type of the first vector operand of the intrinsic.
+// Returns nullptr in case no vector operand was found.
+FixedVectorType *getFirstOperandVectorType(const IntrinsicInst *II) {
+  for (unsigned I = 0; I < II->getNumOperands(); ++I) {
+    auto *T = II->getOperand(I)->getType();
+    if (T->isVectorTy()) {
+      return cast<FixedVectorType>(T);
+    }
+  }
+  return nullptr;
+}
+
+// determine if the given vector type represents a full
+// machine vector register.
+bool isVectorFull(FixedVectorType *VType) {
+  unsigned MaxElts = SystemZ::VectorBits / VType->getScalarSizeInBits();
+  return VType->getNumElements() >= MaxElts;
+}
+
 bool SystemZTTIImpl::shouldExpandReduction(const IntrinsicInst *II) const {
   // Always expand on Subtargets without vector instructions.
   if (!ST->hasVector())
     return true;
 
-  // Find the type of the vector operand of the intrinsic
-  // This assumes that each vector reduction intrinsic only
-  // has one vector operand.
-  FixedVectorType *VType = nullptr;
-  for (unsigned I = 0; I < II->getNumOperands(); ++I) {
-    auto *T = II->getOperand(I)->getType();
-    if (T->isVectorTy()) {
-      VType = cast<FixedVectorType>(T);
-      break;
-    }
-  }
-
-  // If we did not find a vector operand, do not continue.
-  if (VType == nullptr)
-    return true;
-
-  // If the vector operand is not a full vector, the reduction
-  // should be expanded.
-  unsigned NumElts = VType->getNumElements();
-  unsigned ScalarSize = VType->getScalarSizeInBits();
-  unsigned MaxElts = SystemZ::VectorBits / ScalarSize;
-  if (NumElts < MaxElts)
-    return true;
-
-  // Handling of full vector operands depends on the
-  // individual intrinsic.
+  // Whether or not to expand is a per-intrinsic decision.
   switch (II->getIntrinsicID()) {
   default:
     return true;
   // Do not expand vector.reduce.add...
   case Intrinsic::vector_reduce_add:
-    // ...unless the scalar size is i64 or larger, since the
-    // performance benefit is dubious there
-    return ScalarSize >= 64;
+    auto *VType = getFirstOperandVectorType(II);
+    // ...unless the scalar size is i64 or larger,
+    // or the operand vector is not full, since the
+    // performance benefit is dubious in those cases
+    return (VType->getScalarSizeInBits() >= 64) || not isVectorFull(VType);
   }
 }
