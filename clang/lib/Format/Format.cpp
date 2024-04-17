@@ -1219,6 +1219,14 @@ template <> struct DocumentListTraits<std::vector<FormatStyle>> {
     return Seq[Index];
   }
 };
+
+template <> struct ScalarEnumerationTraits<FormatStyle::GotoLabelIndentation> {
+  static void enumeration(IO &IO, FormatStyle::GotoLabelIndentation &Value) {
+    IO.enumCase(Value, "false", FormatStyle::GLI_None);
+    IO.enumCase(Value, "true", FormatStyle::GLI_Indent);
+  }
+};
+
 } // namespace yaml
 } // namespace llvm
 
@@ -1498,7 +1506,7 @@ FormatStyle getLLVMStyle(FormatStyle::LanguageKind Language) {
   LLVMStyle.IndentCaseBlocks = false;
   LLVMStyle.IndentCaseLabels = false;
   LLVMStyle.IndentExternBlock = FormatStyle::IEBS_AfterExternBlock;
-  LLVMStyle.IndentGotoLabels = true;
+  LLVMStyle.IndentGotoLabels = FormatStyle::GLI_Indent;
   LLVMStyle.IndentPPDirectives = FormatStyle::PPDIS_None;
   LLVMStyle.IndentRequiresClause = true;
   LLVMStyle.IndentWidth = 2;
