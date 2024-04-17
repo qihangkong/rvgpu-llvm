@@ -28,6 +28,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/Transforms/Utils/Cloning.h"
 
 // Force linking some of the runtimes that helps attaching to a debugger.
 LLVM_ATTRIBUTE_USED void linkComponents() {
@@ -73,7 +74,15 @@ llvm::Error IncrementalExecutor::addModule(PartialTranslationUnit &PTU) {
       Jit->getMainJITDylib().createResourceTracker();
   ResourceTrackers[&PTU] = RT;
 
-  return Jit->addIRModule(RT, {std::move(PTU.TheModule), TSCtx});
+  // Clang's CodeGen is designed to work with a single llvm::Module. In many
+  // cases for convenience various CodeGen parts have a reference to the
+  // llvm::Module (TheModule or Module) which does not change when a new module
+  // is pushed. However, the execution engine wants to take ownership of the
+  // module which does not map well to CodeGen's design. To work this around
+  // we clone the module and pass it down.
+  std::unique_ptr<llvm::Module> ModuleClone = llvm::CloneModule(*PTU.TheModule);
+
+  return Jit->addIRModule(RT, {std::move(ModuleClone), TSCtx});
 }
 
 llvm::Error IncrementalExecutor::removeModule(PartialTranslationUnit &PTU) {
