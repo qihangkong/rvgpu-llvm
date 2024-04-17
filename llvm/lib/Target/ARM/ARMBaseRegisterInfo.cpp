@@ -213,9 +213,9 @@ getReservedRegs(const MachineFunction &MF) const {
     markSuperRegs(Reserved, BasePtr);
 
   // Some targets reserve R4, R5 or R9.
-  if (STI.isReserveR4()) 
+  if (STI.isR4Reserved()) 
     markSuperRegs(Reserved, ARM::R4);
-  if (STI.isReserveR5()) 
+  if (STI.isR5Reserved()) 
     markSuperRegs(Reserved, ARM::R5);
   if (STI.isR9Reserved())
     markSuperRegs(Reserved, ARM::R9);
