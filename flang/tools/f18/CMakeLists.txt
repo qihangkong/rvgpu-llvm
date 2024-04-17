@@ -92,6 +92,7 @@ if (NOT CMAKE_CROSSCOMPILING)
 endif()
 
 add_custom_target(module_files ALL DEPENDS ${MODULE_FILES})
+set_target_properties(module_files PROPERTIES FOLDER "Flang/Resources")
 
 # This flang shell script will only work in a POSIX shell.
 if (NOT WIN32)
