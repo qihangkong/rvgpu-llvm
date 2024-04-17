@@ -35,6 +35,28 @@ define <vscale x 1 x half> @vfmadd_vv_nxv1f16(<vscale x 1 x half> %va, <vscale x
   ret <vscale x 1 x half> %vd
 }
 
+define <vscale x 1 x half> @vfmadd_vv_nxv1f16_commuted(<vscale x 1 x half> %va, <vscale x 1 x half> %vb, <vscale x 1 x half> %vc) {
+; ZVFH-LABEL: vfmadd_vv_nxv1f16:
+; ZVFH:       # %bb.0:
+; ZVFH-NEXT:    vsetvli a0, zero, e16, mf4, ta, ma
+; ZVFH-NEXT:    vfmadd.vv v8, v9, v10
+; ZVFH-NEXT:    ret
+;
+; ZVFHMIN-LABEL: vfmadd_vv_nxv1f16:
+; ZVFHMIN:       # %bb.0:
+; ZVFHMIN-NEXT:    vsetvli a0, zero, e16, mf4, ta, ma
+; ZVFHMIN-NEXT:    vfwcvt.f.f.v v11, v10
+; ZVFHMIN-NEXT:    vfwcvt.f.f.v v10, v8
+; ZVFHMIN-NEXT:    vfwcvt.f.f.v v12, v9
+; ZVFHMIN-NEXT:    vsetvli zero, zero, e32, mf2, ta, ma
+; ZVFHMIN-NEXT:    vfmadd.vv v12, v10, v11
+; ZVFHMIN-NEXT:    vsetvli zero, zero, e16, mf4, ta, ma
+; ZVFHMIN-NEXT:    vfncvt.f.f.w v8, v12
+; ZVFHMIN-NEXT:    ret
+  %vd = call <vscale x 1 x half> @llvm.fma.v1f16(<vscale x 1 x half> %vb, <vscale x 1 x half> %vc, <vscale x 1 x half> %va)
+  ret <vscale x 1 x half> %vd
+}
+
 define <vscale x 1 x half> @vfmadd_vf_nxv1f16(<vscale x 1 x half> %va, <vscale x 1 x half> %vb, half %c) {
 ; ZVFH-LABEL: vfmadd_vf_nxv1f16:
 ; ZVFH:       # %bb.0:
