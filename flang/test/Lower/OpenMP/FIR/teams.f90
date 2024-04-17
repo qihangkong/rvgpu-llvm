@@ -1,6 +1,6 @@
 ! REQUIRES: openmp_runtime
 
-! RUN: %flang_fc1 -emit-fir -fopenmp %s -o - | FileCheck %s
+! RUN: %flang_fc1 -emit-fir -fopenmp %openmp_module_flag %s -o - | FileCheck %s
 
 ! CHECK-LABEL: func @_QPteams_simple
 subroutine teams_simple()
