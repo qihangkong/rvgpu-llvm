@@ -562,7 +562,6 @@ static Triple::ArchType parseArch(StringRef ArchName) {
                  "spirv32v1.3", "spirv32v1.4", "spirv32v1.5", Triple::spirv32)
           .Cases("spirv64", "spirv64v1.0", "spirv64v1.1", "spirv64v1.2",
                  "spirv64v1.3", "spirv64v1.4", "spirv64v1.5", Triple::spirv64)
-          .StartsWith("dxil", Triple::dxil)
           .StartsWith("kalimba", Triple::kalimba)
           .Case("lanai", Triple::lanai)
           .Case("renderscript32", Triple::renderscript32)
@@ -574,7 +573,7 @@ static Triple::ArchType parseArch(StringRef ArchName) {
           .Case("csky", Triple::csky)
           .Case("loongarch32", Triple::loongarch32)
           .Case("loongarch64", Triple::loongarch64)
-          .Case("dxil", Triple::dxil)
+          .StartsWith("dxil", Triple::dxil)
           .Case("xtensa", Triple::xtensa)
           .Default(Triple::UnknownArch);
 
