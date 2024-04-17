@@ -1327,7 +1327,7 @@ SystemZTTIImpl::getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
 // Asserts that the operand indicated is actually a vector.
 FixedVectorType *getOperandVectorType(const IntrinsicInst *II, unsigned Index) {
   auto *T = II->getOperand(Index)->getType();
-  assert (T->isVectorTy());
+  assert(T->isVectorTy());
   return cast<FixedVectorType>(T);
 }
 
