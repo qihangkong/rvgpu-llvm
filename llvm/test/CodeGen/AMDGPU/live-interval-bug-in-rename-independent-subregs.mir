@@ -3510,34 +3510,34 @@ body:             |
   ; GCN-NEXT:   renamable $vgpr1 = COPY renamable $sgpr14
   ; GCN-NEXT:   renamable $vgpr1_vgpr2_vgpr3_vgpr4 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr1, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
   ; GCN-NEXT:   renamable $vgpr5 = V_MBCNT_LO_U32_B32_e64 -1, 0, implicit $exec
-  ; GCN-NEXT:   renamable $vgpr16 = V_MBCNT_HI_U32_B32_e64 -1, killed $vgpr5, implicit $exec
+  ; GCN-NEXT:   renamable $vgpr17 = V_MBCNT_HI_U32_B32_e64 -1, killed $vgpr5, implicit $exec
   ; GCN-NEXT:   renamable $sgpr14 = S_OR_B32 killed renamable $sgpr14, 16, implicit-def dead $scc
   ; GCN-NEXT:   renamable $vgpr5 = COPY killed renamable $sgpr14
-  ; GCN-NEXT:   renamable $vgpr6 = V_LSHLREV_B32_e64 5, $vgpr16, implicit $exec
-  ; GCN-NEXT:   renamable $vgpr12_vgpr13_vgpr14_vgpr15 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr5, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; GCN-NEXT:   renamable $vgpr6 = V_LSHLREV_B32_e64 5, $vgpr17, implicit $exec
+  ; GCN-NEXT:   renamable $vgpr13_vgpr14_vgpr15_vgpr16 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr5, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
   ; GCN-NEXT:   renamable $vgpr5 = V_OR_B32_e64 16, $vgpr6, implicit $exec
   ; GCN-NEXT:   renamable $sgpr14 = V_READFIRSTLANE_B32 $vgpr1, implicit $exec
-  ; GCN-NEXT:   renamable $vgpr8_vgpr9_vgpr10_vgpr11 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr6, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; GCN-NEXT:   renamable $vgpr9_vgpr10_vgpr11_vgpr12 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr6, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
   ; GCN-NEXT:   renamable $sgpr15 = V_READFIRSTLANE_B32 $vgpr2, implicit $exec
   ; GCN-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr3, implicit $exec
   ; GCN-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 killed $vgpr4, implicit $exec
-  ; GCN-NEXT:   renamable $vgpr4_vgpr5_vgpr6_vgpr7 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr5, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
-  ; GCN-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr12, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 $vgpr13, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr14, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 killed $vgpr15, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr24 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr25 = V_READFIRSTLANE_B32 $vgpr11, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr26 = V_READFIRSTLANE_B32 $vgpr4, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr27 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
-  ; GCN-NEXT:   renamable $vgpr1 = COPY renamable $vgpr7
+  ; GCN-NEXT:   renamable $vgpr5_vgpr6_vgpr7_vgpr8 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr5, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; GCN-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr13, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 $vgpr14, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr15, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 killed $vgpr16, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr24 = V_READFIRSTLANE_B32 $vgpr11, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr25 = V_READFIRSTLANE_B32 $vgpr12, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr26 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr27 = V_READFIRSTLANE_B32 $vgpr6, implicit $exec
+  ; GCN-NEXT:   renamable $vgpr13 = COPY renamable $vgpr8
   ; GCN-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr14_sgpr15, killed renamable $sgpr22_sgpr23, implicit-def $scc
-  ; GCN-NEXT:   renamable $sgpr14 = V_READFIRSTLANE_B32 $vgpr6, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr14 = V_READFIRSTLANE_B32 $vgpr7, implicit $exec
   ; GCN-NEXT:   renamable $sgpr22 = S_CSELECT_B32 1, 0, implicit $scc
   ; GCN-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr16_sgpr17, killed renamable $sgpr24_sgpr25, implicit-def $scc
-  ; GCN-NEXT:   renamable $sgpr15 = V_READFIRSTLANE_B32 $vgpr1, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr15 = V_READFIRSTLANE_B32 $vgpr13, implicit $exec
   ; GCN-NEXT:   renamable $sgpr16 = S_CSELECT_B32 1, 0, implicit $scc
   ; GCN-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr18_sgpr19, killed renamable $sgpr26_sgpr27, implicit-def $scc
   ; GCN-NEXT:   renamable $sgpr17 = S_CSELECT_B32 1, 0, implicit $scc
@@ -3546,12 +3546,12 @@ body:             |
   ; GCN-NEXT:   renamable $sgpr15 = S_AND_B32 killed renamable $sgpr22, killed renamable $sgpr16, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_AND_B32 killed renamable $sgpr17, killed renamable $sgpr15, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr14, killed renamable $sgpr15, implicit-def dead $scc
-  ; GCN-NEXT:   renamable $vcc = V_CMP_NE_U32_e64 $sgpr7, killed $vgpr16, implicit $exec
+  ; GCN-NEXT:   renamable $vcc = V_CMP_NE_U32_e64 $sgpr7, killed $vgpr17, implicit $exec
   ; GCN-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr14, 1, implicit-def dead $scc
   ; GCN-NEXT:   $scc = COPY killed renamable $sgpr14
   ; GCN-NEXT:   renamable $sgpr33 = S_CSELECT_B32 1, 0, implicit $scc
   ; GCN-NEXT:   renamable $sgpr12_sgpr13 = S_XOR_B64 killed renamable $vcc, killed renamable $sgpr12_sgpr13, implicit-def dead $scc
-  ; GCN-NEXT:   renamable $vgpr3 = IMPLICIT_DEF
+  ; GCN-NEXT:   renamable $vgpr15 = IMPLICIT_DEF
   ; GCN-NEXT:   renamable $sgpr14_sgpr15 = COPY $exec, implicit-def $exec
   ; GCN-NEXT:   renamable $sgpr16_sgpr17 = S_AND_B64 renamable $sgpr14_sgpr15, killed renamable $sgpr12_sgpr13, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr12_sgpr13 = S_XOR_B64 renamable $sgpr16_sgpr17, killed renamable $sgpr14_sgpr15, implicit-def dead $scc
@@ -3561,7 +3561,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.40.Flow73:
   ; GCN-NEXT:   successors: %bb.41(0x40000000), %bb.42(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $vgpr0, $vgpr3, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $vgpr0, $vgpr15, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr12_sgpr13 = S_OR_SAVEEXEC_B64 killed renamable $sgpr12_sgpr13, implicit-def $exec, implicit-def $scc, implicit $exec
   ; GCN-NEXT:   $exec = S_XOR_B64_term $exec, renamable $sgpr12_sgpr13, implicit-def $scc
@@ -3570,7 +3570,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.41 (%ir-block.195):
   ; GCN-NEXT:   successors: %bb.43(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr28_sgpr29 = S_MOV_B64_IMM_PSEUDO 3
   ; GCN-NEXT:   renamable $sgpr22_sgpr23 = S_AND_B64 $exec, $exec, implicit-def dead $scc
@@ -3578,14 +3578,14 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.42.Flow74:
   ; GCN-NEXT:   successors: %bb.83(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr3, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr15, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   $exec = S_OR_B64 $exec, killed renamable $sgpr12_sgpr13, implicit-def $scc
   ; GCN-NEXT:   S_BRANCH %bb.83
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.43 (%ir-block.198):
   ; GCN-NEXT:   successors: %bb.44(0x30000000), %bb.45(0x50000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr22_sgpr23, $sgpr28_sgpr29:0x000000000000000F, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr22_sgpr23, $sgpr28_sgpr29:0x000000000000000F, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr14_sgpr15 = COPY killed renamable $sgpr28_sgpr29
   ; GCN-NEXT:   renamable $sgpr28_sgpr29 = IMPLICIT_DEF
@@ -3616,7 +3616,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.44 (%ir-block.202):
   ; GCN-NEXT:   successors: %bb.46(0x30000000), %bb.47(0x50000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr22_sgpr23, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr22_sgpr23, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr16 = S_ADD_U32 renamable $sgpr14, -2, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr36 = S_MOV_B32 0
@@ -3645,7 +3645,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.45.Flow65:
   ; GCN-NEXT:   successors: %bb.94(0x04000000), %bb.43(0x7c000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_AND_B32 killed renamable $sgpr17, 1, implicit-def dead $scc
   ; GCN-NEXT:   $scc = COPY killed renamable $sgpr15
@@ -3654,7 +3654,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.46 (%ir-block.223):
   ; GCN-NEXT:   successors: %bb.48(0x30000000), %bb.49(0x50000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr36, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr22_sgpr23, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr36, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr22_sgpr23, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr18 = S_ADD_U32 renamable $sgpr14, -1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr35 = S_MOV_B32 0
@@ -3681,13 +3681,13 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.47.Flow66:
   ; GCN-NEXT:   successors: %bb.45(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   S_BRANCH %bb.45
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.48 (%ir-block.242):
   ; GCN-NEXT:   successors: %bb.50(0x30000000), %bb.51(0x50000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr22_sgpr23, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr22_sgpr23, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr20_sgpr21 = nuw S_LSHL_B64 1, renamable $sgpr14, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr37 = S_MOV_B32 0
@@ -3712,13 +3712,13 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.49.Flow67:
   ; GCN-NEXT:   successors: %bb.47(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   S_BRANCH %bb.47
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.50 (%ir-block.258):
   ; GCN-NEXT:   successors: %bb.52(0x30000000), %bb.53(0x50000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr22_sgpr23, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr22_sgpr23, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr20 = S_ADD_U32 renamable $sgpr14, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr24_sgpr25 = nuw S_LSHL_B64 1, renamable $sgpr20, implicit-def dead $scc
@@ -3742,13 +3742,13 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.51.Flow68:
   ; GCN-NEXT:   successors: %bb.49(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   S_BRANCH %bb.49
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.52 (%ir-block.274):
   ; GCN-NEXT:   successors: %bb.54(0x30000000), %bb.55(0x50000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr39, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr39, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr24 = S_ADD_U32 renamable $sgpr14, 2, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr26_sgpr27 = nuw S_LSHL_B64 1, renamable $sgpr24, implicit-def dead $scc
@@ -3770,13 +3770,13 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.53.Flow69:
   ; GCN-NEXT:   successors: %bb.51(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   S_BRANCH %bb.51
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.54 (%ir-block.288):
   ; GCN-NEXT:   successors: %bb.56(0x30000000), %bb.57(0x50000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr39, $sgpr40, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr39, $sgpr40, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr26 = S_ADD_U32 renamable $sgpr14, 3, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr28_sgpr29 = nuw S_LSHL_B64 1, renamable $sgpr26, implicit-def dead $scc
@@ -3796,13 +3796,13 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.55.Flow70:
   ; GCN-NEXT:   successors: %bb.53(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   S_BRANCH %bb.53
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.56 (%ir-block.300):
   ; GCN-NEXT:   successors: %bb.58(0x30000000), %bb.93(0x50000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr39, $sgpr40, $sgpr41, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr39, $sgpr40, $sgpr41, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr30 = S_ADD_U32 renamable $sgpr14, 4, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr28_sgpr29 = nuw S_LSHL_B64 1, renamable $sgpr30, implicit-def dead $scc
@@ -3819,13 +3819,13 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.57.Flow71:
   ; GCN-NEXT:   successors: %bb.55(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   S_BRANCH %bb.55
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.58 (%ir-block.310):
   ; GCN-NEXT:   successors: %bb.93(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr39, $sgpr40, $sgpr41, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr39, $sgpr40, $sgpr41, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x000000000000000F, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr28 = S_ADD_U32 renamable $sgpr14, 8, implicit-def $scc
   ; GCN-NEXT:   renamable $sgpr17 = COPY $scc
@@ -3839,7 +3839,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.59.Flow62:
   ; GCN-NEXT:   successors: %bb.60(0x40000000), %bb.80(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr14 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr14, 1, implicit-def dead $scc
@@ -3849,14 +3849,14 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.60..splitsplitsplitsplitsplitsplitsplit_crit_edge:
   ; GCN-NEXT:   successors: %bb.80(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr7 = COPY killed renamable $sgpr16
   ; GCN-NEXT:   S_BRANCH %bb.80
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.61.Flow60:
   ; GCN-NEXT:   successors: %bb.62(0x40000000), %bb.79(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr14 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr14, 1, implicit-def dead $scc
@@ -3866,14 +3866,14 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.62..splitsplitsplitsplitsplitsplit_crit_edge:
   ; GCN-NEXT:   successors: %bb.79(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr7 = COPY killed renamable $sgpr18
   ; GCN-NEXT:   S_BRANCH %bb.79
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.63.Flow58:
   ; GCN-NEXT:   successors: %bb.64(0x40000000), %bb.78(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_AND_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -3883,14 +3883,14 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.64..splitsplitsplitsplitsplit_crit_edge:
   ; GCN-NEXT:   successors: %bb.78(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr7 = COPY killed renamable $sgpr14
   ; GCN-NEXT:   S_BRANCH %bb.78
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.65.Flow56:
   ; GCN-NEXT:   successors: %bb.66(0x40000000), %bb.77(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_AND_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -3900,14 +3900,14 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.66..splitsplitsplitsplit_crit_edge:
   ; GCN-NEXT:   successors: %bb.77(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr7 = COPY killed renamable $sgpr20
   ; GCN-NEXT:   S_BRANCH %bb.77
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.67.Flow54:
   ; GCN-NEXT:   successors: %bb.68(0x40000000), %bb.76(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_AND_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -3917,14 +3917,14 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.68..splitsplitsplit_crit_edge:
   ; GCN-NEXT:   successors: %bb.76(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr7 = COPY killed renamable $sgpr24
   ; GCN-NEXT:   S_BRANCH %bb.76
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.69.Flow52:
   ; GCN-NEXT:   successors: %bb.70(0x40000000), %bb.75(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_AND_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -3934,21 +3934,21 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.70..splitsplit_crit_edge:
   ; GCN-NEXT:   successors: %bb.75(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr7 = COPY killed renamable $sgpr26
   ; GCN-NEXT:   S_BRANCH %bb.75
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.71..split_crit_edge:
   ; GCN-NEXT:   successors: %bb.74(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr7 = COPY killed renamable $sgpr30
   ; GCN-NEXT:   S_BRANCH %bb.74
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.72.Flow64:
   ; GCN-NEXT:   successors: %bb.73(0x40000000), %bb.81(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr15, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr14 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr14 = S_AND_B32 killed renamable $sgpr14, 1, implicit-def dead $scc
@@ -3958,89 +3958,89 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.73.._crit_edge:
   ; GCN-NEXT:   successors: %bb.81(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr7 = COPY killed renamable $sgpr34
   ; GCN-NEXT:   S_BRANCH %bb.81
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.74.Flow:
   ; GCN-NEXT:   successors: %bb.69(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_MOV_B32 0
   ; GCN-NEXT:   S_BRANCH %bb.69
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.75.Flow53:
   ; GCN-NEXT:   successors: %bb.67(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_MOV_B32 0
   ; GCN-NEXT:   S_BRANCH %bb.67
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.76.Flow55:
   ; GCN-NEXT:   successors: %bb.65(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_MOV_B32 0
   ; GCN-NEXT:   S_BRANCH %bb.65
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.77.Flow57:
   ; GCN-NEXT:   successors: %bb.63(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_MOV_B32 0
   ; GCN-NEXT:   S_BRANCH %bb.63
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.78.Flow59:
   ; GCN-NEXT:   successors: %bb.61(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_MOV_B32 0
   ; GCN-NEXT:   S_BRANCH %bb.61
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.79.Flow61:
   ; GCN-NEXT:   successors: %bb.59(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr16_sgpr17:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_MOV_B32 0
   ; GCN-NEXT:   S_BRANCH %bb.59
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.80.Flow63:
   ; GCN-NEXT:   successors: %bb.72(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_MOV_B32 0
   ; GCN-NEXT:   S_BRANCH %bb.72
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.81 (%ir-block.332):
   ; GCN-NEXT:   successors: %bb.42(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr7 = S_LSHL_B32 killed renamable $sgpr7, 5, implicit-def dead $scc
-  ; GCN-NEXT:   renamable $vgpr2 = COPY renamable $sgpr7
+  ; GCN-NEXT:   renamable $vgpr1 = COPY renamable $sgpr7
   ; GCN-NEXT:   renamable $sgpr7 = S_OR_B32 killed renamable $sgpr7, 16, implicit-def dead $scc
-  ; GCN-NEXT:   renamable $sgpr14 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
-  ; GCN-NEXT:   renamable $vgpr3 = COPY killed renamable $sgpr7
-  ; GCN-NEXT:   renamable $vgpr12_vgpr13_vgpr14_vgpr15 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr2, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
-  ; GCN-NEXT:   renamable $sgpr15 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 killed $vgpr11, implicit $exec
-  ; GCN-NEXT:   renamable $vgpr7_vgpr8_vgpr9_vgpr10 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr3, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
-  ; GCN-NEXT:   renamable $sgpr0 = V_READFIRSTLANE_B32 $vgpr4, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr1 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr2 = V_READFIRSTLANE_B32 killed $vgpr6, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr3 = V_READFIRSTLANE_B32 killed $vgpr1, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr12, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 $vgpr13, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr14, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 killed $vgpr15, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr7, implicit $exec
-  ; GCN-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
-  ; GCN-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr18_sgpr19, killed renamable $sgpr14_sgpr15, implicit-def $scc
   ; GCN-NEXT:   renamable $sgpr14 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
+  ; GCN-NEXT:   renamable $vgpr8 = COPY killed renamable $sgpr7
+  ; GCN-NEXT:   renamable $vgpr1_vgpr2_vgpr3_vgpr4 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr1, renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; GCN-NEXT:   renamable $sgpr15 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr16 = V_READFIRSTLANE_B32 $vgpr11, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr17 = V_READFIRSTLANE_B32 killed $vgpr12, implicit $exec
+  ; GCN-NEXT:   renamable $vgpr8_vgpr9_vgpr10_vgpr11 = BUFFER_LOAD_DWORDX4_OFFEN killed renamable $vgpr8, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable load (<4 x s32>), align 1, addrspace 8)
+  ; GCN-NEXT:   renamable $sgpr0 = V_READFIRSTLANE_B32 $vgpr5, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr1 = V_READFIRSTLANE_B32 $vgpr6, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr2 = V_READFIRSTLANE_B32 killed $vgpr7, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr3 = V_READFIRSTLANE_B32 killed $vgpr13, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr18 = V_READFIRSTLANE_B32 $vgpr1, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr19 = V_READFIRSTLANE_B32 $vgpr2, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr20 = V_READFIRSTLANE_B32 $vgpr3, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr21 = V_READFIRSTLANE_B32 killed $vgpr4, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr22 = V_READFIRSTLANE_B32 $vgpr8, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr23 = V_READFIRSTLANE_B32 $vgpr9, implicit $exec
+  ; GCN-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr18_sgpr19, killed renamable $sgpr14_sgpr15, implicit-def $scc
+  ; GCN-NEXT:   renamable $sgpr14 = V_READFIRSTLANE_B32 $vgpr10, implicit $exec
   ; GCN-NEXT:   renamable $sgpr7 = S_CSELECT_B32 1, 0, implicit $scc
   ; GCN-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr20_sgpr21, killed renamable $sgpr16_sgpr17, implicit-def $scc
-  ; GCN-NEXT:   renamable $sgpr15 = V_READFIRSTLANE_B32 killed $vgpr10, implicit $exec
+  ; GCN-NEXT:   renamable $sgpr15 = V_READFIRSTLANE_B32 killed $vgpr11, implicit $exec
   ; GCN-NEXT:   renamable $sgpr16 = S_CSELECT_B32 1, 0, implicit $scc
   ; GCN-NEXT:   S_CMP_EQ_U64 killed renamable $sgpr22_sgpr23, killed renamable $sgpr0_sgpr1, implicit-def $scc
   ; GCN-NEXT:   renamable $sgpr0 = S_CSELECT_B32 1, 0, implicit $scc
@@ -4054,7 +4054,7 @@ body:             |
   ; GCN-NEXT:   renamable $sgpr0 = S_CSELECT_B32 1, 0, implicit $scc
   ; GCN-NEXT:   renamable $sgpr0 = S_LSHL_B32 killed renamable $sgpr0, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr0 = S_OR_B32 killed renamable $sgpr0, killed renamable $sgpr33, implicit-def dead $scc
-  ; GCN-NEXT:   renamable $vgpr3 = COPY killed renamable $sgpr0
+  ; GCN-NEXT:   renamable $vgpr15 = COPY killed renamable $sgpr0
   ; GCN-NEXT:   S_BRANCH %bb.42
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.82 (%ir-block.363):
@@ -4062,14 +4062,14 @@ body:             |
   ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr0_sgpr1_sgpr2_sgpr3
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr14 = S_OR_B32 renamable $sgpr33, 2, implicit-def dead $scc
-  ; GCN-NEXT:   renamable $vgpr3 = COPY killed renamable $sgpr14
-  ; GCN-NEXT:   renamable $vgpr8_vgpr9 = IMPLICIT_DEF
-  ; GCN-NEXT:   renamable $vgpr1_vgpr2 = IMPLICIT_DEF
-  ; GCN-NEXT:   renamable $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7 = IMPLICIT_DEF
+  ; GCN-NEXT:   renamable $vgpr15 = COPY killed renamable $sgpr14
+  ; GCN-NEXT:   renamable $vgpr9_vgpr10 = IMPLICIT_DEF
+  ; GCN-NEXT:   renamable $vgpr13_vgpr14 = IMPLICIT_DEF
+  ; GCN-NEXT:   renamable $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8 = IMPLICIT_DEF
   ; GCN-NEXT:   S_BRANCH %bb.40
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.83 (%ir-block.365):
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr3, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $vgpr0, $vgpr15, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr8_sgpr9 = S_LOAD_DWORDX2_IMM killed renamable $sgpr8_sgpr9, 0, 0 :: (invariant load (<2 x s32>) from %ir.numWorkgroupsPtr, align 16, addrspace 4)
   ; GCN-NEXT:   renamable $vgpr1 = COPY killed renamable $sgpr5
@@ -4080,7 +4080,7 @@ body:             |
   ; GCN-NEXT:   renamable $sgpr4 = S_LSHL_B32 killed renamable $sgpr4, 6, implicit-def dead $scc
   ; GCN-NEXT:   renamable $vgpr0 = V_ADD_U32_e64 killed $sgpr4, killed $vgpr0, 0, implicit $exec
   ; GCN-NEXT:   renamable $vgpr0 = V_ADD_LSHL_U32_e64 killed $vgpr1, killed $vgpr0, 2, implicit $exec
-  ; GCN-NEXT:   BUFFER_STORE_DWORD_OFFEN_exact killed renamable $vgpr3, killed renamable $vgpr0, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable store (s32), align 1, addrspace 8)
+  ; GCN-NEXT:   BUFFER_STORE_DWORD_OFFEN_exact killed renamable $vgpr15, killed renamable $vgpr0, killed renamable $sgpr0_sgpr1_sgpr2_sgpr3, 0, 0, 0, 0, implicit $exec :: (dereferenceable store (s32), align 1, addrspace 8)
   ; GCN-NEXT:   S_ENDPGM 0
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.84.Flow96:
@@ -4185,14 +4185,14 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.93.Flow72:
   ; GCN-NEXT:   successors: %bb.57(0x80000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr17, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr22_sgpr23, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr28_sgpr29:0x000000000000000F, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr42 = S_MOV_B32 0
   ; GCN-NEXT:   S_BRANCH %bb.57
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.94.loop.exit.guard37:
   ; GCN-NEXT:   successors: %bb.95(0x40000000), %bb.72(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr36, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr36, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -4204,7 +4204,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.95.loop.exit.guard38:
   ; GCN-NEXT:   successors: %bb.96(0x40000000), %bb.59(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr35, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr35, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -4216,7 +4216,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.96.loop.exit.guard39:
   ; GCN-NEXT:   successors: %bb.97(0x40000000), %bb.61(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr37, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr37, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -4228,7 +4228,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.97.loop.exit.guard40:
   ; GCN-NEXT:   successors: %bb.98(0x40000000), %bb.63(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr38, $sgpr39, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr39, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -4240,7 +4240,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.98.loop.exit.guard41:
   ; GCN-NEXT:   successors: %bb.99(0x40000000), %bb.65(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr38, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr38, $sgpr40, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr40, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -4252,7 +4252,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.99.loop.exit.guard42:
   ; GCN-NEXT:   successors: %bb.100(0x40000000), %bb.67(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr38, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr38, $sgpr41, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr41, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -4264,7 +4264,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.100.loop.exit.guard43:
   ; GCN-NEXT:   successors: %bb.101(0x40000000), %bb.69(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr38, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr38, $sgpr42, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr42, 1, implicit-def dead $scc
   ; GCN-NEXT:   renamable $sgpr15 = S_XOR_B32 killed renamable $sgpr15, 1, implicit-def dead $scc
@@ -4276,7 +4276,7 @@ body:             |
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT: bb.101.loop.exit.guard44:
   ; GCN-NEXT:   successors: %bb.71(0x40000000), %bb.74(0x40000000)
-  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr38, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr1_vgpr2:0x0000000000000003, $vgpr8_vgpr9_vgpr10_vgpr11:0x00000000000000FF, $vgpr0_vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7:0x0000000000003F00
+  ; GCN-NEXT:   liveins: $sgpr4, $sgpr5, $sgpr6, $sgpr7, $sgpr33, $sgpr34, $sgpr38, $vgpr0, $sgpr8_sgpr9:0x000000000000000F, $sgpr10_sgpr11, $sgpr12_sgpr13, $sgpr14_sgpr15:0x0000000000000003, $sgpr16_sgpr17:0x0000000000000003, $sgpr18_sgpr19:0x0000000000000003, $sgpr20_sgpr21:0x0000000000000003, $sgpr24_sgpr25:0x0000000000000003, $sgpr26_sgpr27:0x0000000000000003, $sgpr30_sgpr31:0x0000000000000003, $sgpr0_sgpr1_sgpr2_sgpr3, $vgpr13_vgpr14:0x0000000000000003, $vgpr9_vgpr10_vgpr11_vgpr12:0x00000000000000FF, $vgpr1_vgpr2_vgpr3_vgpr4_vgpr5_vgpr6_vgpr7_vgpr8:0x0000000000003F00
   ; GCN-NEXT: {{  $}}
   ; GCN-NEXT:   renamable $sgpr15 = S_AND_B32 killed renamable $sgpr38, 1, implicit-def dead $scc
   ; GCN-NEXT:   $scc = COPY killed renamable $sgpr15
