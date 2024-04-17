@@ -5553,7 +5553,7 @@ ExprResult Sema::BuildTemplateIdExpr(const CXXScopeSpec &SS,
         R.getRepresentativeDecl(), TemplateKWLoc, TemplateArgs);
     if (Res.isInvalid() || Res.isUsable())
       return Res;
-    // Result is dependent. Carry on to build an UnresolvedLookupEpxr.
+    // Result is dependent. Carry on to build an UnresolvedLookupExpr.
     KnownDependent = true;
   }
 
@@ -5570,6 +5570,10 @@ ExprResult Sema::BuildTemplateIdExpr(const CXXScopeSpec &SS,
       Context, R.getNamingClass(), SS.getWithLocInContext(Context),
       TemplateKWLoc, R.getLookupNameInfo(), RequiresADL, TemplateArgs,
       R.begin(), R.end(), KnownDependent);
+
+  if (ULE->getType() == Context.OverloadTy && R.isSingleResult() &&
+      !R.getFoundDecl()->getAsFunction())
+    ULE->setType(Context.UnresolvedTemplateTy);
 
   return ULE;
 }
@@ -5609,8 +5613,9 @@ Sema::BuildQualifiedTemplateIdExpr(CXXScopeSpec &SS,
     Diag(NameInfo.getLoc(), diag::err_template_kw_refers_to_type_template)
         << SS.getScopeRep() << NameInfo.getName().getAsString() << SS.getRange()
         << isTypeAliasTemplateDecl;
-    Diag(Temp->getLocation(), diag::note_referenced_type_template) << 0;
-    return ExprError();
+    Diag(Temp->getLocation(), diag::note_referenced_type_template)
+        << isTypeAliasTemplateDecl;
+    return CreateRecoveryExpr(NameInfo.getBeginLoc(), NameInfo.getEndLoc(), {});
   };
 
   if (ClassTemplateDecl *Temp = R.getAsSingle<ClassTemplateDecl>())
