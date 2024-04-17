@@ -26,16 +26,28 @@
 #include "test_macros.h"
 #include "../types.h"
 
+class Data {
+public:
+  Data()  = default;
+  ~Data() = default;
+
+  char* getDummyData() { return this->dummy_data_; }
+
+  std::size_t getDummyDataSize() { return sizeof(this->dummy_data_); }
+
+private:
+  alignas(OverAligned) char dummy_data_[alignof(OverAligned)];
+};
+
 int new_nothrow_called = 0;
 int delete_called = 0;
-
-alignas(OverAligned) char DummyData[alignof(OverAligned)];
+Data data_class;
 
 void* operator new(std::size_t s, std::align_val_t a, std::nothrow_t const&) noexcept {
-    assert(s <= sizeof(DummyData));
-    assert(static_cast<std::size_t>(a) == alignof(OverAligned));
-    ++new_nothrow_called;
-    return DummyData;
+  assert(s <= data_class.getDummyDataSize());
+  assert(static_cast<std::size_t>(a) == alignof(OverAligned));
+  ++new_nothrow_called;
+  return data_class.getDummyData();
 }
 
 void operator delete(void*, std::align_val_t) noexcept {
@@ -48,7 +60,7 @@ int main(int, char**) {
     {
         new_nothrow_called = delete_called = 0;
         OverAligned* x = new (std::nothrow) OverAligned;
-        assert(static_cast<void*>(x) == DummyData);
+        assert(static_cast<void*>(x) == data_class.getDummyData());
         ASSERT_WITH_OPERATOR_NEW_FALLBACKS(new_nothrow_called == 1);
 
         delete x;
