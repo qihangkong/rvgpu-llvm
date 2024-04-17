@@ -13,7 +13,9 @@
 #include "llvm/IR/Instruction.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/IR/AttributeMask.h"
+#include "llvm/IR/Attributes.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
@@ -450,6 +452,10 @@ void Instruction::dropPoisonGeneratingFlags() {
     cast<TruncInst>(this)->setHasNoUnsignedWrap(false);
     cast<TruncInst>(this)->setHasNoSignedWrap(false);
     break;
+
+  case Instruction::Call:
+  case Instruction::Invoke:
+    cast<CallBase>(this)->removeRetAttr(Attribute::Range);
   }
 
   if (isa<FPMathOperator>(this)) {

@@ -11,8 +11,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/IR/Operator.h"
+#include "llvm/IR/Attributes.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/GetElementPtrTypeIterator.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instructions.h"
 
 #include "ConstantsContext.h"
@@ -49,6 +51,9 @@ bool Operator::hasPoisonGeneratingFlags() const {
     if (auto *NNI = dyn_cast<PossiblyNonNegInst>(this))
       return NNI->hasNonNeg();
     return false;
+  case Instruction::Call:
+  case Instruction::Invoke:
+    return cast<CallBase>(this)->hasRetAttr(Attribute::Range);
   default:
     if (const auto *FP = dyn_cast<FPMathOperator>(this))
       return FP->hasNoNaNs() || FP->hasNoInfs();
