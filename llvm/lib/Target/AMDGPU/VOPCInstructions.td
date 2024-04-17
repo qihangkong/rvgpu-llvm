@@ -1386,27 +1386,32 @@ multiclass VOPC_Real_Base<GFXGen Gen, bits<9> op> {
 
 multiclass VOPC_Real_with_name<GFXGen Gen, bits<9> op, string OpName,
                                string asm_name, string pseudo_mnemonic = ""> {
-  let AssemblerPredicate = Gen.AssemblerPredicate, DecoderNamespace = Gen.DecoderNamespace in {
-    defvar ps32 = !cast<VOPC_Pseudo>(OpName#"_e32");
-    defvar ps64 = !cast<VOP3_Pseudo>(OpName#"_e64");
+  defvar ps32 = !cast<VOPC_Pseudo>(OpName#"_e32");
+  defvar ps64 = !cast<VOP3_Pseudo>(OpName#"_e64");
+  let AssemblerPredicate = Gen.AssemblerPredicate in {
+    // MnemonicAlias and GCNPredicateControl both define the field Predicates,
+    // so GCNPredicateControl must come after MnemonicAlias because it contains
+    // the predicates we actually want.
+    def : MnemonicAlias<!if(!empty(pseudo_mnemonic), ps32.Mnemonic,
+                                                     pseudo_mnemonic),
+                        asm_name, ps32.AsmVariantName>,
+          GCNPredicateControl;
+    def : MnemonicAlias<!if(!empty(pseudo_mnemonic), ps64.Mnemonic,
+                                                     pseudo_mnemonic),
+                        asm_name, ps64.AsmVariantName>,
+          GCNPredicateControl;
+
+    let DecoderNamespace = Gen.DecoderNamespace in {
     def _e32#Gen.Suffix :
       // 32 and 64 bit forms of the instruction have _e32 and _e64
       // respectively appended to their assembly mnemonic.
       // _e64 is printed as part of the VOPDstS64orS32 operand, whereas
       // the destination-less 32bit forms add it to the asmString here.
       VOPC_Real<ps32, Gen.Subtarget, asm_name#"_e32">,
-      VOPCe<op{7-0}>,
-      MnemonicAlias<!if(!empty(pseudo_mnemonic), ps32.Mnemonic,
-                        pseudo_mnemonic),
-                    asm_name, ps32.AsmVariantName>,
-      Requires<[Gen.AssemblerPredicate]>;
+      VOPCe<op{7-0}>;
     def _e64#Gen.Suffix :
-          VOP3_Real<ps64, Gen.Subtarget, asm_name>,
-          VOP3a_gfx11_gfx12<{0, op}, ps64.Pfl>,
-          MnemonicAlias<!if(!empty(pseudo_mnemonic), ps64.Mnemonic,
-                            pseudo_mnemonic),
-                        asm_name, ps64.AsmVariantName>,
-          Requires<[Gen.AssemblerPredicate]> {
+          VOP3_Real_Gen<ps64, Gen, asm_name>,
+          VOP3a_gfx11_gfx12<{0, op}, ps64.Pfl> {
       // Encoding used for VOPC instructions encoded as VOP3 differs from
       // VOP3e by destination name (sdst) as VOPC doesn't have vector dst.
       bits<8> sdst;
@@ -1453,8 +1458,9 @@ multiclass VOPC_Real_with_name<GFXGen Gen, bits<9> op, string OpName,
       def _e64_dpp#Gen.Suffix : VOPC64_DPP16_Dst<{0, op}, psDPP, asm_name>,
                                 SIMCInstr<psDPP.PseudoInstr, Gen.Subtarget>;
       def _e64_dpp8#Gen.Suffix : VOPC64_DPP8_Dst<{0, op}, ps64, asm_name>;
-    }
-  } // End AssemblerPredicate = Gen.AssemblerPredicate, DecoderNamespace = Gen.DecoderNamespace
+    } // end if ps64.Pfl.HasExtVOP3DPP
+    } // End DecoderNamespace
+  } // End AssemblerPredicate
 }
 
 multiclass VOPC_Real_t16<GFXGen Gen, bits<9> op, string asm_name,
@@ -1514,24 +1520,29 @@ multiclass VOPCX_Real<GFXGen Gen, bits<9> op> {
 
 multiclass VOPCX_Real_with_name<GFXGen Gen, bits<9> op, string OpName,
       string asm_name, string pseudo_mnemonic = ""> {
-  let AssemblerPredicate = Gen.AssemblerPredicate, DecoderNamespace = Gen.DecoderNamespace in {
-    defvar ps32 = !cast<VOPC_Pseudo>(OpName#"_nosdst_e32");
-    defvar ps64 = !cast<VOP3_Pseudo>(OpName#"_nosdst_e64");
+  defvar ps32 = !cast<VOPC_Pseudo>(OpName#"_nosdst_e32");
+  defvar ps64 = !cast<VOP3_Pseudo>(OpName#"_nosdst_e64");
+  let AssemblerPredicate = Gen.AssemblerPredicate in {
+    // MnemonicAlias and GCNPredicateControl both define the field Predicates,
+    // so GCNPredicateControl must come after MnemonicAlias because it contains
+    // the predicates we actually want.
+    def : MnemonicAlias<!if(!empty(pseudo_mnemonic), !subst("_nosdst", "", ps32.Mnemonic),
+                                                     pseudo_mnemonic),
+                        asm_name, ps32.AsmVariantName>,
+          GCNPredicateControl;
+    def : MnemonicAlias<!if(!empty(pseudo_mnemonic), !subst("_nosdst", "", ps64.Mnemonic),
+                                                     pseudo_mnemonic),
+                        asm_name, ps64.AsmVariantName>,
+          GCNPredicateControl;
+
+    let DecoderNamespace = Gen.DecoderNamespace in {
     def _e32#Gen.Suffix
         : VOPC_Real<ps32, Gen.Subtarget, asm_name>,
-          MnemonicAlias<!if(!empty(pseudo_mnemonic), !subst("_nosdst", "", ps32.Mnemonic),
-                            pseudo_mnemonic),
-                        asm_name, ps32.AsmVariantName>,
-          Requires<[Gen.AssemblerPredicate]>,
           VOPCe<op{7-0}> {
       let AsmString = asm_name # "{_e32} " # ps32.AsmOperands;
     }
     def _e64#Gen.Suffix
-        : VOP3_Real<ps64, Gen.Subtarget, asm_name>,
-          MnemonicAlias<!if(!empty(pseudo_mnemonic), !subst("_nosdst", "", ps64.Mnemonic),
-                            pseudo_mnemonic),
-                        asm_name, ps64.AsmVariantName>,
-          Requires<[Gen.AssemblerPredicate]>,
+        : VOP3_Real_Gen<ps64, Gen, asm_name>,
           VOP3a_gfx11_gfx12<{0, op}, ps64.Pfl> {
       let Inst{7-0} = ? ; // sdst
       let AsmString = asm_name # "{_e64} " # ps64.AsmOperands;
@@ -1557,8 +1568,9 @@ multiclass VOPCX_Real_with_name<GFXGen Gen, bits<9> op, string OpName,
       def _e64_dpp8#Gen.Suffix : VOPC64_DPP8_NoDst<{0, op}, ps64, asm_name> {
         let AsmString = asm_name # "{_e64_dpp} " # AsmDPP8;
       }
-    }
-  } // End AssemblerPredicate = Gen.AssemblerPredicate, DecoderNamespace = Gen.DecoderNamespace
+    } // End if ps64.Pfl.HasExtVOP3DPP
+    } // End DecoderNamespace
+  } // End AssemblerPredicate
 }
 
 multiclass VOPCX_Real_t16<GFXGen Gen, bits<9> op, string asm_name,
