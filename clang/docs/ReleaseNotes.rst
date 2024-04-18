@@ -427,6 +427,10 @@ Bug Fixes in This Version
 
 - Fixed an assertion failure on invalid InitListExpr in C89 mode (#GH88008).
 
+- Clang now allows the value of unroll count to be zero in ``#pragma GCC unroll`` and ``#pragma unroll``.
+  The values of 0 and 1 block any unrolling of the loop. This keeps the same behavior with GCC.
+  Fixes (`#88624 <https://github.com/llvm/llvm-project/issues/88624>`_).
+
 Bug Fixes to Compiler Builtins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
