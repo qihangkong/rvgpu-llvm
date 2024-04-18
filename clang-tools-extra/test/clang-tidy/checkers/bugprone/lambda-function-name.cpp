@@ -40,4 +40,14 @@ void Negatives() {
   [] { FUNC_MACRO_WITH_FILE_AND_LINE; }();
   [] { FUNCTION_MACRO_WITH_FILE_AND_LINE; }();
   [] { EMBED_IN_ANOTHER_MACRO2; }();
+
+  [] (const char* func = __func__) { func; }();
+  [func=__func__] { func; }();
+  [] {
+    struct S {
+      void f() {
+        __func__;
+      }
+    };
+  }();
 }
