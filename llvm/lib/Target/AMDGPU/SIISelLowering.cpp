@@ -16424,8 +16424,9 @@ void SITargetLowering::emitExpandAtomicRMW(AtomicRMWInst *AI) const {
   Builder.CreateBr(CheckSharedBB);
 
   Builder.SetInsertPoint(CheckSharedBB);
-  CallInst *IsShared = Builder.CreateIntrinsic(Intrinsic::amdgcn_is_shared, {},
-                                               {Addr}, nullptr, "is.shared");
+  CallInst *IsShared =
+      Builder.CreateIntrinsic(Builder.getInt1Ty(), Intrinsic::amdgcn_is_shared,
+                              {Addr}, nullptr, "is.shared");
   Builder.CreateCondBr(IsShared, SharedBB, CheckPrivateBB);
 
   Builder.SetInsertPoint(SharedBB);
@@ -16435,8 +16436,9 @@ void SITargetLowering::emitExpandAtomicRMW(AtomicRMWInst *AI) const {
   Builder.CreateBr(PhiBB);
 
   Builder.SetInsertPoint(CheckPrivateBB);
-  CallInst *IsPrivate = Builder.CreateIntrinsic(
-      Intrinsic::amdgcn_is_private, {}, {Addr}, nullptr, "is.private");
+  CallInst *IsPrivate =
+      Builder.CreateIntrinsic(Builder.getInt1Ty(), Intrinsic::amdgcn_is_private,
+                              {Addr}, nullptr, "is.private");
   Builder.CreateCondBr(IsPrivate, PrivateBB, GlobalBB);
 
   Builder.SetInsertPoint(PrivateBB);
