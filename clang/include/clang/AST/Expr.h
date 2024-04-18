@@ -4799,6 +4799,203 @@ private:
   friend class ASTStmtReader;
 };
 
+/// Represents a #embed "expression".
+class PPEmbedExpr final : public Expr {
+  SourceLocation BuiltinLoc, RParenLoc;
+  DeclContext *ParentContext;
+  StringLiteral *Filename = nullptr;
+  StringLiteral *BinaryData = nullptr;
+  IntegerLiteral *FakeChildNode = nullptr;
+  const ASTContext *Ctx = nullptr;
+
+public:
+  enum Action {
+    NotFound,
+    FoundOne,
+    Expanded,
+  };
+
+  PPEmbedExpr(const ASTContext &Ctx, StringLiteral *Filename,
+              StringLiteral *BinaryData, SourceLocation BLoc,
+              SourceLocation RParenLoc, DeclContext *Context);
+
+  /// Build an empty call expression.
+  explicit PPEmbedExpr(EmptyShell Empty) : Expr(SourceLocExprClass, Empty) {}
+
+  const DeclContext *getParentContext() const { return ParentContext; }
+  DeclContext *getParentContext() { return ParentContext; }
+
+  SourceLocation getLocation() const { return BuiltinLoc; }
+  SourceLocation getBeginLoc() const { return BuiltinLoc; }
+  SourceLocation getEndLoc() const { return RParenLoc; }
+
+  StringLiteral *getFilenameStringLiteral() const { return Filename; }
+  StringLiteral *getDataStringLiteral() const { return BinaryData; }
+
+  size_t getDataElementCount(ASTContext &Context) const;
+
+  template <bool Const>
+  class ChildElementIter
+      : public llvm::iterator_facade_base<
+            ChildElementIter<Const>, std::random_access_iterator_tag,
+            std::conditional_t<Const, const IntegerLiteral *,
+                               IntegerLiteral *>> {
+    friend class PPEmbedExpr;
+
+    PPEmbedExpr *PPExpr = nullptr;
+    unsigned long long CurOffset;
+    using BaseTy = typename ChildElementIter::iterator_facade_base;
+
+    ChildElementIter(PPEmbedExpr *E) : PPExpr(E), CurOffset(0) {}
+
+  public:
+    ChildElementIter() : CurOffset(ULLONG_MAX) {}
+    typename BaseTy::reference operator*() const {
+      assert(PPExpr && CurOffset != ULLONG_MAX &&
+             "trying to dereference an invalid iterator");
+      IntegerLiteral *N = PPExpr->FakeChildNode;
+      StringRef DataRef = PPExpr->BinaryData->getBytes();
+      N->setValue(*PPExpr->Ctx,
+                  llvm::APInt(N->getValue().getBitWidth(), DataRef[CurOffset],
+                              N->getType()->isSignedIntegerType()));
+      // We want to return a reference to the fake child node in the
+      // PPEmbedExpr, not the local variable N.
+      return const_cast<typename BaseTy::reference>(PPExpr->FakeChildNode);
+    }
+    typename BaseTy::pointer operator->() const { return **this; }
+    using BaseTy::operator++;
+    ChildElementIter &operator++() {
+      assert(PPExpr && "trying to increment an invalid iterator");
+      assert(CurOffset != ULLONG_MAX &&
+             "Already at the end of what we can iterate over");
+      if (++CurOffset >= PPExpr->BinaryData->getByteLength()) {
+        CurOffset = ULLONG_MAX;
+        PPExpr = nullptr;
+      }
+      return *this;
+    }
+    bool operator==(ChildElementIter Other) const {
+      return (PPExpr == Other.PPExpr && CurOffset == Other.CurOffset);
+    }
+    ChildElementIter &operator+=(unsigned N) {
+      assert(PPExpr && "trying to increment an invalid iterator");
+      assert(CurOffset != ULLONG_MAX &&
+             "Already at the end of what we can iterate over");
+      if (CurOffset + N >= PPExpr->BinaryData->getByteLength()) {
+        CurOffset = ULLONG_MAX;
+        PPExpr = nullptr;
+      } else {
+        CurOffset += N;
+      }
+      return *this;
+    }
+  }; // class ChildElementIter
+
+public:
+  using fake_child_range = llvm::iterator_range<ChildElementIter<false>>;
+  using const_fake_child_range = llvm::iterator_range<ChildElementIter<true>>;
+
+  fake_child_range underlying_data_elements() {
+    return fake_child_range(ChildElementIter<false>(this),
+                            ChildElementIter<false>());
+  }
+
+  const_fake_child_range underlying_data_elements() const {
+    return const_fake_child_range(
+        ChildElementIter<true>(const_cast<PPEmbedExpr *>(this)),
+        ChildElementIter<true>());
+  }
+
+  child_range children() {
+    return child_range(child_iterator(), child_iterator());
+  }
+
+  const_child_range children() const {
+    return const_child_range(const_child_iterator(), const_child_iterator());
+  }
+
+  static bool classof(const Stmt *T) {
+    return T->getStmtClass() == PPEmbedExprClass;
+  }
+
+  ChildElementIter<false> begin() { return ChildElementIter<false>(this); }
+
+private:
+  friend class ASTStmtReader;
+};
+
+/// Represents a subrange of data imported by #embed directive. Needed to
+/// handle nested initializer lists with #embed directives.
+/// Example:
+///  struct S {
+///    int x, y;
+///  };
+///
+///  struct T {
+///    int x[2];
+///    struct S s;
+///  };
+///
+///  struct T t[] = {
+///  #embed "data" // data contains 10 elements;
+///  };
+/// The resulting semantic form of initializer list will contain (ESE stands
+/// for EmbedSubscriptExpr):
+///  { {ESE(first two data elements), {ESE(3rd element), ESE(4th element) }},
+///  { {ESE(5th and 6th element), {ESE(7th element), ESE(8th element) }},
+///  { {ESE(9th and 10th element), { zeroinitializer }}}
+///
+/// EmbedSubscriptExpr referencing more than element only appear for arrays of
+/// scalars.
+class EmbedSubscriptExpr : public Expr {
+  PPEmbedExpr *ReferencedEmbed;
+  unsigned Begin;
+  unsigned NumOfElements;
+
+public:
+  explicit EmbedSubscriptExpr(QualType T, PPEmbedExpr *ReferencedEmbed,
+                              unsigned Begin, unsigned NumOfElements)
+      : Expr(EmbedSubscriptExprClass, T, VK_PRValue, OK_Ordinary),
+        ReferencedEmbed(ReferencedEmbed), Begin(Begin),
+        NumOfElements(NumOfElements) {}
+
+  static bool classof(const Stmt *T) {
+    return T->getStmtClass() == EmbedSubscriptExprClass;
+  }
+
+  PPEmbedExpr *getEmbed() const { return ReferencedEmbed; }
+
+  unsigned getBegin() const { return Begin; }
+
+  unsigned getDataElementCount() const { return NumOfElements; }
+
+  SourceLocation getLocation() const { return ReferencedEmbed->getLocation(); }
+  SourceLocation getBeginLoc() const { return ReferencedEmbed->getBeginLoc(); }
+  SourceLocation getEndLoc() const { return ReferencedEmbed->getEndLoc(); }
+
+  // Iterators
+  child_range children() {
+    return child_range(child_iterator(), child_iterator());
+  }
+  const_child_range children() const {
+    return const_child_range(const_child_iterator(), const_child_iterator());
+  }
+
+  template <typename Foo, typename... Targs>
+  bool doForEachDataElement(Foo F, unsigned &StartingIndexInArray,
+                            Targs... Fargs) const {
+    PPEmbedExpr *PPEmbed = this->getEmbed();
+    auto It = PPEmbed->begin() + this->getBegin();
+    const unsigned NumOfEls = this->getDataElementCount();
+    for (unsigned EmbedIndex = 0; EmbedIndex < NumOfEls; ++EmbedIndex, ++It) {
+      if (!F(*It, StartingIndexInArray, Fargs...))
+        return false;
+      StartingIndexInArray++;
+    }
+    return true;
+  }
+};
+
 /// Describes an C or C++ initializer list.
 ///
 /// InitListExpr describes an initializer list, which can be used to
