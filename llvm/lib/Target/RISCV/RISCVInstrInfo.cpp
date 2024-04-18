@@ -66,6 +66,22 @@ using namespace RISCV;
 
 } // namespace llvm::RISCVVPseudosTable
 
+namespace llvm::RISCVVInversePseudosTable {
+
+using namespace RISCV;
+
+#define GET_RISCVVInversePseudosTable_IMPL
+#include "RISCVGenSearchableTables.inc"
+
+} // end namespace llvm::RISCVVInversePseudosTable
+
+namespace llvm::RISCV {
+
+#define GET_RISCVMaskedPseudosTable_IMPL
+#include "RISCVGenSearchableTables.inc"
+
+} // end namespace llvm::RISCV
+
 RISCVInstrInfo::RISCVInstrInfo(RISCVSubtarget &STI)
     : RISCVGenInstrInfo(RISCV::ADJCALLSTACKDOWN, RISCV::ADJCALLSTACKUP),
       STI(STI) {}
