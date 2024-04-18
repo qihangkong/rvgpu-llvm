@@ -300,6 +300,11 @@ CacheCostTy IndexedReference::computeRefCost(const Loop &L,
     TripCount = SE.getNoopOrZeroExtend(TripCount, WiderType);
     const SCEV *Numerator = SE.getMulExpr(Stride, TripCount);
     RefCost = SE.getUDivExpr(Numerator, CacheLineSize);
+    // When result is zero, round it to one because at least one cache line must
+    // be used. It does not make sense to output the result that zero cache line
+    // is used.
+    if (RefCost->isZero())
+      RefCost = SE.getUDivCeilSCEV(Numerator, CacheLineSize);
 
     LLVM_DEBUG(dbgs().indent(4)
                << "Access is consecutive: RefCost=(TripCount*Stride)/CLS="
