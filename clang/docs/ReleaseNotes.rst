@@ -369,6 +369,9 @@ Improvements to Clang's diagnostics
 
 - Clang now diagnoses requires expressions with explicit object parameters.
 
+- Clang now diagnoses missing format attributes for non-template functions and
+  class/struct/union members. Fixes #GH70024
+
 Improvements to Clang's time-trace
 ----------------------------------
 
