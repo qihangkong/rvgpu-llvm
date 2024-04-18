@@ -980,7 +980,14 @@ include "SMEInstrFormats.td"
 //===----------------------------------------------------------------------===//
 
 let hasSideEffects = 1, isCodeGenOnly = 1 in {
-let Defs = [SP], Uses = [SP] in {
+
+def STORETPIDR2 : Pseudo<(outs), (ins GPR64:$addr, GPR64sp:$frameindex, i32imm:$offset), []>, Sched<[]>;
+
+let Defs = [SP] in {
+
+def STACKALLOC : Pseudo<(outs GPR64:$addr), (ins GPR64:$size, GPR64:$sp), []>, Sched<[]>;
+
+let Uses = [SP] in {
 // We set Sched to empty list because we expect these instructions to simply get
 // removed in most cases.
 def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
@@ -990,6 +997,7 @@ def ADJCALLSTACKUP : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
                             [(AArch64callseq_end timm:$amt1, timm:$amt2)]>,
                             Sched<[]>;
 
+}
 }
 
 let Defs = [SP, NZCV], Uses = [SP] in {

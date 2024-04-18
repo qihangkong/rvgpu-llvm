@@ -1121,6 +1121,43 @@ bool AArch64ExpandPseudo::expandMI(MachineBasicBlock &MBB,
   default:
     break;
 
+  case AArch64::STORETPIDR2: {
+    Register BufferAddr = MI.getOperand(0).getReg();
+    auto TPIDR2Object = MI.getOperand(1).getReg();
+    unsigned Offset = MI.getOperand(2).getImm();
+    // Store the buffer pointer to the TPIDR2 stack object.
+    BuildMI(MBB, MI, MI.getDebugLoc(), TII->get(AArch64::STRXui))
+        .addReg(BufferAddr)
+        .addUse(TPIDR2Object)
+        .addImm(0 + Offset);
+    // Set the reserved bytes (10-15) to zero
+    BuildMI(MBB, MI, MI.getDebugLoc(), TII->get(AArch64::STRHHui))
+        .addReg(AArch64::WZR)
+        .addUse(TPIDR2Object)
+        .addImm(5 + Offset);
+    BuildMI(MBB, MI, MI.getDebugLoc(), TII->get(AArch64::STRWui))
+        .addReg(AArch64::WZR)
+        .addUse(TPIDR2Object)
+        .addImm(3 + Offset);
+    MI.eraseFromParent();
+    return true;
+  }
+
+  case AArch64::STACKALLOC: {
+    Register Dest = MI.getOperand(0).getReg();
+    Register SPCopy = MI.getOperand(2).getReg();
+    BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(AArch64::SUBXrs), Dest)
+        .addReg(SPCopy)
+        .add(MI.getOperand(1))
+        .addImm(0);
+    BuildMI(MBB, MBBI, MI.getDebugLoc(), TII->get(AArch64::ADDXri))
+        .addReg(AArch64::SP, RegState::Define)
+        .addReg(Dest)
+        .addImm(0)
+        .addImm(0);
+    MI.eraseFromParent();
+    return true;
+  }
   case AArch64::BSPv8i8:
   case AArch64::BSPv16i8: {
     Register DstReg = MI.getOperand(0).getReg();
