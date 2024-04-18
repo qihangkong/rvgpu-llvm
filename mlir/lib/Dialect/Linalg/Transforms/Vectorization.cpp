@@ -1597,6 +1597,16 @@ vectorizeAsTensorUnpackOp(RewriterBase &rewriter, tensor::UnPackOp unpackOp,
 
   RankedTensorType unpackTensorType = unpackOp.getSourceType();
 
+  // If the input vector sizes are not provided, then the vector sizes are
+  // determined by the result tensor shape. In case the vector sizes aren't
+  // provided, we update the inBounds attribute instead of masking.
+  bool doMasking = true;
+  if (inputVectorSizes.empty()) {
+    ArrayRef<int64_t> resultTensorShape = unpackOp.getDestType().getShape();
+    inputVectorSizes = resultTensorShape.take_front(unpackOp.getSourceRank());
+    doMasking = false;
+  }
+
   ArrayRef<int64_t> innerDimPos = unpackOp.getInnerDimsPos();
   ArrayRef<int64_t> innerTiles = unpackOp.getStaticInnerTiles();
 
@@ -1651,7 +1661,8 @@ vectorizeAsTensorUnpackOp(RewriterBase &rewriter, tensor::UnPackOp unpackOp,
   // to shape of source, then a mask is necessary.
   Value readResult = createReadOrMaskedRead(
       rewriter, loc, unpackOp.getSource(),
-      ArrayRef<int64_t>(readMaskShape.begin(), readMaskShape.end()), padValue);
+      ArrayRef<int64_t>(readMaskShape.begin(), readMaskShape.end()), padValue,
+      doMasking);
 
   PackingMetadata packMetadata;
   SmallVector<int64_t> lastDimToInsertPosPerm =
@@ -1827,8 +1838,14 @@ vectorizeUnPackOpPrecondition(tensor::UnPackOp unpackOp,
     LDBG("Inner-tiles must be constant: " << unpackOp << "\n");
     return failure();
   }
-  llvm::ArrayRef<int64_t> resultShape = unpackOp.getDestType().getShape();
-  if (!inputVectorSizes.empty() &&
+  ArrayRef<int64_t> resultShape = unpackOp.getDestType().getShape();
+  bool satisfyEmptyCond = true;
+  if (inputVectorSizes.empty()) {
+    if (!unpackOp.getDestType().hasStaticShape() ||
+        !unpackOp.getSourceType().hasStaticShape())
+      satisfyEmptyCond = false;
+  }
+  if (!satisfyEmptyCond &&
       failed(isValidMaskedInputVector(resultShape, inputVectorSizes)))
     return failure();
 
