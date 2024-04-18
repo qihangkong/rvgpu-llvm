@@ -1431,9 +1431,12 @@ Value *ScalarExprEmitter::EmitScalarCast(Value *Src, QualType SrcType,
     return Builder.CreateFPToUI(Src, DstTy, "conv");
   }
 
-  if (DstElementTy->getTypeID() < SrcElementTy->getTypeID())
+  if ((DstElementTy->is16bitFPTy() && SrcElementTy->is16bitFPTy()))
+    return Builder.CreateBitCast(Src, DstTy, "conv");
+  else if (DstElementTy->getTypeID() < SrcElementTy->getTypeID())
     return Builder.CreateFPTrunc(Src, DstTy, "conv");
-  return Builder.CreateFPExt(Src, DstTy, "conv");
+  else
+    return Builder.CreateFPExt(Src, DstTy, "conv");
 }
 
 /// Emit a conversion from the specified type to the specified destination type,
@@ -1906,7 +1909,9 @@ Value *ScalarExprEmitter::VisitConvertVectorExpr(ConvertVectorExpr *E) {
   } else {
     assert(SrcEltTy->isFloatingPointTy() && DstEltTy->isFloatingPointTy() &&
            "Unknown real conversion");
-    if (DstEltTy->getTypeID() < SrcEltTy->getTypeID())
+    if ((DstEltTy->is16bitFPTy() && SrcEltTy->is16bitFPTy()))
+      Res = Builder.CreateBitCast(Src, DstTy, "conv");
+    else if (DstEltTy->getTypeID() < SrcEltTy->getTypeID())
       Res = Builder.CreateFPTrunc(Src, DstTy, "conv");
     else
       Res = Builder.CreateFPExt(Src, DstTy, "conv");
