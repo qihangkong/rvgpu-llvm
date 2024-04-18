@@ -2983,6 +2983,17 @@ bool CombinerHelper::matchHoistLogicOpWithSameOpcodeHands(
   MachineInstr *RightHandInst = getDefIgnoringCopies(RHSReg, MRI);
   if (!LeftHandInst || !RightHandInst)
     return false;
+
+  // Look through freeze()s.
+  bool LeftHandFreeze = LeftHandInst->getOpcode() == TargetOpcode::G_FREEZE;
+  bool RightHandFreeze = RightHandInst->getOpcode() == TargetOpcode::G_FREEZE;
+  if (LeftHandFreeze)
+    LeftHandInst =
+        getDefIgnoringCopies(LeftHandInst->getOperand(1).getReg(), MRI);
+  if (RightHandFreeze)
+    RightHandInst =
+        getDefIgnoringCopies(RightHandInst->getOperand(1).getReg(), MRI);
+
   unsigned HandOpcode = LeftHandInst->getOpcode();
   if (HandOpcode != RightHandInst->getOpcode())
     return false;
@@ -3006,8 +3017,10 @@ bool CombinerHelper::matchHoistLogicOpWithSameOpcodeHands(
     return false;
   case TargetOpcode::G_ANYEXT:
   case TargetOpcode::G_SEXT:
-  case TargetOpcode::G_ZEXT: {
+  case TargetOpcode::G_ZEXT:
+  case TargetOpcode::G_TRUNC: {
     // Match: logic (ext X), (ext Y) --> ext (logic X, Y)
+    // Match: logic (trunc X), (trunc Y) -> trunc (logic X, Y)
     break;
   }
   case TargetOpcode::G_AND:
@@ -3032,8 +3045,18 @@ bool CombinerHelper::matchHoistLogicOpWithSameOpcodeHands(
   auto NewLogicDst = MRI.createGenericVirtualRegister(XTy);
   OperandBuildSteps LogicBuildSteps = {
       [=](MachineInstrBuilder &MIB) { MIB.addDef(NewLogicDst); },
-      [=](MachineInstrBuilder &MIB) { MIB.addReg(X); },
-      [=](MachineInstrBuilder &MIB) { MIB.addReg(Y); }};
+      [=](MachineInstrBuilder &MIB) mutable {
+        // freeze (hand (x, ...)) -> freeze(x)
+        if (LeftHandFreeze)
+          X = Builder.buildFreeze(XTy, X).getReg(0);
+        MIB.addReg(X);
+      },
+      [=](MachineInstrBuilder &MIB) mutable {
+        // freeze (hand (y, ...)) -> freeze(y)
+        if (RightHandFreeze)
+          Y = Builder.buildFreeze(YTy, Y).getReg(0);
+        MIB.addReg(Y);
+      }};
   InstructionBuildSteps LogicSteps(LogicOpcode, LogicBuildSteps);
 
   // Steps to build hand (logic x, y), ...z
