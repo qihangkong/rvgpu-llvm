@@ -1,8 +1,8 @@
 ! REQUIRES: openmp_runtime
 
 ! This test checks lowering of atomic and atomic update constructs
-! RUN: bbc --use-desc-for-alloc=false -fopenmp -emit-fir -hlfir=false %s -o - | FileCheck %s
-! RUN: %flang_fc1 -mllvm --use-desc-for-alloc=false -emit-fir -flang-deprecated-no-hlfir -fopenmp %s -o - | FileCheck %s
+! RUN: bbc --use-desc-for-alloc=false %openmp_flags -emit-fir -hlfir=false %s -o - | FileCheck %s
+! RUN: %flang_fc1 -mllvm --use-desc-for-alloc=false -emit-fir -flang-deprecated-no-hlfir %openmp_flags %s -o - | FileCheck %s
 
 program OmpAtomicUpdate
     use omp_lib
