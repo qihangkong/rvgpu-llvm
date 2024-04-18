@@ -1147,7 +1147,9 @@ enum ProfVersion {
   Version11 = 11,
   // VTable profiling,
   Version12 = 12,
-  // The current version is 12.
+  // Record the on-disk byte size of header.
+  Version13 = 13,
+  // The current version is 13.
   CurrentVersion = INSTR_PROF_INDEX_VERSION
 };
 const uint64_t Version = ProfVersion::CurrentVersion;
@@ -1175,6 +1177,11 @@ struct Header {
   uint64_t BinaryIdOffset;
   uint64_t TemporalProfTracesOffset;
   uint64_t VTableNamesOffset;
+
+  // The on-disk byte size of the header. As with other fields, do not read its
+  // value before calling readFromBuffer.
+  uint64_t Size = 0;
+
   // New fields should only be added at the end to ensure that the size
   // computation is correct. The methods below need to be updated to ensure that
   // the new field is read correctly.
@@ -1182,12 +1189,14 @@ struct Header {
   // Reads a header struct from the buffer.
   static Expected<Header> readFromBuffer(const unsigned char *Buffer);
 
-  // Returns the size of the header in bytes for all valid fields based on the
-  // version. I.e a older version header will return a smaller size.
+  // Returns the on-disk byte size of the header for all valid fields based on
+  // the version.
   size_t size() const;
 
-  // Returns the format version in little endian. The header retains the version
-  // in native endian of the compiler runtime.
+  Expected<size_t> knownFieldsEndByteOffset() const;
+
+  // Returns the format version in little endian. The header retains the
+  // version in native endian of the compiler runtime.
   uint64_t formatVersion() const;
 };
 
