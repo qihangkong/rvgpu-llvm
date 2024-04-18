@@ -610,6 +610,89 @@ void SystemZInstrInfo::insertSelect(MachineBasicBlock &MBB,
     .addImm(CCValid).addImm(CCMask);
 }
 
+static void transferDeadCC(MachineInstr *OldMI, MachineInstr *NewMI) {
+  if (OldMI->registerDefIsDead(SystemZ::CC)) {
+    MachineOperand *CCDef = NewMI->findRegisterDefOperand(SystemZ::CC);
+    if (CCDef != nullptr)
+      CCDef->setIsDead(true);
+  }
+}
+
+static void transferMIFlag(MachineInstr *OldMI, MachineInstr *NewMI,
+                           MachineInstr::MIFlag Flag) {
+  if (OldMI->getFlag(Flag))
+    NewMI->setFlag(Flag);
+}
+
+MachineInstr *SystemZInstrInfo::optimizeLoadInstr(MachineInstr &MI,
+                                                  MachineRegisterInfo *MRI,
+                                                  Register &FoldAsLoadDefReg,
+                                                  MachineInstr *&DefMI) const {
+  const TargetRegisterInfo *TRI = MRI->getTargetRegisterInfo();
+
+  // Check whether we can move the DefMI load, and that it only has one use.
+  DefMI = MRI->getVRegDef(FoldAsLoadDefReg);
+  assert(DefMI);
+  bool SawStore = false;
+  if (!DefMI->isSafeToMove(nullptr, SawStore) ||
+      !MRI->hasOneNonDBGUse(FoldAsLoadDefReg))
+    return nullptr;
+
+  // For reassociable FP operations, any loads have been purposefully left
+  // unfolded so that MachineCombiner can do its work on reg/reg
+  // opcodes. After that, as many loads as possible are now folded.
+  unsigned LoadOpc = 0;
+  unsigned RegMemOpcode = 0;
+  const TargetRegisterClass *FPRC = nullptr;
+  RegMemOpcode = MI.getOpcode() == SystemZ::WFADB_CCPseudo   ? SystemZ::ADB
+                 : MI.getOpcode() == SystemZ::WFSDB_CCPseudo ? SystemZ::SDB
+                 : MI.getOpcode() == SystemZ::WFMDB          ? SystemZ::MDB
+                                                             : 0;
+  if (RegMemOpcode) {
+    LoadOpc = SystemZ::VL64;
+    FPRC = &SystemZ::FP64BitRegClass;
+  } else {
+    RegMemOpcode = MI.getOpcode() == SystemZ::WFASB_CCPseudo   ? SystemZ::AEB
+                   : MI.getOpcode() == SystemZ::WFSSB_CCPseudo ? SystemZ::SEB
+                   : MI.getOpcode() == SystemZ::WFMSB          ? SystemZ::MEEB
+                                                               : 0;
+    if (RegMemOpcode) {
+      LoadOpc = SystemZ::VL32;
+      FPRC = &SystemZ::FP32BitRegClass;
+    }
+  }
+  if (!RegMemOpcode || DefMI->getOpcode() != LoadOpc)
+    return nullptr;
+  assert((MI.findRegisterDefOperandIdx(SystemZ::CC) == -1 ||
+          MI.findRegisterDefOperandIdx(SystemZ::CC, /*isDead=*/true) != -1) &&
+         "Expected dead CC-def on add/sub pseudo instruction.");
+
+  Register DstReg = MI.getOperand(0).getReg();
+  MachineOperand LHS = MI.getOperand(1);
+  MachineOperand RHS = MI.getOperand(2);
+  MachineOperand &RegMO = RHS.getReg() == FoldAsLoadDefReg ? LHS : RHS;
+  if ((RegMemOpcode == SystemZ::SDB || RegMemOpcode == SystemZ::SEB) &&
+      FoldAsLoadDefReg != RHS.getReg())
+    return nullptr;
+
+  MachineOperand &Base = DefMI->getOperand(1);
+  MachineOperand &Disp = DefMI->getOperand(2);
+  MachineOperand &Indx = DefMI->getOperand(3);
+  MachineInstrBuilder MIB =
+      BuildMI(*MI.getParent(), MI, MI.getDebugLoc(), get(RegMemOpcode), DstReg)
+          .add(RegMO)
+          .add(Base)
+          .add(Disp)
+          .add(Indx)
+          .addMemOperand(*DefMI->memoperands_begin());
+  MIB->addRegisterDead(SystemZ::CC, TRI);
+  MRI->setRegClass(DstReg, FPRC);
+  MRI->setRegClass(RegMO.getReg(), FPRC);
+  transferMIFlag(&MI, MIB, MachineInstr::NoFPExcept);
+
+  return MIB;
+}
+
 bool SystemZInstrInfo::foldImmediate(MachineInstr &UseMI, MachineInstr &DefMI,
                                      Register Reg,
                                      MachineRegisterInfo *MRI) const {
@@ -937,20 +1020,6 @@ static LogicOp interpretAndImmediate(unsigned Opcode) {
   }
 }
 
-static void transferDeadCC(MachineInstr *OldMI, MachineInstr *NewMI) {
-  if (OldMI->registerDefIsDead(SystemZ::CC)) {
-    MachineOperand *CCDef = NewMI->findRegisterDefOperand(SystemZ::CC);
-    if (CCDef != nullptr)
-      CCDef->setIsDead(true);
-  }
-}
-
-static void transferMIFlag(MachineInstr *OldMI, MachineInstr *NewMI,
-                           MachineInstr::MIFlag Flag) {
-  if (OldMI->getFlag(Flag))
-    NewMI->setFlag(Flag);
-}
-
 MachineInstr *
 SystemZInstrInfo::convertToThreeAddress(MachineInstr &MI, LiveVariables *LV,
                                         LiveIntervals *LIS) const {
@@ -1001,6 +1070,89 @@ SystemZInstrInfo::convertToThreeAddress(MachineInstr &MI, LiveVariables *LV,
     }
   }
   return nullptr;
+}
+
+void SystemZInstrInfo::finalizeInsInstrs(
+    MachineInstr &Root, unsigned &P,
+    SmallVectorImpl<MachineInstr *> &InsInstrs) const {
+  const TargetRegisterInfo *TRI =
+      Root.getParent()->getParent()->getSubtarget().getRegisterInfo();
+  for (auto *Inst : InsInstrs) {
+    switch (Inst->getOpcode()) {
+    case SystemZ::WFADB_CCPseudo:
+    case SystemZ::WFASB_CCPseudo:
+    case SystemZ::WFSDB_CCPseudo:
+    case SystemZ::WFSSB_CCPseudo:
+      Inst->addRegisterDead(SystemZ::CC, TRI);
+      break;
+    default:
+      break;
+    }
+  }
+}
+
+bool SystemZInstrInfo::isAssociativeAndCommutative(const MachineInstr &Inst,
+                                                   bool Invert) const {
+  unsigned Opc = Inst.getOpcode();
+  if (Invert) {
+    auto InverseOpcode = getInverseOpcode(Opc);
+    if (!InverseOpcode)
+      return false;
+    Opc = *InverseOpcode;
+  }
+
+  switch (Opc) {
+  default:
+    break;
+  // Adds and multiplications.
+  case SystemZ::WFADB_CCPseudo:
+  case SystemZ::WFASB_CCPseudo:
+    assert(Inst.findRegisterDefOperandIdx(SystemZ::CC, /*isDead=*/true) != -1 &&
+           "Expected dead CC-def on add/sub pseudo instruction.");
+    LLVM_FALLTHROUGH;
+  case SystemZ::WFAXB:
+  case SystemZ::VFADB:
+  case SystemZ::VFASB:
+  case SystemZ::WFMDB:
+  case SystemZ::WFMSB:
+  case SystemZ::WFMXB:
+  case SystemZ::VFMDB:
+  case SystemZ::VFMSB:
+    return (Inst.getFlag(MachineInstr::MIFlag::FmReassoc) &&
+            Inst.getFlag(MachineInstr::MIFlag::FmNsz));
+  }
+
+  return false;
+}
+
+std::optional<unsigned>
+SystemZInstrInfo::getInverseOpcode(unsigned Opcode) const {
+  // fadd => fsub
+  switch (Opcode) {
+  case SystemZ::WFADB_CCPseudo:
+    return SystemZ::WFSDB_CCPseudo;
+  case SystemZ::WFASB_CCPseudo:
+    return SystemZ::WFSSB_CCPseudo;
+  case SystemZ::WFAXB:
+    return SystemZ::WFSXB;
+  case SystemZ::VFADB:
+    return SystemZ::VFSDB;
+  case SystemZ::VFASB:
+    return SystemZ::VFSSB;
+  // fsub => fadd
+  case SystemZ::WFSDB_CCPseudo:
+    return SystemZ::WFADB_CCPseudo;
+  case SystemZ::WFSSB_CCPseudo:
+    return SystemZ::WFASB_CCPseudo;
+  case SystemZ::WFSXB:
+    return SystemZ::WFAXB;
+  case SystemZ::VFSDB:
+    return SystemZ::VFADB;
+  case SystemZ::VFSSB:
+    return SystemZ::VFASB;
+  default:
+    return std::nullopt;
+  }
 }
 
 MachineInstr *SystemZInstrInfo::foldMemoryOperandImpl(
