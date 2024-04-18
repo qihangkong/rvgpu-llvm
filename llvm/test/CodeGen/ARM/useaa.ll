@@ -1,7 +1,7 @@
-; RUN: llc < %s -mtriple=armv8r-eabi -mcpu=cortex-r52 | FileCheck %s --check-prefix=CHECK --check-prefix=USEAA
+; RUN: llc < %s -mtriple=armv8r-eabi -mcpu=cortex-r52 -mattr=+neon,+fp-armv8 | FileCheck %s --check-prefix=CHECK --check-prefix=USEAA
 ; RUN: llc < %s -mtriple=armv7m-eabi -mcpu=cortex-m4 | FileCheck %s --check-prefix=CHECK --check-prefix=USEAA
 ; RUN: llc < %s -mtriple=armv8m-eabi -mcpu=cortex-m33 | FileCheck %s --check-prefix=CHECK --check-prefix=USEAA
-; RUN: llc < %s -mtriple=armv8r-eabi -mcpu=generic | FileCheck %s --check-prefix=CHECK --check-prefix=GENERIC
+; RUN: llc < %s -mtriple=armv8r-eabi -mcpu=generic -mattr=+neon,+fp-armv8 | FileCheck %s --check-prefix=CHECK --check-prefix=GENERIC
 
 ; Check we use AA during codegen, so can interleave these loads/stores.
 

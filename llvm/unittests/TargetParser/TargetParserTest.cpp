@@ -351,7 +351,7 @@ INSTANTIATE_TEST_SUITE_P(
                                    ARM::AEK_MP | ARM::AEK_HWDIVARM |
                                        ARM::AEK_HWDIVTHUMB | ARM::AEK_DSP,
                                    "7-R"),
-        ARMCPUTestParams<uint64_t>("cortex-r52", "armv8-r", "neon-fp-armv8",
+        ARMCPUTestParams<uint64_t>("cortex-r52", "armv8-r", "fpv5-sp-d16",
                                    ARM::AEK_NONE | ARM::AEK_CRC | ARM::AEK_MP |
                                        ARM::AEK_VIRT | ARM::AEK_HWDIVARM |
                                        ARM::AEK_HWDIVTHUMB | ARM::AEK_DSP,
