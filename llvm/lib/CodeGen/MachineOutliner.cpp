@@ -616,17 +616,14 @@ void MachineOutliner::findCandidates(
       // * End before the other starts
       // * Start after the other ends
       unsigned EndIdx = StartIdx + StringLen - 1;
-      auto FirstOverlap = find_if(
-          CandidatesForRepeatedSeq, [StartIdx, EndIdx](const Candidate &C) {
-            return EndIdx >= C.getStartIdx() && StartIdx <= C.getEndIdx();
-          });
-      if (FirstOverlap != CandidatesForRepeatedSeq.end()) {
+      if (CandidatesForRepeatedSeq.size() > 0 &&
+          StartIdx <= CandidatesForRepeatedSeq.back().getEndIdx()) {
 #ifndef NDEBUG
         ++NumDiscarded;
         LLVM_DEBUG(dbgs() << "    .. DISCARD candidate @ [" << StartIdx
                           << ", " << EndIdx << "]; overlaps with candidate @ ["
-                          << FirstOverlap->getStartIdx() << ", "
-                          << FirstOverlap->getEndIdx() << "]\n");
+                          << CandidatesForRepeatedSeq.back().getStartIdx() << ", "
+                          << CandidatesForRepeatedSeq.back().getEndIdx() << "]\n");
 #endif
         continue;
       }
@@ -828,10 +825,16 @@ bool MachineOutliner::outline(Module &M,
                     << "\n");
   bool OutlinedSomething = false;
 
-  // Sort by benefit. The most beneficial functions should be outlined first.
+  // Sort by priority where priority := getNotOutlinedCost / getOutliningCost.
+  // The function with highest priority should be outlined first.
   stable_sort(FunctionList,
               [](const OutlinedFunction &LHS, const OutlinedFunction &RHS) {
-                return LHS.getBenefit() > RHS.getBenefit();
+                if (LHS.getBenefit() == 0)
+                  return false;
+                if (LHS.getBenefit() > 0 && RHS.getBenefit() == 0)
+                  return true;
+                return LHS.getNotOutlinedCost() * RHS.getOutliningCost() >
+                       RHS.getNotOutlinedCost() * LHS.getOutliningCost();
               });
 
   // Walk over each function, outlining them as we go along. Functions are
