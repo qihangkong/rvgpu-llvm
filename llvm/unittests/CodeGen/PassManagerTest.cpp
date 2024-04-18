@@ -212,13 +212,17 @@ TEST_F(PassManagerTest, Basic) {
   MPM.addPass(TestMachineModulePass(Count, Counts));
   MFPM.addPass(TestMachineFunctionPass(Count, Counts));
   MPM.addPass(createModuleToMachineFunctionPassAdaptor(std::move(MFPM)));
+  MPM.addPass(createModuleToFunctionPassAdaptor(
+      createFunctionToMachineFunctionPassAdaptor(
+          TestMachineFunctionPass(Count, Counts))));
 
   testing::internal::CaptureStderr();
   MPM.run(*M, MAM);
   std::string Output = testing::internal::GetCapturedStderr();
 
-  EXPECT_EQ((std::vector<int>{10, 16, 18, 20, 30, 36, 38, 40}), Counts);
-  EXPECT_EQ(40, Count);
+  EXPECT_EQ((std::vector<int>{10, 16, 18, 20, 30, 36, 38, 40, 46, 48, 50}),
+            Counts);
+  EXPECT_EQ(50, Count);
 }
 
 TEST_F(PassManagerTest, DiagnosticHandler) {
