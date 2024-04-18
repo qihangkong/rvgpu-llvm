@@ -1395,6 +1395,11 @@ enum NodeType {
   // which is later translated to an implicit use in the MIR.
   CONVERGENCECTRL_GLUE,
 
+  // Experimental vector histogram intrinsic
+  // Operands: input chain, baseptr, indices, inc, mask
+  // Output: output chain
+  EXPERIMENTAL_HISTOGRAM,
+
   /// BUILTIN_OP_END - This must be the last enum value in this list.
   /// The target-specific pre-isel opcode values start here.
   BUILTIN_OP_END
