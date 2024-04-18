@@ -541,6 +541,7 @@ Bug Fixes to C++ Support
 - Fix a crash in requires expression with templated base class member function. Fixes (#GH84020).
 - Fix a crash caused by defined struct in a type alias template when the structure
   has fields with dependent type. Fixes (#GH75221).
+- Fix placement new initializes typedef array with correct size. Fixes (#GH41441).
 
 Bug Fixes to AST Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^
