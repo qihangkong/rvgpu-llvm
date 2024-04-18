@@ -404,9 +404,8 @@ define amdgpu_kernel void @s_ctlz_zero_undef_i16_with_select(ptr addrspace(1) no
 ; VI-NEXT:    s_load_dword s2, s[0:1], 0x2c
 ; VI-NEXT:    s_load_dwordx2 s[0:1], s[0:1], 0x24
 ; VI-NEXT:    s_waitcnt lgkmcnt(0)
-; VI-NEXT:    s_and_b32 s2, s2, 0xffff
+; VI-NEXT:    s_lshl_b32 s2, s2, 16
 ; VI-NEXT:    s_flbit_i32_b32 s2, s2
-; VI-NEXT:    s_add_i32 s2, s2, -16
 ; VI-NEXT:    v_mov_b32_e32 v0, s0
 ; VI-NEXT:    v_mov_b32_e32 v1, s1
 ; VI-NEXT:    v_mov_b32_e32 v2, s2
@@ -708,8 +707,8 @@ define amdgpu_kernel void @v_ctlz_zero_undef_i16_with_select(ptr addrspace(1) no
 ; VI-NEXT:    v_lshlrev_b16_e32 v1, 8, v2
 ; VI-NEXT:    s_waitcnt vmcnt(0)
 ; VI-NEXT:    v_or_b32_e32 v0, v1, v0
-; VI-NEXT:    v_ffbh_u32_sdwa v1, v0 dst_sel:DWORD dst_unused:UNUSED_PAD src0_sel:WORD_0
-; VI-NEXT:    v_add_u32_e32 v1, vcc, -16, v1
+; VI-NEXT:    v_lshlrev_b32_e32 v1, 16, v0
+; VI-NEXT:    v_ffbh_u32_e32 v1, v1
 ; VI-NEXT:    v_cmp_ne_u16_e32 vcc, 0, v0
 ; VI-NEXT:    v_cndmask_b32_e32 v2, 32, v1, vcc
 ; VI-NEXT:    v_mov_b32_e32 v0, s0
