@@ -59,9 +59,12 @@ namespace {
     static const char *getRegisterName(MCRegister Reg) {
       return SparcInstPrinter::getRegisterName(Reg);
     }
+    void diagnoseAsmOperandError(LLVMContext &C, const AsmOperandErrorCode EC,
+                                 const char *AsmStr, uint64_t Loc) override;
 
-    bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
-                         const char *ExtraCode, raw_ostream &O) override;
+    AsmOperandErrorCode PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
+                                        const char *ExtraCode,
+                                        raw_ostream &O) override;
     bool PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNo,
                                const char *ExtraCode, raw_ostream &O) override;
 
@@ -422,13 +425,34 @@ void SparcAsmPrinter::printMemOperand(const MachineInstr *MI, int opNum,
   printOperand(MI, opNum+1, O);
 }
 
+void SparcAsmPrinter::diagnoseAsmOperandError(LLVMContext &C,
+                                              const AsmOperandErrorCode EC,
+                                              const char *AsmStr,
+                                              uint64_t Loc) {
+  AsmPrinter::diagnoseAsmOperandError(C, EC, AsmStr, Loc);
+  std::string msg;
+  raw_string_ostream Msg(msg);
+  switch (EC) {
+  default:
+    break;
+  case AsmOperandErrorCode::CONSTRAINT_H_ERROR:
+    Msg << "Hi part of pair should point to an even-numbered register";
+    Msg << "\n (note that in some cases it might be necessary to manually "
+           "bind the input/output registers instead of relying on "
+           "automatic allocation)";
+    break;
+  }
+  C.emitError(Msg.str());
+}
 /// PrintAsmOperand - Print out an operand for an inline asm expression.
 ///
-bool SparcAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
-                                      const char *ExtraCode,
-                                      raw_ostream &O) {
+AsmOperandErrorCode SparcAsmPrinter::PrintAsmOperand(const MachineInstr *MI,
+                                                     unsigned OpNo,
+                                                     const char *ExtraCode,
+                                                     raw_ostream &O) {
   if (ExtraCode && ExtraCode[0]) {
-    if (ExtraCode[1] != 0) return true; // Unknown modifier.
+    if (ExtraCode[1] != 0)
+      return AsmOperandErrorCode::UNKNOWN_MODIFIER_ERROR; // Unknown modifier.
 
     switch (ExtraCode[0]) {
     default:
@@ -451,14 +475,7 @@ bool SparcAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
         MOReg = RegisterInfo->getMatchingSuperReg(MOReg, SP::sub_even,
                                                   &SP::IntPairRegClass);
         if (!MOReg) {
-          SMLoc Loc;
-          OutContext.reportError(
-              Loc, "Hi part of pair should point to an even-numbered register");
-          OutContext.reportError(
-              Loc, "(note that in some cases it might be necessary to manually "
-                   "bind the input/output registers instead of relying on "
-                   "automatic allocation)");
-          return true;
+          return AsmOperandErrorCode::CONSTRAINT_H_ERROR;
         }
       }
 
@@ -476,7 +493,7 @@ bool SparcAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
       }
 
       O << '%' << SparcInstPrinter::getRegisterName(Reg);
-      return false;
+      return AsmOperandErrorCode::NO_ERROR;
     }
     case 'f':
     case 'r':
@@ -486,7 +503,7 @@ bool SparcAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
 
   printOperand(MI, OpNo, O);
 
-  return false;
+  return AsmOperandErrorCode::NO_ERROR;
 }
 
 bool SparcAsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI,
