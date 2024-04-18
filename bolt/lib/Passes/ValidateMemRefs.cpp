@@ -34,6 +34,11 @@ bool ValidateMemRefs::checkAndFixJTReference(BinaryFunction &BF, MCInst &Inst,
   if (!JT)
     return false;
 
+  // If the operand does not refer to the jump table symbol, then we
+  // don't need to update the reference.
+  if (JT->getFirstLabel() != Sym)
+    return true;
+
   const bool IsLegitAccess = llvm::is_contained(JT->Parents, &BF);
   if (IsLegitAccess)
     return true;
