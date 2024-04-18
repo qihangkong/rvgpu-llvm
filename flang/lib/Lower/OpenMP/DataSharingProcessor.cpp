@@ -15,6 +15,7 @@
 #include "Utils.h"
 #include "flang/Lower/PFTBuilder.h"
 #include "flang/Lower/SymbolMap.h"
+#include "flang/Optimizer/Builder/HLFIRTools.h"
 #include "flang/Optimizer/Builder/Todo.h"
 #include "flang/Semantics/tools.h"
 #include "mlir/Dialect/OpenMP/OpenMPDialect.h"
@@ -390,8 +391,48 @@ void DataSharingProcessor::doPrivatize(
           &allocRegion, /*insertPt=*/{}, symType, symLoc);
 
       firOpBuilder.setInsertionPointToEnd(allocEntryBlock);
-      symTable->addSymbol(*sym,
-                          fir::substBase(symExV, allocRegion.getArgument(0)));
+
+      fir::ExtendedValue localExV = symExV.match(
+          [&](const fir::ArrayBoxValue &box) -> fir::ExtendedValue {
+            llvm::SmallVector<mlir::Value> extents;
+            llvm::SmallVector<mlir::Value> lBounds;
+            hlfir::genLboundsAndExtentsFromBox(symLoc, firOpBuilder,
+                                               allocRegion.getArgument(0),
+                                               box.rank(), lBounds, &extents);
+
+            return fir::ArrayBoxValue(allocRegion.getArgument(0), extents,
+                                      lBounds);
+          },
+          [&](const fir::CharBoxValue &box) -> fir::ExtendedValue {
+            TODO(symLoc,
+                 "Delayed privatization is not supported for CharBoxValue");
+            return {};
+          },
+          [&](const fir::CharArrayBoxValue &box) -> fir::ExtendedValue {
+            TODO(
+                symLoc,
+                "Delayed privatization is not supported for CharArrayBoxValue");
+            return {};
+          },
+          [&](const fir::ProcBoxValue &box) -> fir::ExtendedValue {
+            TODO(symLoc,
+                 "Delayed privatization is not supported for ProcBoxValue");
+            return {};
+          },
+          [&](const fir::BoxValue &box) -> fir::ExtendedValue {
+            TODO(symLoc, "Delayed privatization is not supported for BoxValue");
+            return {};
+          },
+          [&](const fir::PolymorphicValue &box) -> fir::ExtendedValue {
+            TODO(symLoc,
+                 "Delayed privatization is not supported for PolymorphicValue");
+            return {};
+          },
+          [&](const auto &box) -> fir::ExtendedValue {
+            return fir::substBase(box, allocRegion.getArgument(0));
+          });
+
+      symTable->addSymbol(*sym, localExV);
       symTable->pushScope();
       cloneSymbol(sym);
       firOpBuilder.create<mlir::omp::YieldOp>(
