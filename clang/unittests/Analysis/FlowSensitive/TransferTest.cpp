@@ -5243,6 +5243,67 @@ TEST(TransferTest, BinaryOperatorComma) {
       });
 }
 
+TEST(TransferTest, ConditionalOperatorValue) {
+  std::string Code = R"(
+    void target(bool Cond, bool B1, bool B2) {
+      bool JoinSame = Cond ? B1 : B1;
+      bool JoinDifferent = Cond ? B1 : B2;
+      // [[p]]
+    }
+  )";
+  runDataflow(
+      Code,
+      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
+         ASTContext &ASTCtx) {
+        Environment Env = getEnvironmentAtAnnotation(Results, "p").fork();
+
+        auto &B1 = getValueForDecl<BoolValue>(ASTCtx, Env, "B1");
+        auto &B2 = getValueForDecl<BoolValue>(ASTCtx, Env, "B2");
+        auto &JoinSame = getValueForDecl<BoolValue>(ASTCtx, Env, "JoinSame");
+        auto &JoinDifferent =
+            getValueForDecl<BoolValue>(ASTCtx, Env, "JoinDifferent");
+
+        EXPECT_EQ(&JoinSame, &B1);
+
+        const Formula &JoinDifferentEqB1 =
+            Env.arena().makeEquals(JoinDifferent.formula(), B1.formula());
+        EXPECT_TRUE(Env.allows(JoinDifferentEqB1));
+        EXPECT_FALSE(Env.proves(JoinDifferentEqB1));
+
+        const Formula &JoinDifferentEqB2 =
+            Env.arena().makeEquals(JoinDifferent.formula(), B2.formula());
+        EXPECT_TRUE(Env.allows(JoinDifferentEqB2));
+        EXPECT_FALSE(Env.proves(JoinDifferentEqB1));
+      });
+}
+
+TEST(TransferTest, ConditionalOperatorLocation) {
+  std::string Code = R"(
+    void target(bool Cond, int I1, int I2) {
+      int &JoinSame = Cond ? I1 : I1;
+      int &JoinDifferent = Cond ? I1 : I2;
+      // [[p]]
+    }
+  )";
+  runDataflow(
+      Code,
+      [](const llvm::StringMap<DataflowAnalysisState<NoopLattice>> &Results,
+         ASTContext &ASTCtx) {
+        Environment Env = getEnvironmentAtAnnotation(Results, "p").fork();
+
+        StorageLocation &I1 = getLocForDecl(ASTCtx, Env, "I1");
+        StorageLocation &I2 = getLocForDecl(ASTCtx, Env, "I2");
+        StorageLocation &JoinSame = getLocForDecl(ASTCtx, Env, "JoinSame");
+        StorageLocation &JoinDifferent =
+            getLocForDecl(ASTCtx, Env, "JoinDifferent");
+
+        EXPECT_EQ(&JoinSame, &I1);
+
+        EXPECT_NE(&JoinDifferent, &I1);
+        EXPECT_NE(&JoinDifferent, &I2);
+      });
+}
+
 TEST(TransferTest, IfStmtBranchExtendsFlowCondition) {
   std::string Code = R"(
     void target(bool Foo) {
@@ -5492,10 +5553,7 @@ TEST(TransferTest, ContextSensitiveReturnReferenceWithConditionalOperator) {
         ASSERT_THAT(Loc, NotNull());
         EXPECT_THAT(Env.getValue(*Loc), NotNull());
 
-        // TODO: We would really like to make this stronger assertion, but that
-        // doesn't work because we don't propagate values correctly through
-        // the conditional operator yet.
-        // ASSERT_THAT(Loc, Eq(SLoc));
+        EXPECT_THAT(Loc, Eq(SLoc));
       },
       {BuiltinOptions{ContextSensitiveOptions{}}});
 }
