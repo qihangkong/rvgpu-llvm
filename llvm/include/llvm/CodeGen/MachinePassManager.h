@@ -76,6 +76,10 @@ struct MachinePassModel
 #endif
 
     auto PA = this->Pass.run(IR, AM);
+    // Machine function passes are not allowed to modify the LLVM
+    // representation, therefore we should preserve all IR analyses.
+    PA.template preserveSet<AllAnalysesOn<Module>>();
+    PA.template preserveSet<AllAnalysesOn<Function>>();
 
     if constexpr (is_detected<has_get_set_properties_t, PassT>::value)
       IR.getProperties().set(PassT::getSetProperties());

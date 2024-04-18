@@ -184,6 +184,7 @@ TEST_F(PassManagerTest, Basic) {
 
   MachineModuleInfo MMI(LLVMTM);
 
+  MachineFunctionAnalysisManager MFAM;
   LoopAnalysisManager LAM;
   MachineFunctionAnalysisManager MFAM;
   FunctionAnalysisManager FAM;

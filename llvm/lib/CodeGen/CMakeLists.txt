@@ -67,6 +67,7 @@ add_llvm_component_library(LLVMCodeGen
   FixupStatepointCallerSaved.cpp
   FreeMachineFunction.cpp
   FuncletLayout.cpp
+  FunctionToMachineFunctionAnalysis.cpp
   GCMetadata.cpp
   GCMetadataPrinter.cpp
   GCRootLowering.cpp

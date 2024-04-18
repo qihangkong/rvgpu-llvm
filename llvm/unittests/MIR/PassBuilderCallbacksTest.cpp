@@ -316,7 +316,7 @@ protected:
   static std::unique_ptr<Module> parseMIR(StringRef MIRCode,
                                           LLVMContext &Context,
                                           TargetMachine &TM,
-                                          MachineModuleInfo &MMI) {
+                                          ModuleAnalysisManager &MAM) {
     SMDiagnostic Diagnostic;
     std::unique_ptr<MemoryBuffer> MBuffer = MemoryBuffer::getMemBuffer(MIRCode);
     std::unique_ptr<MIRParser> MIR =
@@ -330,7 +330,7 @@ protected:
     Mod->setModuleIdentifier("module");
     Mod->setDataLayout(TM.createDataLayout());
 
-    [[maybe_unused]] bool Ret = MIR->parseMachineFunctions(*Mod, MMI);
+    [[maybe_unused]] bool Ret = MIR->parseMachineFunctions(*Mod, MAM);
     assert(!Ret);
 
     return Mod;
@@ -355,7 +355,6 @@ protected:
       GTEST_SKIP();
 
     MMI = std::make_unique<MachineModuleInfo>(TM.get());
-    M = parseMIR(MIRString, Context, *TM, *MMI);
     PB = std::make_unique<PassBuilder>(TM.get(), PipelineTuningOptions(),
                                        std::nullopt, &PIC);
 
@@ -399,6 +398,7 @@ protected:
     PB->registerMachineFunctionAnalyses(MFAM);
     PB->crossRegisterProxies(LAM, FAM, CGAM, MAM, &MFAM);
     MAM.registerPass([&] { return MachineModuleAnalysis(*MMI); });
+    M = parseMIR(MIRString, Context, *TM, MAM);
   }
 };
 
@@ -554,9 +554,6 @@ TEST_F(MachineFunctionCallbacksTest, InstrumentedFreeMFPass2) {
   EXPECT_CALL(CallbacksHandle, runAfterPassInvalidated(
                                    HasNameRegex("FreeMachineFunctionPass"), _))
       .InSequence(PISequence);
-  EXPECT_CALL(CallbacksHandle,
-              runAfterPassInvalidated(HasNameRegex("PassManager"), _))
-      .InSequence(PISequence);
 
   // runAfterPass should not be called since the MachineFunction is no longer
   // valid after FreeMachineFunctionPass.
@@ -564,7 +561,7 @@ TEST_F(MachineFunctionCallbacksTest, InstrumentedFreeMFPass2) {
               runAfterPass(HasNameRegex("FreeMachineFunctionPass"), _, _))
       .Times(0);
   EXPECT_CALL(CallbacksHandle, runAfterPass(HasNameRegex("PassManager"), _, _))
-      .Times(0);
+      .Times(1);
 
   MachineFunctionPassManager MFPM;
   MFPM.addPass(FreeMachineFunctionPass());

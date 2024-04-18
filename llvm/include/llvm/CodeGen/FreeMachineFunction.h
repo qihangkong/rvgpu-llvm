@@ -13,6 +13,7 @@
 
 namespace llvm {
 
+// TODO: Convert it to function pass.
 class FreeMachineFunctionPass : public PassInfoMixin<FreeMachineFunctionPass> {
 public:
   PreservedAnalyses run(MachineFunction &MF,
