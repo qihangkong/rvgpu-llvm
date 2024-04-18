@@ -1,7 +1,7 @@
 ! REQUIRES: openmp_runtime
 
-!RUN: %flang_fc1 -emit-fir -flang-deprecated-no-hlfir -fopenmp %openmp_module_flag %s -o - | FileCheck %s
-!RUN: bbc -emit-fir -hlfir=false -fopenmp %openmp_module_flag %s -o - | FileCheck %s
+!RUN: %flang_fc1 -emit-fir -flang-deprecated-no-hlfir %openmp_flags %s -o - | FileCheck %s
+!RUN: bbc -emit-fir -hlfir=false %openmp_flags %s -o - | FileCheck %s
 
 !===============================================================================
 ! Single construct
