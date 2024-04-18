@@ -4516,6 +4516,27 @@ SDValue TargetLowering::SimplifySetCC(EVT VT, SDValue N0, SDValue N1,
         }
       }
     }
+
+    // Optimize
+    //    (icmp eq/ne (shift N00, N01C), 0) -> (icmp eq/ne N00, 0)
+    // If shift is logical and all shifted out bits are known to be zero, then
+    // the zero'd ness doesnt change and we can omit the shift.
+    // If all shifted out bits are equal to at least one bit that isn't
+    // shifted out, then the zero'd ness doesnt change and we can omit the
+    // shift.
+    if ((Cond == ISD::SETEQ || Cond == ISD::SETNE) && C1.isZero() &&
+        N0.hasOneUse() &&
+        (N0.getOpcode() == ISD::SHL || N0.getOpcode() == ISD::SRL)) {
+      if (ConstantSDNode *ShAmt = isConstOrConstSplat(N0.getOperand(1))) {
+        SDValue N00 = N0.getOperand(0);
+        KnownBits Known = DAG.computeKnownBits(N00);
+        if (N0.getOpcode() == ISD::SRL)
+          Known = Known.reverseBits();
+        if (ShAmt->getAPIntValue().ule(Known.countMinLeadingZeros()) ||
+            ShAmt->getAPIntValue().ult(Known.countMinSignBits()))
+          return DAG.getSetCC(dl, VT, N00, N1, Cond);
+      }
+    }
   }
 
   // FIXME: Support vectors.
