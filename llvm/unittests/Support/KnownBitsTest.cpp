@@ -559,6 +559,18 @@ TEST(KnownBitsTest, BinaryExhaustive) {
       KnownBits::mulhu,
       [](const APInt &N1, const APInt &N2) { return APIntOps::mulhu(N1, N2); },
       checkCorrectnessOnlyBinary);
+
+  testBinaryOpExhaustive(KnownBits::avgFloorS, APIntOps::avgFloorS,
+                         checkCorrectnessOnlyBinary);
+
+  testBinaryOpExhaustive(KnownBits::avgFloorU, APIntOps::avgFloorU,
+                         checkCorrectnessOnlyBinary);
+
+  testBinaryOpExhaustive(KnownBits::avgCeilU, APIntOps::avgCeilU,
+                         checkCorrectnessOnlyBinary);
+
+  testBinaryOpExhaustive(KnownBits::avgCeilS, APIntOps::avgCeilS,
+                         checkCorrectnessOnlyBinary);
 }
 
 TEST(KnownBitsTest, UnaryExhaustive) {

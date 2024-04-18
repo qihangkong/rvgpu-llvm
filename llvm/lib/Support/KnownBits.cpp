@@ -762,6 +762,30 @@ KnownBits KnownBits::usub_sat(const KnownBits &LHS, const KnownBits &RHS) {
   return computeForSatAddSub(/*Add*/ false, /*Signed*/ false, LHS, RHS);
 }
 
+KnownBits KnownBits::avgFloorS(const KnownBits &LHS, const KnownBits &RHS) {
+  APInt Zero = APIntOps::avgFloorS(LHS.Zero, RHS.Zero);
+  APInt One = APIntOps::avgFloorS(LHS.One, RHS.One);
+  return KnownBits(Zero, One);
+}
+
+KnownBits KnownBits::avgFloorU(const KnownBits &LHS, const KnownBits &RHS) {
+  APInt Zero = APIntOps::avgFloorU(LHS.Zero, RHS.Zero);
+  APInt One = APIntOps::avgFloorU(LHS.One, RHS.One);
+  return KnownBits(Zero, One);
+}
+
+KnownBits KnownBits::avgCeilS(const KnownBits &LHS, const KnownBits &RHS) {
+  APInt Zero = APIntOps::avgCeilS(LHS.Zero, RHS.Zero);
+  APInt One = APIntOps::avgCeilS(LHS.One, RHS.One);
+  return KnownBits(Zero, One);
+}
+
+KnownBits KnownBits::avgCeilU(const KnownBits &LHS, const KnownBits &RHS) {
+  APInt Zero = APIntOps::avgCeilU(LHS.Zero, RHS.Zero);
+  APInt One = APIntOps::avgCeilU(LHS.One, RHS.One);
+  return KnownBits(Zero, One);
+}
+
 KnownBits KnownBits::mul(const KnownBits &LHS, const KnownBits &RHS,
                          bool NoUndefSelfMultiply) {
   unsigned BitWidth = LHS.getBitWidth();
