@@ -7368,8 +7368,8 @@ static void handleHLSLResourceBindingAttr(Sema &S, Decl *D,
   // Validate.
   if (!Slot.empty()) {
     switch (Slot[0]) {
-    case 'u':
     case 'b':
+    case 'u':
     case 's':
     case 't':
       break;
@@ -7398,8 +7398,72 @@ static void handleHLSLResourceBindingAttr(Sema &S, Decl *D,
     return;
   }
 
-  // FIXME: check reg type match decl. Issue
-  // https://github.com/llvm/llvm-project/issues/57886.
+  VarDecl *VD = dyn_cast<VarDecl>(D);
+  HLSLBufferDecl *BD = dyn_cast<HLSLBufferDecl>(D);
+
+  if (VD || BD) {
+    llvm::hlsl::ResourceClass RC;
+    StringRef varTy = "";
+    if (VD) {
+
+      const Type *Ty = VD->getType()->getPointeeOrArrayElementType();
+      if (!Ty)
+        return;
+      QualType t = cast<ElaboratedType>(Ty)->getNamedType();
+      const CXXRecordDecl *RD = Ty->getAsCXXRecordDecl();
+      if (!RD)
+        return;
+
+      if (auto TDecl = dyn_cast<ClassTemplateSpecializationDecl>(RD))
+        RD = TDecl->getSpecializedTemplate()->getTemplatedDecl();
+      RD = RD->getCanonicalDecl();
+      const auto *Attr = RD->getAttr<HLSLResourceAttr>();
+      if (!Attr)
+        return;
+
+      RC = Attr->getResourceClass();
+      varTy = RD->getName();
+    } else {
+      if (BD->isCBuffer()) {
+        RC = llvm::hlsl::ResourceClass::CBuffer;
+        varTy = "cbuffer";
+      } else {
+        RC = llvm::hlsl::ResourceClass::CBuffer;
+        varTy = "tbuffer";
+      }
+    }
+    switch (RC) {
+    case llvm::hlsl::ResourceClass::SRV: {
+      if (Slot[0] != 't')
+        S.Diag(ArgLoc, diag::err_hlsl_mismatching_register_type_and_name)
+            << Slot.substr(0, 1) << varTy << "t";
+      break;
+    }
+    case llvm::hlsl::ResourceClass::UAV: {
+      if (Slot[0] != 'u')
+        S.Diag(ArgLoc, diag::err_hlsl_mismatching_register_type_and_name)
+            << Slot.substr(0, 1) << varTy << "u";
+      break;
+    }
+    case llvm::hlsl::ResourceClass::CBuffer: {
+      if (Slot[0] != 'b')
+        S.Diag(ArgLoc, diag::err_hlsl_mismatching_register_type_and_name)
+            << Slot.substr(0, 1) << varTy << "b";
+      break;
+    }
+    case llvm::hlsl::ResourceClass::Sampler: {
+      if (Slot[0] != 's')
+        S.Diag(ArgLoc, diag::err_hlsl_mismatching_register_type_and_name)
+            << Slot.substr(0, 1) << varTy << "s";
+      break;
+    }
+    case llvm::hlsl::ResourceClass::Invalid: {
+      llvm_unreachable("Resource class should be valid.");
+      break;
+    }
+    }
+  }
+
   HLSLResourceBindingAttr *NewAttr =
       HLSLResourceBindingAttr::Create(S.getASTContext(), Slot, Space, AL);
   if (NewAttr)
