@@ -18,6 +18,7 @@
 #include "llvm/CodeGen/BasicTTIImpl.h"
 #include "llvm/CodeGen/CostTable.h"
 #include "llvm/CodeGen/TargetLowering.h"
+#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/Support/Debug.h"
@@ -1322,26 +1323,30 @@ SystemZTTIImpl::getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
   return BaseT::getIntrinsicInstrCost(ICA, CostKind);
 }
 
+// Find the type of the vector operand indicated by index.
+// Asserts that the operand indicated is actually a vector.
+FixedVectorType *getOperandVectorType(const IntrinsicInst *II, unsigned Index) {
+  auto *T = II->getOperand(Index)->getType();
+  assert(T->isVectorTy());
+  return cast<FixedVectorType>(T);
+}
+
 bool SystemZTTIImpl::shouldExpandReduction(const IntrinsicInst *II) const {
-  // Always expand on Subtargets without vector instructions
+  // Always expand on Subtargets without vector instructions.
   if (!ST->hasVector())
     return true;
 
-  // Always expand for operands that do not fill one vector reg
-  auto *Type = cast<FixedVectorType>(II->getOperand(0)->getType());
-  unsigned NumElts = Type->getNumElements();
-  unsigned ScalarSize = Type->getScalarSizeInBits();
-  unsigned MaxElts = SystemZ::VectorBits / ScalarSize;
-  if (NumElts < MaxElts)
-    return true;
-
-  // Otherwise
+  // Whether or not to expand is a per-intrinsic decision.
   switch (II->getIntrinsicID()) {
-  // Do not expand vector.reduce.add
-  case Intrinsic::vector_reduce_add:
-    // Except for i64, since the performance benefit is dubious there
-    return ScalarSize >= 64;
   default:
     return true;
+  // Do not expand vector.reduce.add...
+  case Intrinsic::vector_reduce_add:
+    auto *VType = getOperandVectorType(II, 0);
+    // ...unless the scalar size is i64 or larger,
+    // or the operand vector is not full, since the
+    // performance benefit is dubious in those cases.
+    return (VType->getScalarSizeInBits() >= 64) ||
+           VType->getPrimitiveSizeInBits() < SystemZ::VectorBits;
   }
 }
