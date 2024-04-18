@@ -2362,12 +2362,26 @@ def int_load_relative: DefaultAttrsIntrinsic<[llvm_ptr_ty], [llvm_ptr_ty, llvm_a
 def int_asan_check_memaccess :
   Intrinsic<[],[llvm_ptr_ty, llvm_i32_ty], [ImmArg<ArgIndex<1>>]>;
 
+// Test whether a pointer is addressable.
+// Parameters: Shadow base, pointer to be checked for validity, AccessInfo
+// (AccessInfo is defined in HWAddressSanitizer.h)
 def int_hwasan_check_memaccess :
   Intrinsic<[], [llvm_ptr_ty, llvm_ptr_ty, llvm_i32_ty],
             [ImmArg<ArgIndex<2>>]>;
+
+// Same as memaccess but supports short granule checks.
+// Parameters: Shadow base, pointer to be checked for validity, AccessInfo
 def int_hwasan_check_memaccess_shortgranules :
   Intrinsic<[], [llvm_ptr_ty, llvm_ptr_ty, llvm_i32_ty],
             [ImmArg<ArgIndex<2>>]>;
+
+// Same as memaccess but assuming a fixed shadow offset,
+// which no longer needs to be passed as a parameter.
+// Parameters: Pointer to be checked for validity, AccessInfo
+def int_hwasan_check_memaccess_fixedshadow :
+  Intrinsic<[], [llvm_ptr_ty, llvm_i32_ty],
+            [ImmArg<ArgIndex<1>>]>;
+
 
 // Xray intrinsics
 //===----------------------------------------------------------------------===//
