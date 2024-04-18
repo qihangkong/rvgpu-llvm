@@ -55,6 +55,7 @@ class SnippetGenerator {
 public:
   struct Options {
     unsigned MaxConfigsPerOpcode = 1;
+    std::optional<int64_t> InitImmValue;
   };
 
   explicit SnippetGenerator(const LLVMState &State, const Options &Opts);
