@@ -297,7 +297,7 @@ void RISCVInstPrinter::printStackAdj(const MCInst *MI, unsigned OpNo,
                                      bool Negate) {
   int64_t Imm = MI->getOperand(OpNo).getImm();
   bool IsRV64 = STI.hasFeature(RISCV::Feature64Bit);
-  bool IsEABI = STI.hasFeature(RISCV::FeatureRVE);
+  bool IsEABI = STI.hasFeature(RISCV::FeatureStdExtE);
   int64_t StackAdj = 0;
   auto RlistVal = MI->getOperand(0).getImm();
   assert(RlistVal != 16 && "Incorrect rlist.");
