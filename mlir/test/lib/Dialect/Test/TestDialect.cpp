@@ -653,6 +653,15 @@ OpFoldResult TestOpInPlaceFold::fold(FoldAdaptor adaptor) {
   return {};
 }
 
+OpFoldResult TestOpInPlaceSelfFold::fold(FoldAdaptor adaptor) {
+  if (!getProperties().folded) {
+    // The folder adds the "folded" if not present.
+    getProperties().folded = BoolAttr::get(getContext(), true);
+    return getResult();
+  }
+  return {};
+}
+
 OpFoldResult TestOpFoldWithFoldAdaptor::fold(FoldAdaptor adaptor) {
   int64_t sum = 0;
   if (auto value = dyn_cast_or_null<IntegerAttr>(adaptor.getOp()))
