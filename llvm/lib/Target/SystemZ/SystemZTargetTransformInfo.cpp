@@ -1345,7 +1345,7 @@ bool SystemZTTIImpl::shouldExpandReduction(const IntrinsicInst *II) const {
     auto *VType = getOperandVectorType(II, 0);
     // ...unless the scalar size is i64 or larger,
     // or the operand vector is not full, since the
-    // performance benefit is dubious in those cases
+    // performance benefit is dubious in those cases.
     return (VType->getScalarSizeInBits() >= 64) ||
            VType->getPrimitiveSizeInBits() < SystemZ::VectorBits;
   }
